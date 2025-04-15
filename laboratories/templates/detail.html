@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ laboratory.name }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ laboratory.name }}</h1>
+    
+    <div>
+        <a href="{% url 'laboratory_list' %}" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+        
+        {% if user.user_type == 'professor' %}
+        <a href="{% url 'create_schedule_request' %}?lab={{ laboratory.id }}" class="btn btn-primary">
+            <i class="bi bi-calendar-plus"></i> Agendar
+        </a>
+        {% endif %}
+        
+        {% if user.user_type == 'technician' %}
+        <a href="{% url 'laboratory_update' laboratory.id %}" class="btn btn-primary">
+            <i class="bi bi-pencil"></i> Editar
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Informações do Laboratório</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Local</dt>
+                    <dd class="col-sm-9">{{ laboratory.location }}</dd>
+                    
+                    <dt class="col-sm-3">Capacidade</dt>
+                    <dd class="col-sm-9">{{ laboratory.capacity }} pessoas</dd>
+                    
+                    <dt class="col-sm-3">Responsável</dt>
+                    <dd class="col-sm-9">{{ laboratory.responsible_technician.get_full_name }}</dd>
+                    
+                    <dt class="col-sm-3">Descrição</dt>
+                    <dd class="col-sm-9">{{ laboratory.description }}</dd>
+                </dl>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Agendamentos Próximos</h5>
+                <a href="{% url 'schedule_calendar' %}?lab={{ laboratory.id }}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-calendar3"></i> Ver Calendário
+                </a>
+            </div>
+            <div class="card-body">
+                {% if upcoming_schedules %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Horário</th>
+                                <th>Professor</th>
+                                <th>Finalidade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for schedule in upcoming_schedules %}
+                            <tr>
+                                <td>{{ schedule.scheduled_date|date:"d/m/Y" }}</td>
+                                <td>{{ schedule.start_time }} - {{ schedule.end_time }}</td>
+                                <td>{{ schedule.professor.get_full_name }}</td>
+                                <td>{{ schedule.purpose|truncatechars:30 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p>Não há agendamentos próximos para este laboratório.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Materiais Disponíveis</h5>
+                {% if user.user_type == 'technician' %}
+                <a href="{% url 'material_create' %}?lab={{ laboratory.id }}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-plus-circle"></i>
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if materials %}
+                <div class="list-group">
+                    {% for material in materials %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ material.name }}</h6>
+                            <small class="{% if material.is_low_stock %}text-danger{% else %}text-success{% endif %}">
+                                {{ material.quantity }} unidades
+                            </small>
+                        </div>
+                        <p class="mb-1">{{ material.description|truncatechars:50 }}</p>
+                        <small>Categoria: {{ material.category.name }}</small>
+                        
+                        {% if material.is_low_stock %}
+                        <div class="mt-2">
+                            <span class="badge bg-danger">Estoque Baixo</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p>Não há materiais cadastrados para este laboratório.</p>
+                {% endif %}
+                
+                {% if user.user_type == 'technician' %}
+                <div class="mt-3">
+                    <a href="{% url 'material_list' %}?laboratory={{ laboratory.id }}" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-box-seam"></i> Gerenciar Materiais
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

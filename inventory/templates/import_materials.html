@@ -1,0 +1,513 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block title %}Importar Materiais | LabConnect{% endblock %}
+{% block extra_css %}
+<style>
+    .import-card {
+        border-radius: var(--border-radius);
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--box-shadow);
+        transition: all 0.3s ease;
+    }
+    
+    .import-card:hover {
+        box-shadow: var(--box-shadow-medium);
+    }
+    
+    .import-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .import-body {
+        padding: 1.5rem;
+    }
+    
+    .import-footer {
+        padding: 1.5rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+    
+    .side-info {
+        background-color: rgba(74, 111, 165, 0.05);
+        border-radius: var(--border-radius);
+        border: 1px solid rgba(74, 111, 165, 0.1);
+        padding: 1.5rem;
+        height: 100%;
+    }
+    
+    .side-info-title {
+        font-weight: 600;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .side-info-title i {
+        margin-right: 0.5rem;
+        color: var(--primary-color);
+    }
+    
+    .info-section {
+        margin-bottom: 1.5rem;
+    }
+    
+    .info-section:last-child {
+        margin-bottom: 0;
+    }
+    
+    .info-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--primary-color);
+    }
+    
+    .drop-zone {
+        border: 2px dashed var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        margin-bottom: 1.5rem;
+    }
+    
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+        border-color: var(--primary-color);
+        background-color: rgba(74, 111, 165, 0.05);
+    }
+    
+    .drop-zone-icon {
+        font-size: 3rem;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+    
+    .drop-zone-prompt {
+        font-size: 1.25rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .drop-zone-input {
+        display: none;
+    }
+    
+    .drop-zone-format {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+    }
+    
+    .file-preview {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        background-color: var(--body-bg);
+        border-radius: var(--border-radius);
+        margin-bottom: 1.5rem;
+    }
+    
+    .file-icon {
+        font-size: 2rem;
+        margin-right: 1rem;
+        color: var(--primary-color);
+    }
+    
+    .file-info {
+        flex: 1;
+    }
+    
+    .file-name {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    .file-meta {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+    }
+    
+    .file-remove {
+        color: var(--danger-color);
+        cursor: pointer;
+        font-size: 1.25rem;
+        transition: all 0.3s ease;
+    }
+    
+    .file-remove:hover {
+        transform: scale(1.1);
+    }
+    
+    .progress-status {
+        margin-top: 1.5rem;
+    }
+    
+    .progress-bar-container {
+        height: 8px;
+        background-color: var(--body-bg);
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+        overflow: hidden;
+    }
+    
+    .progress-bar {
+        height: 100%;
+        background-color: var(--primary-color);
+        border-radius: 4px;
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+    
+    .progress-text {
+        display: flex;
+        justify-content: space-between;
+        color: var(--text-muted);
+        font-size: 0.875rem;
+    }
+    
+    .template-card {
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .template-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--box-shadow-medium);
+    }
+    
+    .template-header {
+        padding: 1rem;
+        background-color: rgba(74, 111, 165, 0.05);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+    }
+    
+    .template-header i {
+        margin-right: 0.5rem;
+        color: var(--primary-color);
+    }
+    
+    .template-body {
+        padding: 1rem;
+    }
+    
+    .template-footer {
+        padding: 1rem;
+        border-top: 1px solid var(--border-color);
+        text-align: center;
+    }
+    
+    .column-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .column-item {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .column-item:last-child {
+        border-bottom: none;
+    }
+    
+    .column-name {
+        font-weight: 600;
+        margin-right: 0.5rem;
+    }
+    
+    .column-required {
+        margin-left: auto;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--danger-color);
+    }
+    
+    .column-optional {
+        margin-left: auto;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-muted);
+    }
+    
+    /* Responsividade */
+    @media (max-width: 767.98px) {
+        .import-header, .import-body, .import-footer {
+            padding: 1rem;
+        }
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Cabeçalho da página -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="page-title">Importar Materiais</h1>
+                <p class="page-subtitle">Adicione múltiplos materiais através de um arquivo Excel ou CSV</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <a href="{% url 'material_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar para Lista
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Formulário de Importação -->
+        <div class="import-card mb-4">
+            <div class="import-header">
+                <h4 class="mb-0">
+                    <i class="bi bi-file-earmark-arrow-up me-2 text-primary"></i>
+                    Upload de Arquivo
+                </h4>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data" id="importForm">
+                {% csrf_token %}
+                <div class="import-body">
+                    
+                    <!-- Styled File Input for Import Materials Page -->
+                    <div class="drop-zone" id="dropZone">
+                        <input type="file" name="file" id="fileInput" class="drop-zone-input" accept=".xlsx,.xls,.csv" style="display: none;">
+                        <div class="drop-zone-icon">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                        </div>
+                            <h4 class="drop-zone-prompt">Arraste e solte seu arquivo aqui</h4>
+                            <p class="drop-zone-format">Formatos suportados: .xlsx, .xls, .csv</p>
+                        <div class="drop-zone-actions">
+                            <span class="drop-zone-format">ou</span>
+                            <button type="button" class="btn btn-outline-primary mt-3" id="browseBtn">
+                                <i class="bi bi-folder2-open me-2"></i>Selecionar Arquivo
+                            </button>
+                        </div>
+                        <div id="filePreview" class="mt-3" style="display: none;">
+                            <div class="alert alert-info d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong id="fileName">Nome do arquivo.xlsx</strong>
+                                    <span id="fileSize" class="ms-2 text-muted small">(0 KB)</span>
+                                </div>
+                                <button type="button" class="btn-close" id="fileRemove" aria-label="Remover arquivo"></button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="filePreview" class="file-preview" style="display: none;">
+                        <div class="file-icon">
+                            <i class="bi bi-file-earmark-spreadsheet"></i>
+                        </div>
+                        <div class="file-info">
+                            <div class="file-name" id="fileName">arquivo.xlsx</div>
+                            <div class="file-meta" id="fileSize">0 KB</div>
+                        </div>
+                        <div class="file-remove" id="fileRemove">
+                            <i class="bi bi-x-circle"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="bi bi-info-circle-fill"></i>
+                            </div>
+                            <div>
+                                <h5 class="text-muted">Instruções para Importação</h5>
+                                <p class="text-muted">
+                                    O arquivo deve conter as seguintes colunas: <strong>nome</strong>, 
+                                    <strong>categoria</strong>, <strong>descrição</strong>, 
+                                    <strong>quantidade</strong>, <strong>estoque_mínimo</strong>, 
+                                    e <strong>laboratório</strong>. 
+                                    Certifique-se de que o nome do laboratório e categoria existam no sistema.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-status" id="progressStatus" style="display: none;">
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="progressBar"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span id="progressText">Processando arquivo...</span>
+                            <span id="progressPercentage">0%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="import-footer">
+                    <a href="{% url 'material_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary" id="importBtn">
+                        <i class="bi bi-upload me-1"></i> Importar Materiais
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Informações laterais -->
+        <div class="side-info mb-4">
+            <h5 class="side-info-title">
+                <i class="bi bi-info-circle"></i> Guia de Importação
+            </h5>
+            
+            <div class="info-section">
+                <div class="info-title">Formato do Arquivo</div>
+                <p>
+                    O sistema aceita arquivos Excel (.xlsx, .xls) ou CSV (.csv).
+                    Certifique-se de que o arquivo tenha as colunas necessárias.
+                </p>
+            </div>
+            
+            <div class="info-section">
+                <div class="info-title">Colunas Obrigatórias</div>
+                    <ul class="column-list">
+                        <li class="column-item">
+                            <span class="column-name">nome</span>
+                            <span class="column-required">Obrigatório</span>
+                        </li>
+                        <li class="column-item">
+                            <span class="column-name">categoria</span>
+                            <span class="column-required">Obrigatório</span>
+                        </li>
+                        <li class="column-item">
+                            <span class="column-name">laboratório</span>
+                            <span class="column-required">Obrigatório</span>
+                        </li>
+                        <li class="column-item">
+                            <span class="column-name">quantidade</span>
+                            <span class="column-required">Obrigatório</span>
+                        </li>
+                        <li class="column-item">
+                            <span class="column-name">estoque_mínimo</span>
+                            <span class="column-required">Obrigatório</span>
+                        </li>
+                        <li class="column-item">
+                            <span class="column-name">descrição</span>
+                            <span class="column-optional">Opcional</span>
+                        </li>
+                        <li class="column-item">
+                            <span class="column-name">tipo_categoria</span>
+                            <span class="column-optional">Opcional</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modelo de Exemplo -->
+        <div class="template-card">
+            <div class="template-header">
+                <i class="bi bi-file-earmark-excel"></i>
+                Modelo para Importação
+            </div>
+            <div class="template-body">
+                <p>
+                    Baixe o modelo abaixo para ajudar na formatação correta 
+                    do seu arquivo de importação.
+                </p>
+            </div>
+            <div class="template-footer">
+                <a href="{% url 'download_template' %}" class="btn btn-success btn-sm">
+                    <i class="bi bi-download me-1"></i> Baixar Modelo Excel
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const browseBtn = document.getElementById('browseBtn');
+        const filePreview = document.getElementById('filePreview');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const fileRemove = document.getElementById('fileRemove');
+    
+        // Trigger file input when browse button is clicked
+        browseBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+    
+        // Handle file selection
+        fileInput.addEventListener('change', handleFileSelect);
+    
+        // Drag and drop events
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+    
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+    
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileSelect();
+            }
+        });
+    
+        // Remove file
+        fileRemove.addEventListener('click', () => {
+            fileInput.value = '';
+            filePreview.style.display = 'none';
+            dropZone.style.display = 'block';
+        });
+    
+        // Handle file selection
+        function handleFileSelect() {
+            const file = fileInput.files[0];
+            if (file) {
+                // Validate file type
+                const allowedTypes = ['.xlsx', '.xls', '.csv'];
+                const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+                
+                if (!allowedTypes.includes(fileExtension)) {
+                    alert('Por favor, selecione um arquivo válido (.xlsx, .xls, .csv)');
+                    fileInput.value = '';
+                    return;
+                }
+    
+                // Update file preview
+                fileName.textContent = file.name;
+                
+                // Format file size
+                const fileSizeKB = Math.round(file.size / 1024);
+                const fileSizeMB = (fileSizeKB / 1024).toFixed(2);
+                fileSize.textContent = fileSizeKB >= 1024 
+                    ? `(${fileSizeMB} MB)` 
+                    : `(${fileSizeKB} KB)`;
+    
+                // Show file preview
+                filePreview.style.display = 'block';
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ title }}</h1>
+    
+    <a href="{% url 'laboratory_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Voltar
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">Nome</label>
+                        <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" 
+                               class="form-control {% if form.name.errors %}is-invalid{% endif %}" 
+                               value="{{ form.name.value|default:'' }}" required>
+                        {% if form.name.errors %}
+                        <div class="invalid-feedback">{{ form.name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.location.id_for_label }}" class="form-label">Local</label>
+                        <input type="text" name="{{ form.location.name }}" id="{{ form.location.id_for_label }}" 
+                               class="form-control {% if form.location.errors %}is-invalid{% endif %}" 
+                               value="{{ form.location.value|default:'' }}" required>
+                        {% if form.location.errors %}
+                        <div class="invalid-feedback">{{ form.location.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.capacity.id_for_label }}" class="form-label">Capacidade</label>
+                        <input type="number" name="{{ form.capacity.name }}" id="{{ form.capacity.id_for_label }}" 
+                               class="form-control {% if form.capacity.errors %}is-invalid{% endif %}" 
+                               value="{{ form.capacity.value|default:'' }}" min="1" required>
+                        {% if form.capacity.errors %}
+                        <div class="invalid-feedback">{{ form.capacity.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.responsible_technician.id_for_label }}" class="form-label">Responsável</label>
+                        <select name="{{ form.responsible_technician.name }}" id="{{ form.responsible_technician.id_for_label }}" 
+                                class="form-select {% if form.responsible_technician.errors %}is-invalid{% endif %}" required>
+                            <option value="" {% if not form.responsible_technician.value %}selected{% endif %}>Selecione...</option>
+                            {% for technician in form.responsible_technician.field.queryset %}
+                            <option value="{{ technician.id }}" {% if form.responsible_technician.value|stringformat:'s' == technician.id|stringformat:'s' %}selected{% endif %}>
+                                {{ technician.get_full_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.responsible_technician.errors %}
+                        <div class="invalid-feedback">{{ form.responsible_technician.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">Descrição</label>
+                        <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" 
+                                  class="form-control {% if form.description.errors %}is-invalid{% endif %}" 
+                                  rows="5" required>{{ form.description.value|default:'' }}</textarea>
+                        {% if form.description.errors %}
+                        <div class="invalid-feedback">{{ form.description.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'laboratory_list' %}" class="btn btn-outline-secondary me-md-2">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

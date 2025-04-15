@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Tendências de Materiais | LabConnect{% endblock %}
+
+{% block extra_css %}
+<style>
+    .trend-card {
+        transition: all 0.3s ease;
+    }
+    
+    .trend-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .keyword-tag {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        background-color: rgba(74, 111, 165, 0.1);
+        color: var(--primary-color);
+        border-radius: 50rem;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+    
+    .keyword-tag:hover {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .keyword-tag .count {
+        display: inline-block;
+        background-color: rgba(74, 111, 165, 0.2);
+        color: var(--primary-color);
+        border-radius: 50rem;
+        padding: 0.1rem 0.4rem;
+        margin-left: 0.25rem;
+        font-size: 0.75rem;
+    }
+    
+    .keyword-tag:hover .count {
+        background-color: rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+    
+    .chart-container {
+        height: 300px;
+    }
+    
+    .similarity-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+        border-radius: 50rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .progress-analysis {
+        height: 10px;
+        border-radius: 5px;
+        margin-top: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Cabeçalho da página -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="page-title">Tendências de Materiais</h1>
+                <p class="page-subtitle">Insights baseados em análise de linguagem natural</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <a href="{% url 'analyze_materials_batch' %}" class="btn btn-primary">
+                    <i class="bi bi-robot me-1"></i> Analisar Materiais
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status da Análise -->
+    <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h5>
+                        <i class="bi bi-bar-chart-line me-2 text-primary"></i>
+                        Status da Análise
+                    </h5>
+                    <p>{{ analyzed_count }} de {{ total_count }} materiais foram analisados pela IA.</p>
+                    <div class="progress progress-analysis">
+                        <div class="progress-bar" role="progressbar" style="width: {{ analysis_percentage }}%"></div>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                    <a href="{% url 'analyze_materials_batch' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-lightning-charge me-1"></i> Analisar Mais Materiais
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Principais Insights -->
+    <div class="row mb-4">
+        <!-- Distribuição de Categorias -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm trend-card">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-pie-chart me-2 text-primary"></i>
+                        Distribuição por Categoria
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Palavras-chave Comuns -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm trend-card">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-tags me-2 text-primary"></i>
+                        Palavras-chave Frequentes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="keyword-cloud">
+                        {% for keyword, count in common_keywords %}
+                            <span class="keyword-tag">
+                                {{ keyword }}
+                                <span class="count">{{ count }}</span>
+                            </span>
+                        {% empty %}
+                            <p>Nenhuma palavra-chave encontrada. Tente analisar mais materiais.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Materiais Similares -->
+    {% if similar_materials %}
+    <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-header bg-transparent">
+            <h5 class="card-title mb-0">
+                <i class="bi bi-link-45deg me-2 text-primary"></i>
+                Materiais Similares
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Material</th>
+                            <th>Categoria</th>
+                            <th>Similaridade</th>
+                            <th>Palavras-chave em Comum</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in similar_materials %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'material_update' item.material.id %}">
+                                        {{ item.material.name }}
+                                    </a>
+                                </td>
+                                <td>{{ item.material.category.name }}</td>
+                                <td>
+                                    <span class="similarity-badge">
+                                        {{ item.similarity|floatformat:2 }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% for keyword in item.common_keywords %}
+                                        <span class="badge bg-light text-dark">{{ keyword }}</span>
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Formulário para Encontrar Similares -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent">
+            <h5 class="card-title mb-0">
+                <i class="bi bi-search me-2 text-primary"></i>
+                Encontrar Materiais Similares
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="get" action="{% url 'material_trends' %}">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="material_id" class="form-label">Selecione um Material</label>
+                        <select name="material_id" id="material_id" class="form-select" required>
+                            <option value="">Selecione um material...</option>
+                            {% for material in materials_with_analysis %}
+                                <option value="{{ material.id }}">{{ material.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search me-1"></i> Encontrar Similares
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Dados para o gráfico de categorias
+        const categoryData = {
+            labels: [
+                {% for category in category_distribution %}
+                    '{{ category.suggested_category }}',
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Materiais por categoria',
+                data: [
+                    {% for category in category_distribution %}
+                        {{ category.count }},
+                    {% endfor %}
+                ],
+                backgroundColor: [
+                    'rgba(74, 111, 165, 0.7)',
+                    'rgba(25, 135, 84, 0.7)',
+                    'rgba(220, 53, 69, 0.7)',
+                    'rgba(255, 193, 7, 0.7)',
+                    'rgba(13, 202, 240, 0.7)'
+                ],
+                borderWidth: 1
+            }]
+        };
+        
+        // Configurar o gráfico de categorias
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        const categoryChart = new Chart(categoryCtx, {
+            type: 'pie',
+            data: categoryData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

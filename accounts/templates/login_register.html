@@ -1,0 +1,584 @@
+{% extends 'base_auth.html' %}
+{% load static %}
+
+{% block title %}Acessar | LabConnect{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos específicos para as páginas de autenticação */
+    .auth-content {
+        background: linear-gradient(135deg, #4a6fa5 0%, #2c4677 100%);
+        position: relative;
+        overflow: hidden;
+        min-height: calc(100vh - 56px); /* Altura total menos o rodapé */
+    }
+    
+    .auth-content::before {
+        content: "";
+        position: absolute;
+        width: 300%;
+        height: 300%;
+        top: -100%;
+        left: -100%;
+        background: url('{% static "img/pattern.svg" %}');
+        opacity: 0.05;
+        animation: subtle-shift 120s linear infinite;
+    }
+    
+    @keyframes subtle-shift {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .auth-card {
+        width: 100%;
+        max-width: 450px;
+        background-color: var(--body-bg);
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 10;
+    }
+    
+    [data-theme="dark"] .auth-card {
+        background-color: rgba(33, 37, 41, 0.95);
+    }
+    
+    .auth-switch-container {
+        width: 100%;
+        display: flex;
+        margin-bottom: 20px;
+        position: relative;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    [data-theme="dark"] .auth-switch-container {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .auth-switch-button {
+        flex: 1;
+        padding: 12px;
+        text-align: center;
+        cursor: pointer;
+        position: relative;
+        z-index: 1;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+    
+    .auth-switch-slider {
+        position: absolute;
+        height: 100%;
+        width: 50%;
+        left: 0;
+        top: 0;
+        background-color: #4a6fa5;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .auth-switch-button.active {
+        color: #fff;
+    }
+    
+    .auth-switch-button:not(.active) {
+        color: #6c757d;
+    }
+    
+    .auth-forms-container {
+        position: relative;
+        overflow: hidden;
+        height: auto;
+    }
+    
+    .auth-form {
+        width: 100%;
+        transition: all 0.5s ease;
+        padding: 15px 30px 30px;
+    }
+    
+    .auth-form.hidden {
+        transform: translateX(100%);
+        position: absolute;
+        top: 0;
+        left: 0;
+        opacity: 0;
+    }
+    
+    .auth-logo {
+        display: block;
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px;
+    }
+    
+    .auth-brand {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .auth-brand h2 {
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+    
+    .auth-brand span {
+        color: #4a6fa5;
+    }
+    
+    .auth-subtitle {
+        text-align: center;
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 25px;
+    }
+    
+    .form-floating {
+        margin-bottom: 20px;
+    }
+    
+    .form-floating label {
+        color: var(--text-muted);
+    }
+    
+    .auth-input {
+        border-radius: 10px;
+        padding: 12px 15px;
+        height: calc(3rem + 2px);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        background-color: rgba(255, 255, 255, 0.9);
+        transition: all 0.3s ease;
+    }
+    
+    [data-theme="dark"] .auth-input {
+        background-color: rgba(33, 37, 41, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+    
+    .auth-input:focus {
+        box-shadow: 0 0 0 0.25rem rgba(74, 111, 165, 0.25);
+        border-color: #4a6fa5;
+    }
+    
+    .auth-submit {
+        width: 100%;
+        padding: 12px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #4a6fa5 0%, #2c4677 100%);
+        border: none;
+        color: white;
+        font-weight: 600;
+        margin-top: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .auth-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(74, 111, 165, 0.4);
+    }
+    
+    .auth-footer {
+        text-align: center;
+        padding: 20px;
+        background-color: rgba(0, 0, 0, 0.02);
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    [data-theme="dark"] .auth-footer {
+        background-color: rgba(255, 255, 255, 0.02);
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .auth-link {
+        color: #4a6fa5;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .auth-link:hover {
+        text-decoration: underline;
+    }
+    
+    .social-login {
+        display: flex;
+        justify-content: center;
+        margin-top: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .social-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 10px;
+        color: #fff;
+        transition: all 0.3s ease;
+    }
+    
+    .social-btn:hover {
+        transform: translateY(-3px);
+    }
+    
+    .social-btn.google {
+        background-color: #DB4437;
+    }
+    
+    .social-btn.microsoft {
+        background-color: #00a4ef;
+    }
+    
+    .password-toggle {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #6c757d;
+        z-index: 10;
+    }
+    
+    .divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 20px 0;
+        color: #6c757d;
+    }
+    
+    .divider::before,
+    .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    [data-theme="dark"] .divider::before,
+    [data-theme="dark"] .divider::after {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .divider::before {
+        margin-right: 10px;
+    }
+    
+    .divider::after {
+        margin-left: 10px;
+    }
+    
+    .input-feedback {
+        display: none;
+        font-size: 0.8rem;
+        margin-top: 5px;
+    }
+    
+    .auth-input:valid ~ .input-feedback.valid {
+        display: block;
+        color: #198754;
+    }
+    
+    .auth-input:invalid:not(:placeholder-shown) ~ .input-feedback.invalid {
+        display: block;
+        color: #dc3545;
+    }
+    
+    /* Animação de carregamento para o botão */
+    .auth-submit.loading {
+        position: relative;
+        color: transparent;
+    }
+    
+    .auth-submit.loading::after {
+        content: "";
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        top: 50%;
+        left: 50%;
+        margin: -10px 0 0 -10px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Responsividade */
+    @media (max-width: 576px) {
+        .auth-card {
+            margin: 15px;
+            border-radius: 10px;
+        }
+        
+        .auth-form {
+            padding: 15px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block auth_content %}
+<div class="auth-card">
+    <div class="auth-form-wrapper">
+        <div class="p-4 pt-5">
+            <div class="auth-brand">
+                <img src="{% static 'img/logo.svg' %}" alt="LabConnect Logo" class="auth-logo">
+                <h2><span>Lab</span>Connect</h2>
+                <p class="auth-subtitle">Sistema de Gestão de Laboratórios</p>
+            </div>
+            
+            <div class="auth-switch-container">
+                <div class="auth-switch-slider" id="authSwitchSlider"></div>
+                <div class="auth-switch-button active" id="loginTab">Login</div>
+                <div class="auth-switch-button" id="registerTab">Cadastro</div>
+            </div>
+            
+            <div class="auth-forms-container">
+                <!-- Formulário de Login -->
+                <div class="auth-form" id="loginForm">
+                    <form id="actualLoginForm" method="post" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        
+                        <div class="form-floating mb-3">
+                            <input type="email" class="form-control auth-input" id="loginEmail" name="username" placeholder="nome@exemplo.com" required>
+                            <label for="loginEmail">Email</label>
+                            <div class="input-feedback valid">Email válido</div>
+                            <div class="input-feedback invalid">Por favor, informe um email válido</div>
+                        </div>
+                        
+                        <div class="form-floating mb-3 position-relative">
+                            <input type="password" class="form-control auth-input" id="loginPassword" name="password" placeholder="Sua senha" required>
+                            <label for="loginPassword">Senha</label>
+                            <i class="bi bi-eye-slash password-toggle" id="loginPasswordToggle"></i>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="rememberMe" name="remember">
+                                <label class="form-check-label" for="rememberMe">Lembrar-me</label>
+                            </div>
+                            <a href="#" class="auth-link">Esqueceu a senha?</a>
+                        </div>
+                        
+                        <button type="submit" class="btn auth-submit" id="loginSubmit">
+                            Entrar
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Formulário de Registro -->
+                <div class="auth-form hidden" id="registerForm">
+                    <form id="actualRegisterForm" method="post" action="{% url 'register' %}">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control auth-input" id="firstName" name="first_name" placeholder="Seu nome" required>
+                                    <label for="firstName">Nome</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control auth-input" id="lastName" name="last_name" placeholder="Seu sobrenome" required>
+                                    <label for="lastName">Sobrenome</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-floating mb-3">
+                            <input type="email" class="form-control auth-input" id="registerEmail" name="email" placeholder="nome@exemplo.com" required>
+                            <label for="registerEmail">Email</label>
+                            <div class="input-feedback valid">Email corporativo válido</div>
+                            <div class="input-feedback invalid">Apenas emails corporativos são permitidos (@cogna.com.br e @kroton.com.br)</div>
+                        </div>
+                        
+                        <div class="form-floating mb-3">
+                            <input type="tel" class="form-control auth-input" id="phoneNumber" name="phone_number" 
+                                pattern="[0-9]{10,11}" placeholder="(99) 99999-9999" required>
+                            <label for="phoneNumber">Telefone</label>
+                            <div class="form-text">Formato: DDD + número (apenas números)</div>
+                        </div>
+                        
+                        <div class="form-floating mb-3">
+                            <select class="form-select auth-input" id="userType" name="user_type" required>
+                                <option value="" selected disabled>Selecione...</option>
+                                <option value="professor">Professor</option>
+                                <option value="technician">Laboratorista</option>
+                            </select>
+                            <label for="userType">Tipo de Usuário</label>
+                        </div>
+                        
+                        <div class="form-floating mb-3 position-relative">
+                            <input type="password" class="form-control auth-input" id="registerPassword" name="password1" 
+                                placeholder="Sua senha" required pattern=".{8,}" title="A senha deve ter pelo menos 8 caracteres">
+                            <label for="registerPassword">Senha</label>
+                            <i class="bi bi-eye-slash password-toggle" id="registerPasswordToggle"></i>
+                            <div class="form-text">Mínimo de 8 caracteres, incluindo números e letras</div>
+                        </div>
+                        
+                        <div class="form-floating mb-3 position-relative">
+                            <input type="password" class="form-control auth-input" id="confirmPassword" name="password2" 
+                                placeholder="Confirme sua senha" required>
+                            <label for="confirmPassword">Confirmar Senha</label>
+                            <i class="bi bi-eye-slash password-toggle" id="confirmPasswordToggle"></i>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                            <label class="form-check-label" for="termsCheck">
+                                Eu concordo com os <a href="#" class="auth-link">Termos de Serviço</a> e <a href="#" class="auth-link">Política de Privacidade</a>
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn auth-submit" id="registerSubmit">
+                            Criar Conta
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="auth-footer">
+            <p class="mb-0" id="authFooterText">
+                Não tem uma conta? <a href="#" class="auth-link" id="switchToRegister">Cadastre-se</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elementos
+        const loginTab = document.getElementById('loginTab');
+        const registerTab = document.getElementById('registerTab');
+        const authSwitchSlider = document.getElementById('authSwitchSlider');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const authFooterText = document.getElementById('authFooterText');
+        const switchToRegister = document.getElementById('switchToRegister');
+        
+        // Toggles de senha
+        const passwordToggles = document.querySelectorAll('.password-toggle');
+        passwordToggles.forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const input = this.previousElementSibling;
+                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                input.setAttribute('type', type);
+                this.classList.toggle('bi-eye');
+                this.classList.toggle('bi-eye-slash');
+            });
+        });
+        
+        // Função para alternar entre os formulários
+        function switchForm(isLogin) {
+            if (isLogin) {
+                // Mostrar login
+                loginTab.classList.add('active');
+                registerTab.classList.remove('active');
+                authSwitchSlider.style.left = '0';
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                authFooterText.innerHTML = 'Não tem uma conta? <a href="#" class="auth-link" id="switchToRegister">Cadastre-se</a>';
+                
+                // Adicionar evento para o novo link
+                document.getElementById('switchToRegister').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    switchForm(false);
+                });
+            } else {
+                // Mostrar registro
+                loginTab.classList.remove('active');
+                registerTab.classList.add('active');
+                authSwitchSlider.style.left = '50%';
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                authFooterText.innerHTML = 'Já tem uma conta? <a href="#" class="auth-link" id="switchToLogin">Faça login</a>';
+                
+                // Adicionar evento para o novo link
+                document.getElementById('switchToLogin').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    switchForm(true);
+                });
+            }
+        }
+        
+        // Adicionar eventos para as abas
+        loginTab.addEventListener('click', function() {
+            switchForm(true);
+        });
+        
+        registerTab.addEventListener('click', function() {
+            switchForm(false);
+        });
+        
+        switchToRegister.addEventListener('click', function(e) {
+            e.preventDefault();
+            switchForm(false);
+        });
+        
+        // Validação de senhas no registro
+        const registerPassword = document.getElementById('registerPassword');
+        const confirmPassword = document.getElementById('confirmPassword');
+        
+        confirmPassword.addEventListener('input', function() {
+            if (this.value !== registerPassword.value) {
+                this.setCustomValidity('As senhas não coincidem');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+        
+        registerPassword.addEventListener('input', function() {
+            if (confirmPassword.value && this.value !== confirmPassword.value) {
+                confirmPassword.setCustomValidity('As senhas não coincidem');
+            } else {
+                confirmPassword.setCustomValidity('');
+            }
+        });
+        
+        // Animação de loading ao enviar formulário
+        document.getElementById('actualLoginForm').addEventListener('submit', function() {
+            document.getElementById('loginSubmit').classList.add('loading');
+        });
+        
+        document.getElementById('actualRegisterForm').addEventListener('submit', function() {
+            document.getElementById('registerSubmit').classList.add('loading');
+        });
+        
+        // Máscara para o telefone
+        const phoneInput = document.getElementById('phoneNumber');
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 11) {
+                value = value.slice(0, 11);
+            }
+            e.target.value = value;
+        });
+        
+        // Verificar se há mensagens de erro do Django
+        {% if form.errors %}
+            // Se houver erros, mostrar o formulário correspondente
+            {% if 'login' in request.path %}
+                switchForm(true);
+            {% else %}
+                switchForm(false);
+            {% endif %}
+        {% endif %}
+    });
+</script>
+{% endblock %}

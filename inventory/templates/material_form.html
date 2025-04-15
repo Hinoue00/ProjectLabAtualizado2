@@ -1,0 +1,571 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block title %}{{ title }} | LabConnect{% endblock %}
+
+
+{% block content %}
+<div class="content-container">
+    <!-- Cabeçalho da página -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="page-title">{{ title }}</h1>
+                <p class="page-subtitle">
+                    {% if material %}
+                        Atualize as informações do material existente
+                    {% else %}
+                        Adicione um novo material ao inventário
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <a href="{% url 'material_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar para Lista
+                </a>
+            </div>
+        </div>
+    </div>
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Formulário principal -->
+        <div class="form-card mb-4">
+            <div class="form-header">
+                <h4 class="mb-0">
+                    <i class="bi bi-box-seam me-2 text-primary"></i>
+                    {% if material %}
+                        Editar Material
+                    {% else %}
+                        Novo Material
+                    {% endif %}
+                </h4>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.name|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.category|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.description|as_crispy_field }}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.quantity|as_crispy_field }}
+                            <div class="form-help-text">Quantidade atual deste item em estoque</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.minimum_stock|as_crispy_field }}
+                            <div class="form-help-text">Quantidade mínima antes de emitir alertas</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.laboratory|as_crispy_field }}
+                    </div>
+                </div>
+                
+                <div class="form-footer">
+                    <a href="{% url 'material_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        {% if material %}
+                            <i class="bi bi-check-lg me-1"></i> Atualizar Material
+                        {% else %}
+                            <i class="bi bi-plus-lg me-1"></i> Adicionar Material
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Informações laterais -->
+        <div class="side-info mb-4">
+            <h5 class="side-info-title">
+                <i class="bi bi-info-circle"></i> Informações sobre Materiais
+            </h5>
+            
+            <div class="info-section">
+                <div class="info-title">Categorias</div>
+                <p>
+                    Agrupe materiais em categorias para facilitar a organização e pesquisa. Categorias 
+                    podem ser definidas na seção de <a href="{% url 'category_list' %}">Categorias</a>.
+                </p>
+            </div>
+            
+            <div class="info-section">
+                <div class="info-title">Estoque Mínimo</div>
+                <p>
+                    Defina um valor mínimo de estoque para receber alertas quando a quantidade disponível 
+                    estiver baixa, evitando a falta de materiais essenciais.
+                </p>
+            </div>
+            
+            <div class="info-section">
+                <div class="info-title">Laboratórios</div>
+                <p>
+                    Associe materiais aos laboratórios onde são utilizados ou armazenados, 
+                    permitindo um controle mais eficiente do inventário por localização.
+                </p>
+            </div>
+        </div>
+        
+        {% if material %}
+        <!-- Status atual do material (somente na edição) -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Status do Material</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="text-muted">Status de Estoque:</div>
+                    <div>
+                        {% if material.is_low_stock %}
+                            <span class="badge bg-danger">Estoque Baixo</span>
+                        {% else %}
+                            <span class="badge bg-success">Estoque OK</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="text-muted">Tipo de Material:</div>
+                    <div>{{ material.category.get_material_type_display }}</div>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="text-muted">Cadastrado por:</div>
+                    <div>Admin</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+<!-- Adicione esta div após o campo de descrição -->
+<div id="docling-suggestions" class="suggestion-box" style="display: none;">
+    <div class="suggestion-title">
+        <i class="bi bi-lightbulb me-2"></i> Sugestões baseadas na descrição:
+    </div>
+    <div id="suggestion-category">
+        <strong>Categoria Sugerida:</strong> <span id="category-suggestion"></span>
+    </div>
+    <div class="mt-2">
+        <strong>Palavras-chave detectadas:</strong>
+        <div id="keywords-container"></div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Adicione um + ao input de nova categoria se necessário
+        const categoryField = document.getElementById('id_category');
+        if (categoryField) {
+            // Adicionar botão de criação rápida de categoria se necessário
+        }
+        
+        // Quantidade com controles +/-
+        const quantityInput = document.getElementById('id_quantity');
+        
+        if (quantityInput) {
+            // Transformar o input em um controle com botões +/-
+            const wrapper = document.createElement('div');
+            wrapper.className = 'quantity-controls';
+            
+            const minusBtn = document.createElement('button');
+            minusBtn.type = 'button';
+            minusBtn.className = 'quantity-btn';
+            minusBtn.innerHTML = '<i class="bi bi-dash"></i>';
+            
+            const plusBtn = document.createElement('button');
+            plusBtn.type = 'button';
+            plusBtn.className = 'quantity-btn';
+            plusBtn.innerHTML = '<i class="bi bi-plus"></i>';
+            
+            // Substituir o input original
+            const parent = quantityInput.parentNode;
+            wrapper.appendChild(minusBtn);
+            wrapper.appendChild(quantityInput);
+            wrapper.appendChild(plusBtn);
+            
+            // Adicionar eventos
+            minusBtn.addEventListener('click', function() {
+                if (quantityInput.value > 0) {
+                    quantityInput.value = parseInt(quantityInput.value) - 1;
+                }
+            });
+            
+            plusBtn.addEventListener('click', function() {
+                quantityInput.value = parseInt(quantityInput.value) + 1;
+            });
+            
+            // Certificar que o input é um número
+            quantityInput.addEventListener('input', function() {
+                if (this.value < 0) this.value = 0;
+            });
+        }
+        const descriptionField = document.querySelector('.docling-analyze');
+        if (descriptionField) {
+            const suggestionsBox = document.getElementById('docling-suggestions');
+            const categorySuggestion = document.getElementById('category-suggestion');
+            const keywordsContainer = document.getElementById('keywords-container');
+            
+            descriptionField.addEventListener('input', debounce(function() {
+                if (this.value.length < 10) {
+                    suggestionsBox.style.display = 'none';
+                    return;
+                }
+                
+                // Fazer requisição para analisar o texto
+                fetch('{% url "analyze_material_description" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        description: this.value
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Exibir sugestões
+                    categorySuggestion.textContent = data.suggested_category_display;
+                    
+                    // Preencher as palavras-chave
+                    keywordsContainer.innerHTML = '';
+                    data.keywords.forEach(keyword => {
+                        const chip = document.createElement('span');
+                        chip.className = 'suggestion-chip';
+                        chip.textContent = keyword;
+                        keywordsContainer.appendChild(chip);
+                    });
+                    
+                    // Mostrar a caixa de sugestões
+                    suggestionsBox.style.display = 'block';
+                    
+                    // Se houver uma categoria sugerida, pré-selecionar no select
+                    const categorySelect = document.getElementById('id_category');
+                    if (categorySelect && data.suggested_category_id) {
+                        categorySelect.value = data.suggested_category_id;
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao analisar descrição:', error);
+                });
+            }, 500)); // Delay de 500ms para não sobrecarregar
+        }
+       
+        
+        // Função utilitária de debounce
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+        
+                // Adicionar sugestões para o campo de nome
+        const nameField = document.getElementById('id_name');
+        const descriptionField = document.getElementById('id_description');
+        const categorySelect = document.getElementById('id_category');
+        
+        if (nameField) {
+            nameField.addEventListener('input', debounce(function() {
+                if (this.value.length < 3) return;
+                
+                let categoryId = categorySelect ? categorySelect.value : null;
+                
+                // Fazer requisição para obter sugestões
+                fetch('{% url "suggest_material_details" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        partial_info: this.value,
+                        category_id: categoryId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error('Erro nas sugestões:', data.error);
+                        return;
+                    }
+                    
+                    // Exibir sugestões
+                    if (data.suggestions && data.suggestions.length > 0) {
+                        showSuggestions(data.suggestions);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao obter sugestões:', error);
+                });
+            }, 500));
+        }
+        
+        // Função para exibir sugestões
+        function showSuggestions(suggestions) {
+            // Verificar se já existe o container de sugestões, se não, criar
+            let suggestionsContainer = document.getElementById('name-suggestions');
+            if (!suggestionsContainer) {
+                suggestionsContainer = document.createElement('div');
+                suggestionsContainer.id = 'name-suggestions';
+                suggestionsContainer.className = 'suggestion-box mt-2';
+                nameField.parentNode.appendChild(suggestionsContainer);
+            }
+            
+            // Limpar sugestões anteriores
+            suggestionsContainer.innerHTML = `
+                <div class="suggestion-title">
+                    <i class="bi bi-lightbulb me-2"></i> Sugestões baseadas no texto:
+                </div>
+                <div id="suggestions-list"></div>
+            `;
+            
+            const suggestionsList = document.getElementById('suggestions-list');
+            
+            // Adicionar cada sugestão
+            suggestions.forEach(suggestion => {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item p-2 border-bottom';
+                item.innerHTML = `
+                    <div class="fw-bold">${suggestion.name}</div>
+                    <div class="small text-muted">${suggestion.description}</div>
+                `;
+                
+                // Ao clicar na sugestão, preencher os campos
+                item.addEventListener('click', function() {
+                    nameField.value = suggestion.name;
+                    if (descriptionField) {
+                        descriptionField.value = suggestion.description;
+                        // Disparar evento para ativar análise da descrição
+                        const event = new Event('input', { bubbles: true });
+                        descriptionField.dispatchEvent(event);
+                    }
+                });
+                
+                suggestionsList.appendChild(item);
+            });
+            
+            // Mostrar o container
+            suggestionsContainer.style.display = 'block';
+        }
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        border-radius: var(--border-radius);
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--box-shadow);
+        transition: all 0.3s ease;
+    }
+    
+    .form-card:hover {
+        box-shadow: var(--box-shadow-medium);
+    }
+    
+    .form-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .form-body {
+        padding: 1.5rem;
+    }
+    
+    .form-footer {
+        padding: 1.5rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+    
+    .side-info {
+        background-color: rgba(74, 111, 165, 0.05);
+        border-radius: var(--border-radius);
+        border: 1px solid rgba(74, 111, 165, 0.1);
+        padding: 1.5rem;
+        height: 100%;
+    }
+    
+    .side-info-title {
+        font-weight: 600;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .side-info-title i {
+        margin-right: 0.5rem;
+        color: var(--primary-color);
+    }
+    
+    .info-section {
+        margin-bottom: 1.5rem;
+    }
+    
+    .info-section:last-child {
+        margin-bottom: 0;
+    }
+    
+    .info-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--primary-color);
+    }
+    
+    .type-selector {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .type-option {
+        flex: 1;
+        min-width: 120px;
+        border: 2px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .type-option.active {
+        border-color: var(--primary-color);
+        background-color: rgba(74, 111, 165, 0.05);
+    }
+    
+    .type-option:hover {
+        border-color: var(--primary-color);
+    }
+    
+    .type-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-muted);
+    }
+    
+    .type-option.active .type-icon {
+        color: var(--primary-color);
+    }
+    
+    .type-label {
+        font-weight: 600;
+    }
+    
+    .form-help-text {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+    
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+    }
+    
+    .quantity-btn {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background-color: var(--body-bg);
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+        transition: all 0.3s ease;
+    }
+    
+    .quantity-btn:hover {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+    
+    .quantity-input {
+        width: 80px;
+        text-align: center;
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        margin: 0 0.5rem;
+    }
+    
+    .feedback-icon {
+        font-size: 5rem;
+        margin-bottom: 1rem;
+        color: var(--primary-color);
+    }
+    
+    /* Responsividade */
+    @media (max-width: 767.98px) {
+        .form-header, .form-body, .form-footer {
+            padding: 1rem;
+        }
+    }
+    .suggestion-box {
+        background-color: rgba(74, 111, 165, 0.1);
+        border-radius: var(--border-radius);
+        padding: 1rem;
+        margin-top: 0.5rem;
+        border-left: 3px solid var(--primary-color);
+    }
+    
+    .suggestion-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .suggestion-chip {
+        display: inline-block;
+        background-color: rgba(74, 111, 165, 0.2);
+        color: var(--primary-color);
+        padding: 0.25rem 0.5rem;
+        border-radius: 1rem;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .suggestion-item {
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .suggestion-item:hover {
+        background-color: rgba(74, 111, 165, 0.1);
+    }
+    
+    .suggestion-item:last-child {
+        border-bottom: none !important;
+    }
+    
+    #name-suggestions {
+        display: none;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,410 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Categorias de Materiais | LabConnect{% endblock %}
+{% block extra_css %}
+<style>
+    .category-card {
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .category-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .category-icon {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        margin-right: 1rem;
+        font-size: 1.5rem;
+    }
+    
+    .category-icon.consumable {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    
+    .category-icon.permanent {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+    
+    .category-icon.perishable {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+    
+    .category-badge {
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .badge-consumable {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    
+    .badge-permanent {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+    
+    .badge-perishable {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+    
+    .materials-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.25rem 0.5rem;
+        background-color: var(--body-bg);
+        border-radius: 50rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-muted);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+    }
+    
+    .empty-state-icon {
+        font-size: 4rem;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+    
+    .modal-header-custom {
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: var(--border-radius) var(--border-radius) 0 0;
+    }
+    
+    .type-selector {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .type-option {
+        flex: 1;
+        min-width: 100px;
+        border: 2px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .type-option.active {
+        border-color: var(--primary-color);
+        background-color: rgba(74, 111, 165, 0.05);
+    }
+    
+    .type-option:hover {
+        border-color: var(--primary-color);
+    }
+    
+    .type-icon {
+        font-size: 1.75rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .type-option.consumable .type-icon {
+        color: #198754;
+    }
+    
+    .type-option.permanent .type-icon {
+        color: #0d6efd;
+    }
+    
+    .type-option.perishable .type-icon {
+        color: #dc3545;
+    }
+    
+    .type-label {
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .type-description {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+    }
+    
+    .btn-action {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+        transition: all 0.3s ease;
+    }
+    
+    .btn-action:hover {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+    
+    .btn-action.btn-edit:hover {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    
+    .btn-action.btn-delete:hover {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+    .modal-body {
+        background-color:var(--body-bg)
+    }
+    
+    .modal-footer{
+        background-color:var(--body-bg)
+    }
+    
+    /* Responsividade */
+    @media (max-width: 767.98px) {
+        .action-buttons {
+            flex-wrap: wrap;
+        }
+        
+        .action-buttons .btn {
+            margin-bottom: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="content-container">
+    <!-- Cabeçalho da página -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="page-title">Categorias de Materiais</h1>
+                <p class="page-subtitle">Gerencie as categorias para organizar o inventário</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                    <i class="bi bi-plus-lg me-1"></i> Nova Categoria
+                </button>
+            </div>
+        </div>
+    </div>
+{% if categories %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for category in categories %}
+            <div class="col">
+                <div class="card category-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="category-icon 
+                                    {% if category.material_type == 'consumable' %}consumable
+                                    {% elif category.material_type == 'permanent' %}permanent
+                                    {% else %}perishable{% endif %}">
+                                    {% if category.material_type == 'consumable' %}
+                                        <i class="bi bi-box-seam"></i>
+                                    {% elif category.material_type == 'permanent' %}
+                                        <i class="bi bi-tools"></i>
+                                    {% else %}
+                                        <i class="bi bi-hourglass-split"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h5 class="card-title mb-1">{{ category.name }}</h5>
+                                    <span class="category-badge badge 
+                                        {% if category.material_type == 'consumable' %}badge-consumable
+                                        {% elif category.material_type == 'permanent' %}badge-permanent
+                                        {% else %}badge-perishable{% endif %}">
+                                        {{ category.get_material_type_display }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn-action" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'category_update' category.id %}">
+                                            <i class="bi bi-pencil me-2"></i>Editar
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="#" 
+                                           onclick="confirmDelete('{{ category.name }}', {{ category.id }})">
+                                            <i class="bi bi-trash me-2"></i>Excluir
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <p class="card-text text-muted mb-3">
+                            Materiais nesta categoria: 
+                            <span class="materials-count">{{ category.material_set.count }}</span>
+                        </p>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'material_list' %}?category={{ category.id }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-search me-1"></i> Ver Materiais
+                            </a>
+                            <a href="{% url 'category_update' category.id %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-pencil me-1"></i> Editar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <!-- Estado vazio -->
+    <div class="card">
+        <div class="card-body">
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="bi bi-tags"></i>
+                </div>
+                <h4>Nenhuma categoria encontrada</h4>
+                <p>Adicione categorias para melhor organizar seus materiais.</p>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                    <i class="bi bi-plus-lg me-1"></i> Nova Categoria
+                </button>
+            </div>
+        </div>
+    </div>
+{% endif %}
+</div>
+<!-- Modal de Adicionar Categoria -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header modal-header-custom">
+                <h5 class="modal-title" id="addCategoryModalLabel">
+                    <i class="bi bi-plus-circle me-2"></i>Nova Categoria
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'category_create' %}" id="categoryForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="categoryName" class="form-label">Nome da Categoria</label>
+                        <input type="text" class="form-control" id="categoryName" name="name" required>
+                    </div>
+                    <label class="form-label">Tipo de Material</label>
+                <div class="type-selector">
+                    <div class="type-option consumable active" data-value="consumable">
+                        <div class="type-icon">
+                            <i class="bi bi-box-seam"></i>
+                        </div>
+                        <div class="type-label">Consumível</div>
+                        <div class="type-description">Materiais que são consumidos no uso</div>
+                    </div>
+                    <div class="type-option permanent" data-value="permanent">
+                        <div class="type-icon">
+                            <i class="bi bi-tools"></i>
+                        </div>
+                        <div class="type-label">Permanente</div>
+                        <div class="type-description">Equipamentos de uso contínuo</div>
+                    </div>
+                    <div class="type-option perishable" data-value="perishable">
+                        <div class="type-icon">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                        <div class="type-label">Perecível</div>
+                        <div class="type-description">Materiais com data de validade</div>
+                    </div>
+                </div>
+                
+                <input type="hidden" id="materialType" name="material_type" value="consumable">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i> Adicionar Categoria
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+</div>
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="deleteCategoryModal" tabindex="-1" aria-labelledby="deleteCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteCategoryModalLabel">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Confirmar Exclusão
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir a categoria <strong id="categoryNameToDelete"></strong>?</p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Esta ação afetará todos os materiais associados a esta categoria.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="deleteCategoryForm" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i> Excluir Categoria
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Seletor de tipo de material
+        const typeOptions = document.querySelectorAll('.type-option');
+        const materialTypeInput = document.getElementById('materialType');
+        
+        typeOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                typeOptions.forEach(opt => opt.classList.remove('active'));
+                this.classList.add('active');
+                materialTypeInput.value = this.dataset.value;
+            });
+        });
+        
+        // Inicializar tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+    
+    // Função para confirmação de exclusão
+    function confirmDelete(categoryName, categoryId) {
+        document.getElementById('categoryNameToDelete').textContent = categoryName;
+        document.getElementById('deleteCategoryForm').action = `/inventory/categories/${categoryId}/delete/`;
+        
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteCategoryModal'));
+        deleteModal.show();
+    }
+</script>
+{% endblock %}

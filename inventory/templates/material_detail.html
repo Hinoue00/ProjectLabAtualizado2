@@ -1,0 +1,438 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ material.name }} - Detalhes | LabConnect{% endblock %}
+
+{% block extra_css %}
+<style>
+    .material-detail-container {
+        background-color: var(--card-bg);
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        overflow: hidden;
+    }
+    
+    .material-header {
+        background: linear-gradient(135deg, #4a6fa5 0%, #2c4677 100%);
+        color: white;
+        padding: 2rem;
+        position: relative;
+    }
+    
+    .material-header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url("{% static 'img/pattern.svg' %}");
+        opacity: 0.1;
+    }
+    
+    .material-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .material-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .material-category {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.35rem 0.75rem;
+        border-radius: 50rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .material-category.consumable {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    
+    .material-category.permanent {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+    
+    .material-category.perishable {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+    
+    .stock-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .stock-indicator {
+        width: 200px;
+        height: 10px;
+        background-color: rgba(0, 0, 0, 0.1);
+        border-radius: 5px;
+        overflow: hidden;
+    }
+    
+    .stock-indicator-bar {
+        height: 100%;
+        border-radius: 5px;
+        transition: width 0.5s ease;
+    }
+    
+    .stock-normal {
+        background-color: #198754;
+    }
+    
+    .stock-warning {
+        background-color: #ffc107;
+    }
+    
+    .stock-danger {
+        background-color: #dc3545;
+    }
+    
+    .material-details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .material-detail-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .material-detail-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .material-detail-title {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+    
+    .material-detail-title i {
+        margin-right: 0.75rem;
+        font-size: 1.5rem;
+    }
+    
+    .timeline-container {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+    }
+    
+    .timeline {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        position: relative;
+    }
+    
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 20px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background-color: var(--border-color);
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding: 1rem 1rem 1rem 40px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .timeline-item:last-child {
+        border-bottom: none;
+    }
+    
+    .timeline-icon {
+        position: absolute;
+        left: 0;
+        top: 1.5rem;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .modal-dialog {
+        max-width: 600px;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 767.98px) {
+        .material-header {
+            padding: 1.5rem;
+        }
+        
+        .material-details-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="page-title">Detalhes do Material</h1>
+                <p class="page-subtitle">Informações detalhadas sobre {{ material.name }}</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <div class="btn-group">
+                    <a href="{% url 'material_list' %}" class="btn btn-outline-secondary me-2">
+                        <i class="bi bi-arrow-left me-1"></i> Voltar
+                    </a>
+                    {% if user.user_type == 'technician' %}
+                        <a href="{% url 'material_update' material.id %}" class="btn btn-primary me-2">
+                            <i class="bi bi-pencil me-1"></i> Editar
+                        </a>
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteMaterialModal">
+                            <i class="bi bi-trash me-1"></i> Excluir
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Material Detail Container -->
+    <div class="material-detail-container">
+        <!-- Material Header -->
+        <div class="material-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="material-icon">
+                        {% if material.category.material_type == 'consumable' %}
+                            <i class="bi bi-box-seam"></i>
+                        {% elif material.category.material_type == 'permanent' %}
+                            <i class="bi bi-tools"></i>
+                        {% else %}
+                            <i class="bi bi-hourglass-split"></i>
+                        {% endif %}
+                    </div>
+                    <h2 class="mb-3">{{ material.name }}</h2>
+                    
+                    <div class="material-meta">
+                        <div class="material-category 
+                            {% if material.category.material_type == 'consumable' %}consumable
+                            {% elif material.category.material_type == 'permanent' %}permanent
+                            {% else %}perishable{% endif %}">
+                            {{ material.category.get_material_type_display }}
+                        </div>
+                        
+                        <div class="stock-status">
+                            <span>Estoque:</span>
+                            <div class="stock-indicator" title="{{ material.quantity }} / {{ material.minimum_stock }}">
+                                <div class="stock-indicator-bar 
+                                    {% if material.stock_percentage < 50 %}stock-danger 
+                                    {% elif material.stock_percentage < 100 %}stock-warning 
+                                    {% else %}stock-normal{% endif %}"
+                                    style="width: {{ material.stock_percentage|floatformat:2 }}%;">
+                                </div>
+                            </div>
+                            <span>
+                                {% if material.is_low_stock %}
+                                    <span class="badge bg-danger">Baixo</span>
+                                {% else %}
+                                    <span class="badge bg-success">OK</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <div class="d-inline-block text-start">
+                        <p class="mb-1">
+                            <strong>Laboratório:</strong> {{ material.laboratory.name }}
+                        </p>
+                        <p class="mb-1">
+                            <strong>Categoria:</strong> {{ material.category.name }}
+                        </p>
+                        <p class="mb-0">
+                            <strong>Última Atualização:</strong> {{ material.updated_at|default:"Não disponível" }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Material Details Grid -->
+        <div class="material-details-grid p-4">
+            <!-- Quantity Details -->
+            <div class="material-detail-card">
+                <h5 class="material-detail-title">
+                    <i class="bi bi-boxes"></i>
+                    Detalhes de Quantidade
+                </h5>
+                <div class="row">
+                    <div class="col-6">
+                        <p class="mb-1">Quantidade Atual:</p>
+                        <h4>{{ material.quantity }}</h4>
+                    </div>
+                    <div class="col-6">
+                        <p class="mb-1">Estoque Mínimo:</p>
+                        <h4>{{ material.minimum_stock }}</h4>
+                    </div>
+                </div>
+                <div class="progress mt-3" style="height: 10px;">
+                    <div class="progress-bar 
+                        {% if material.stock_percentage < 50 %}bg-danger 
+                        {% elif material.stock_percentage < 100 %}bg-warning 
+                        {% else %}bg-success{% endif %}" 
+                        role="progressbar" 
+                        style="width: {{ material.stock_percentage|floatformat:2 }}%;"
+                        aria-valuenow="{{ material.stock_percentage|floatformat:2 }}"
+                        aria-valuemin="0" 
+                        aria-valuemax="100">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="material-detail-card">
+                <h5 class="material-detail-title">
+                    <i class="bi bi-info-circle"></i>
+                    Descrição
+                </h5>
+                <p>{{ material.description|default:"Nenhuma descrição disponível." }}</p>
+            </div>
+
+            <!-- Usage History -->
+            <div class="material-detail-card">
+                <h5 class="material-detail-title">
+                    <i class="bi bi-clock-history"></i>
+                    Histórico de Uso
+                </h5>
+                <div class="timeline-container">
+                    <ul class="timeline">
+                        {% for usage in recent_usages %}
+                            <li class="timeline-item">
+                                <div class="timeline-icon">
+                                    <i class="bi bi-calendar-check"></i>
+                                </div>
+                                <h6 class="mb-1">{{ usage.schedule.professor.get_full_name }}</h6>
+                                <p class="text-muted mb-0">
+                                    {{ usage.quantity }} unidades usadas em 
+                                    {{ usage.schedule.scheduled_date|date:"d/m/Y" }}
+                                </p>
+                            </li>
+                        {% empty %}
+                            <li class="text-center py-4 text-muted">
+                                Nenhum histórico de uso encontrado
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Material Modal -->
+<div class="modal fade" id="deleteMaterialModal" tabindex="-1" aria-labelledby="deleteMaterialModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteMaterialModalLabel">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Confirmar Exclusão
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Você tem certeza que deseja excluir o material <strong>{{ material.name }}</strong>?</p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Esta ação não pode ser desfeita. Todos os registros associados a este material serão excluídos.
+                </div>
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Detalhes do Material:</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Categoria:</strong> {{ material.category.name }}</li>
+                            <li><strong>Laboratório:</strong> {{ material.laboratory.name }}</li>
+                            <li><strong>Quantidade:</strong> {{ material.quantity }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="post" action="{% url 'material_delete' material.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i> Excluir Material
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tooltip para o indicador de estoque
+        const stockIndicator = document.querySelector('.stock-indicator');
+        if (stockIndicator) {
+            const stockPercentage = stockIndicator.querySelector('.stock-indicator-bar').style.width;
+            stockIndicator.setAttribute('title', `Estoque: ${stockPercentage}`);
+        }
+
+        // Confirmação de exclusão de material
+        const deleteMaterialForm = document.querySelector('#deleteMaterialModal form');
+        if (deleteMaterialForm) {
+            deleteMaterialForm.addEventListener('submit', function(e) {
+                const confirmMessage = 'Tem certeza que deseja excluir permanentemente este material? Esta ação não pode ser desfeita.';
+                if (!confirm(confirmMessage)) {
+                    e.preventDefault();
+                }
+            });
+        }
+
+        // Animação de carregamento do indicador de estoque
+        const stockBar = document.querySelector('.stock-indicator-bar');
+        if (stockBar) {
+            const percentage = parseFloat(stockBar.style.width);
+            stockBar.style.width = '0%';
+            
+            // Animar a barra de estoque
+            setTimeout(() => {
+                stockBar.style.width = `${percentage}%`;
+            }, 100);
+        }
+
+        // Tooltip para elementos de detalhes
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });

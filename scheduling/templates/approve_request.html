@@ -1,0 +1,298 @@
+{% extends 'base.html' %}
+{% block title %}Aprovar Solicitação de Agendamento | LabConnect{% endblock %}
+
+{% block extra_css %}
+<style>
+    .approve-request-container {
+        background-color: var(--card-bg);
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+    }
+    
+    .request-header {
+        background-color: rgba(74, 111, 165, 0.05);
+        border-bottom: 1px solid var(--border-color);
+        padding: 1.5rem;
+    }
+    
+    .request-details {
+        padding: 1.5rem;
+    }
+    
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .detail-item:last-child {
+        border-bottom: none;
+    }
+    
+    .detail-label {
+        font-weight: 600;
+        color: var(--text-muted);
+    }
+    
+    .detail-value {
+        text-align: right;
+    }
+    
+    .warning-note {
+        background-color: rgba(255, 193, 7, 0.1);
+        border-left: 4px solid #ffc107;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .warning-note-icon {
+        font-size: 2rem;
+        color: #ffc107;
+        margin-right: 1rem;
+    }
+    
+    .resource-conflicts {
+        background-color: rgba(220, 53, 69, 0.05);
+        border: 1px solid rgba(220, 53, 69, 0.2);
+        border-radius: var(--border-radius);
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .resource-conflicts-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .resource-conflicts-icon {
+        color: #dc3545;
+        margin-right: 0.75rem;
+        font-size: 1.5rem;
+    }
+    
+    .resource-conflicts-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .resource-conflict-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .resource-conflict-item:last-child {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="page-title">Aprovar Solicitação de Agendamento</h1>
+                <p class="page-subtitle">Revise os detalhes e decida sobre a solicitação</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <a href="{% url 'schedule_requests_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar para Lista
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="approve-request-container">
+                <!-- Request Header -->
+                <div class="request-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="bi bi-calendar-check me-2 text-primary"></i>
+                            Solicitação de Agendamento
+                        </h4>
+                        <span class="badge 
+                            {% if schedule_request.status == 'pending' %}bg-warning
+                            {% elif schedule_request.status == 'approved' %}bg-success
+                            {% else %}bg-danger{% endif %}">
+                            {{ schedule_request.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Conflict Warning -->
+                {% if is_conflicting %}
+                <div class="resource-conflicts">
+                    <div class="resource-conflicts-header">
+                        <i class="bi bi-exclamation-triangle resource-conflicts-icon"></i>
+                        <h5 class="mb-0">Conflitos de Recursos Detectados</h5>
+                    </div>
+                    <ul class="resource-conflicts-list">
+                        {% for conflict in conflicting_schedules %}
+                        <li class="resource-conflict-item">
+                            <div>
+                                <strong>{{ conflict.professor.get_full_name }}</strong>
+                                <span class="text-muted small">{{ conflict.scheduled_date|date:"d/m/Y" }}</span>
+                            </div>
+                            <div>
+                                {{ conflict.start_time }} - {{ conflict.end_time }}
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <!-- Warning Note -->
+                <div class="warning-note d-flex align-items-center">
+                    <div class="warning-note-icon">
+                        <i class="bi bi-info-circle"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-2">Informações Importantes</h5>
+                        <p class="mb-0">
+                            Ao aprovar esta solicitação, o laboratório será reservado para o professor durante 
+                            o período especificado. Verifique cuidadosamente os detalhes antes de confirmar.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Request Details -->
+                <div class="request-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Professor</div>
+                        <div class="detail-value">{{ schedule_request.professor.get_full_name }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Laboratório</div>
+                        <div class="detail-value">{{ schedule_request.laboratory.name }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Disciplina/Assunto</div>
+                        <div class="detail-value">{{ schedule_request.subject }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Data</div>
+                        <div class="detail-value">{{ schedule_request.scheduled_date|date:"d/m/Y" }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Horário</div>
+                        <div class="detail-value">
+                            {{ schedule_request.start_time|time:"H:i" }} - 
+                            {{ schedule_request.end_time|time:"H:i" }}
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Número de Alunos</div>
+                        <div class="detail-value">
+                            {{ schedule_request.number_of_students|default:"Não informado" }}
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Descrição</div>
+                        <div class="detail-value text-muted">
+                            {{ schedule_request.description|default:"Sem descrição adicional" }}
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Materiais Necessários</div>
+                        <div class="detail-value text-muted">
+                            {{ schedule_request.materials|default:"Nenhum material especificado" }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Approval Actions -->
+                <div class="request-footer p-3 border-top d-flex justify-content-between">
+                    <form method="post" action="{% url 'reject_schedule_request' schedule_request.id %}" class="me-2">
+                        {% csrf_token %}
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectionModal">
+                            <i class="bi bi-x-circle me-1"></i> Rejeitar
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'approve_schedule_request' schedule_request.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary" 
+                                {% if is_conflicting %}disabled title="Existem conflitos de agendamento"{% endif %}>
+                            <i class="bi bi-check-circle me-1"></i> Aprovar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rejection Modal -->
+<div class="modal fade" id="rejectionModal" tabindex="-1" aria-labelledby="rejectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="rejectionModalLabel">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Rejeitar Solicitação
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'reject_schedule_request' schedule_request.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="rejectionReason" class="form-label">Motivo da Rejeição</label>
+                        <textarea class="form-control" id="rejectionReason" name="rejection_reason" rows="4" required 
+                                  placeholder="Descreva detalhadamente o motivo da rejeição da solicitação..."></textarea>
+                        <div class="form-text">Sua explicação será enviada ao professor.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-check-lg me-1"></i> Confirmar Rejeição
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if is_conflicting %}
+            // Mostrar mensagem de alerta para conflitos
+            Swal.fire({
+                icon: 'warning',
+                title: 'Conflitos Detectados',
+                text: 'Existem agendamentos conflitantes para este laboratório e horário.',
+                confirmButtonText: 'Entendi'
+            });
+        {% endif %}
+
+        // Confirmação de rejeição de agendamento
+        const rejectionForm = document.querySelector('#rejectionModal form');
+        if (rejectionForm) {
+            rejectionForm.addEventListener('submit', function(e) {
+                const reason = document.getElementById('rejectionReason').value.trim();
+                
+                if (!reason) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Motivo Obrigatório',
+                        text: 'Por favor, forneça um motivo para a rejeição da solicitação.',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

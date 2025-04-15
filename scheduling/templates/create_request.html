@@ -1,0 +1,377 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Solicitar Agendamento | LabConnect{% endblock %}
+
+{% block extra_css %}
+<style>
+    .schedule-request-container {
+        background-color: var(--card-bg);
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+    }
+
+    .textarea
+    
+    .request-header {
+        background-color: rgba(74, 111, 165, 0.05);
+        border-bottom: 1px solid var(--border-color);
+        padding: 1.5rem;
+    }
+    
+    .request-body {
+        padding: 1.5rem;
+    }
+    
+    .request-body h5 {
+        color:var(--text-color)
+    }
+
+     .request-body label {
+        color:var(--text-color)
+    }
+
+    .request-footer {
+        background-color: var(--card-bg);
+        border-top: 1px solid var(--border-color);
+        padding: 1.5rem;
+    }
+    
+    .laboratory-selection {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .laboratory-option {
+        border: 2px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .laboratory-option:hover,
+    .laboratory-option.selected {
+        border-color: var(--primary-color);
+        background-color: rgba(74, 111, 165, 0.05);
+    }
+    
+    .laboratory-option-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: var(--text-muted);
+    }
+    
+    .laboratory-option.selected .laboratory-option-icon {
+        color: var(--primary-color);
+    }
+    
+    .laboratory-option-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .laboratory-option-capacity {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+    }
+    
+    .time-slots {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 0.5rem;
+    }
+    
+    .time-slot {
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 0.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .time-slot:hover,
+    .time-slot.selected {
+        border-color: var(--primary-color);
+        background-color: rgba(74, 111, 165, 0.1);
+    }
+    
+    .availability-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.875rem;
+    }
+    
+    .availability-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+    }
+    
+    .availability-available {
+        background-color: #28a745;
+    }
+    
+    .availability-partial {
+        background-color: #ffc107;
+    }
+
+    .draft-warning {
+        background-color: rgba(255, 193, 7, 0.1);
+        border-left: 4px solid #ffc107;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .draft-warning-icon {
+        font-size: 2rem;
+        color: #ffc107;
+        margin-right: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="page-title">Solicitar Agendamento</h1>
+                <p class="page-subtitle">Agende um laboratório para sua aula</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <a href="{% url 'professor_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Draft Warning -->
+    {% if not is_confirmation_day %}
+    <div class="draft-warning d-flex align-items-center mb-4">
+        <div class="draft-warning-icon">
+            <i class="bi bi-info-circle"></i>
+        </div>
+        <div>
+            <h5 class="mb-2">Aviso de Rascunho</h5>
+            <p class="mb-0">
+                Você está criando um rascunho de agendamento. Só será possível confirmar e enviar 
+                este agendamento na próxima quinta ou sexta-feira. 
+                <a href="{% url 'list_draft_schedule_requests' %}" class="alert-link">
+                    Ver meus rascunhos
+                </a>
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Scheduling Request Container -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="schedule-request-container card border-0 shadow-sm">
+                <!-- Informative Alert -->
+                <div class="alert alert-info m-3" role="alert">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Você está 
+                    {% if is_confirmation_day or request.user.is_staff %}
+                        confirmando um agendamento
+                    {% else %}
+                        criando um rascunho
+                    {% endif %}
+                    para a semana de <strong>{{ next_week_start|date:"d/m/Y" }}</strong> a <strong>{{ next_week_end|date:"d/m/Y" }}</strong>
+                </div>
+
+                <!-- Request Form -->
+                <form method="post" id="scheduleRequestForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="request-body">
+                        <!-- Rest of the form remains the same... -->
+                        <!-- Laboratory Selection -->
+                        <div class="mb-4">
+                            <h5 class="mb-3">Selecione o Laboratório</h5>
+                            <div class="laboratory-selection">
+                                {% for laboratory in form.laboratory.field.queryset %}
+                                <div class="laboratory-option" data-laboratory-id="{{ laboratory.id }}">
+                                    <div class="laboratory-option-icon">
+                                        {% if 'eng' in laboratory.department|lower %}
+                                            <i class="bi bi-gear"></i>
+                                        {% elif 'saúde' in laboratory.department|lower %}
+                                            <i class="bi bi-heart-pulse"></i>
+                                        {% else %}
+                                            <i class="bi bi-laptop"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="laboratory-option-title">{{ laboratory.name }}</div>
+                                    <div class="laboratory-option-capacity">Capacidade: {{ laboratory.capacity }} pessoas</div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {{ form.laboratory }}
+                        </div>
+
+                        <!-- Rest of the form... -->
+                        <!-- Request Details -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.subject|as_crispy_field }}
+                            </div>
+                            <div class="mb-3">
+                                <label for="id_scheduled_date" class="form-label">Data Agendada</label>
+                                <input type="date" name="scheduled_date" id="id_scheduled_date" class="form-control" 
+                                       min="{{ next_week_start|date:'Y-m-d' }}" max="{{ next_week_end|date:'Y-m-d' }}" required>
+                                <div class="form-text">Apenas dias úteis (segunda a sexta) da próxima semana.</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_shift" class="form-label">Turno</label>
+                            <select name="shift" id="id_shift" class="form-select" required>
+                                <option value="" {% if not form.shift.value %}selected{% endif %}>Selecione o turno</option>
+                                <option value="morning" {% if form.shift.value == "morning" %}selected{% endif %}>Matutino (08:00 - 12:00)</option>
+                                <option value="evening" {% if form.shift.value == "evening" %}selected{% endif %}>Noturno (19:00 - 22:00)</option>
+                            </select>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.number_of_students|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.description|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.materials|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_attachments" class="form-label">Arquivos</label>
+                        <input type="file" name="attachments" id="id_attachments" multiple class="form-control">
+                        <div class="form-text">Você pode anexar roteiros de aula, imagens ou qualquer outro documento.</div>
+                    </div>
+
+                    <!-- Request Footer -->
+                    <div class="request-footer">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'professor_dashboard' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg me-1"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if is_confirmation_day or request.user.is_staff %}
+                                    <i class="bi bi-calendar-plus me-1"></i> Enviar Agendamento
+                                {% else %}
+                                    <i class="bi bi-save me-1"></i> Salvar Rascunho
+                                {% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Laboratory Selection
+        const labOptions = document.querySelectorAll('.laboratory-option');
+        const labSelect = document.getElementById('id_laboratory');
+        
+        // Marcar o laboratório selecionado
+        if (labSelect && labSelect.value) {
+            const selectedOption = document.querySelector(`.laboratory-option[data-laboratory-id="${labSelect.value}"]`);
+            if (selectedOption) {
+                selectedOption.classList.add('selected');
+            }
+        }
+        
+        // Adicionar eventos de clique nos laboratórios
+        labOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const labId = this.dataset.laboratoryId;
+                
+                // Remover a seleção anterior
+                labOptions.forEach(opt => opt.classList.remove('selected'));
+                
+                // Adicionar a nova seleção
+                this.classList.add('selected');
+                
+                // Atualizar o select
+                if (labSelect) {
+                    labSelect.value = labId;
+                }
+            });
+        });
+        
+        // Add confirmation dialog for draft/confirmation
+        const form = document.getElementById('scheduleRequestForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const isConfirmationDay = {{ is_confirmation_day|yesno:"true,false" }};
+                
+                if (!isConfirmationDay) {
+                    const confirmMessage = 'Tem certeza que deseja salvar este agendamento como rascunho? ' +
+                                         'Você só poderá confirmá-lo na próxima quinta ou sexta-feira.';
+                    
+                    if (!confirm(confirmMessage)) {
+                        e.preventDefault();
+                    }
+                }
+            });
+        }
+    });
+        document.addEventListener('DOMContentLoaded', function() {
+            // Bloqueio de seleção para fins de semana
+            const dateInput = document.getElementById('id_scheduled_date');
+            
+            if (dateInput) {
+                dateInput.addEventListener('input', function() {
+                    const selectedDate = new Date(this.value);
+                    const dayOfWeek = selectedDate.getDay();
+                    
+                    // 6 = domingo, 5 = sábado
+                    if (dayOfWeek === 5 || dayOfWeek === 6) {
+                        this.setCustomValidity('Por favor, selecione apenas dias úteis (segunda a sexta).');
+                        
+                        // Visual feedback
+                        this.classList.add('is-invalid');
+                        
+                        // Adicionar mensagem de erro
+                        let errorDiv = this.nextElementSibling;
+                        if (!errorDiv || !errorDiv.classList.contains('invalid-feedback')) {
+                            errorDiv = document.createElement('div');
+                            errorDiv.className = 'invalid-feedback';
+                            errorDiv.textContent = 'Por favor, selecione apenas dias úteis (segunda a sexta).';
+                            this.parentNode.appendChild(errorDiv);
+                        }
+                    } else {
+                        this.setCustomValidity('');
+                        this.classList.remove('is-invalid');
+                        
+                        // Remover mensagem de erro se existir
+                        const errorDiv = this.nextElementSibling;
+                        if (errorDiv && errorDiv.classList.contains('invalid-feedback')) {
+                            errorDiv.remove();
+                        }
+                    }
+                });
+            }
+        });
+</script>
+{% endblock %}

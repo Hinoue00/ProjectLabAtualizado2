@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Confirmar Exclusão | LabConnect{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-container {
+        max-width: 650px;
+        margin: 0 auto;
+    }
+    
+    .delete-card {
+        border-radius: var(--border-radius);
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--box-shadow);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+    
+    .delete-header {
+        padding: 1.5rem;
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    .delete-header i {
+        font-size: 2rem;
+        margin-right: 1rem;
+    }
+    
+    .delete-body {
+        padding: 1.5rem;
+    }
+    
+    .delete-footer {
+        padding: 1.5rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+    
+    .material-info {
+        background-color: rgba(0, 0, 0, 0.03);
+        border-radius: var(--border-radius);
+        padding: 1.25rem;
+        margin: 1.5rem 0;
+    }
+    
+    .warning-message {
+        padding: 1rem;
+        background-color: rgba(255, 193, 7, 0.1);
+        border-left: 4px solid #ffc107;
+        margin-bottom: 1.5rem;
+    }
+    
+    .danger-message {
+        padding: 1rem;
+        background-color: rgba(220, 53, 69, 0.1);
+        border-left: 4px solid #dc3545;
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-container delete-container">
+    <!-- Cabeçalho da página -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-12">
+                <h1 class="page-title">Confirmar Exclusão</h1>
+                <p class="page-subtitle">Confirme a exclusão permanente do material</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card de confirmação de exclusão -->
+    <div class="delete-card">
+        <div class="delete-header d-flex align-items-center">
+            <i class="bi bi-exclamation-triangle"></i>
+            <h4 class="mb-0">Excluir Material</h4>
+        </div>
+        
+        <div class="delete-body">
+            <p>Você tem certeza que deseja excluir o material <strong>{{ material.name }}</strong>?</p>
+            
+            <div class="danger-message">
+                <div class="d-flex">
+                    <div class="me-3">
+                        <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                    </div>
+                    <div>
+                        <h5 class="text-danger mb-2">Atenção!</h5>
+                        <p class="mb-0">Esta ação não pode ser desfeita. Todos os dados associados a este material serão excluídos permanentemente do sistema.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="material-info">
+                <h5 class="mb-3">Informações do Material</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1"><strong>Nome:</strong></p>
+                        <p>{{ material.name }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1"><strong>Categoria:</strong></p>
+                        <p>{{ material.category.name }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1"><strong>Laboratório:</strong></p>
+                        <p>{{ material.laboratory.name }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-1"><strong>Quantidade em Estoque:</strong></p>
+                        <p>{{ material.quantity }} unidades</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="warning-message">
+                <div class="d-flex">
+                    <div class="me-3">
+                        <i class="bi bi-info-circle-fill text-warning"></i>
+                    </div>
+                    <div>
+                        <p class="mb-0">Se você não tem certeza, considere apenas atualizar o material em vez de excluí-lo.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="delete-footer">
+            <a href="{% url 'material_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg me-1"></i> Cancelar
+            </a>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-trash me-1"></i> Confirmar Exclusão
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

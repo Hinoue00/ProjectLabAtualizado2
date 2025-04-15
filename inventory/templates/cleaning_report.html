@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Relatório de Limpeza de Dados | LabConnect{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-card {
+        border-radius: var(--border-radius);
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--box-shadow);
+        transition: all 0.3s ease;
+        margin-bottom: 1.5rem;
+    }
+    
+    .report-header {
+        padding: 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .report-title {
+        margin-bottom: 0;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+    }
+    
+    .report-title i {
+        margin-right: 0.75rem;
+        color: var(--primary-color);
+    }
+    
+    .report-body {
+        padding: 1.5rem;
+    }
+    
+    .report-footer {
+        padding: 1.25rem;
+        border-top: 1px solid var(--border-color);
+        text-align: right;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-item {
+        background-color: var(--body-bg);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        text-align: center;
+    }
+    
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: var(--primary-color);
+    }
+    
+    .stat-label {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+    }
+    
+    .changes-list {
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid var(--border-color);
+        border-radius: 0.5rem;
+    }
+    
+    .change-item {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .change-item:last-child {
+        border-bottom: none;
+    }
+    
+    .change-icon {
+        margin-right: 0.5rem;
+        color: var(--primary-color);
+    }
+    
+    .no-changes {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Página de Relatório de Limpeza Detalhado -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="page-title">Relatório Detalhado de Limpeza de Dados</h1>
+                <p class="page-subtitle">Transformação inteligente dos seus dados de materiais</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <div class="btn-group">
+                    <a href="{% url 'material_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Voltar para Materiais
+                    </a>
+                    <a href="{% url 'import_materials' %}" class="btn btn-primary">
+                        <i class="bi bi-upload me-1"></i> Nova Importação
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- Cartão Principal do Relatório -->
+<div class="report-card">
+    <div class="report-header">
+        <h4 class="report-title">
+            <i class="bi bi-magic"></i>
+            Limpeza de {{ report.original_file }}
+        </h4>
+        <div>
+            <span class="badge bg-primary me-2">{{ report.stats.total_changes }} Alterações</span>
+            <span class="badge bg-success">{{ report.stats.cleaned_rows }} Linhas Processadas</span>
+        </div>
+    </div>
+    
+    <div class="report-body">
+        <!-- Sumário Executivo -->
+        <div class="alert alert-info" role="alert">
+            <h5 class="alert-heading">
+                <i class="bi bi-info-circle me-2"></i>Sumário Executivo
+            </h5>
+            <p>Realizamos uma limpeza abrangente que garantiu a qualidade e consistência dos seus dados de materiais.</p>
+        </div>
+
+        <!-- Estatísticas Resumidas -->
+        {% for stat_name, stat_value in report.stats.items %}
+        <div class="stat-item">
+            <div class="stat-value">{{ stat_value }}</div>
+            <div class="stat-label">
+                {{ stat_name|title|default:stat_name|slice:":-1"|join:" "|capfirst }}
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Alterações Detalhadas -->
+        <h5 class="mt-4 mb-3">
+            <i class="bi bi-list-check me-2 text-primary"></i>Alterações Realizadas
+        </h5>
+        <div class="changes-list">
+            {% if report.changes %}
+                {% for change in report.changes %}
+                    <div class="change-item">
+                        <span class="change-severity 
+                            {% if 'removido' in change.lower %}change-severity-high
+                            {% elif 'padronizado' in change.lower %}change-severity-medium
+                            {% else %}change-severity-low{% endif %}">
+                            {% if 'removido' in change.lower %}Alto Impacto
+                            {% elif 'padronizado' in change.lower %}Médio Impacto
+                            {% else %}Baixo Impacto{% endif %}
+                        </span>
+                        <i class="bi bi-check-circle-fill change-icon"></i>
+                        {{ change }}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-changes text-center p-4">
+                    <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">Dados já estavam em excelente estado!</h5>
+                    <p class="text-muted">Nenhuma alteração significativa foi necessária.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Pré-visualização dos Dados -->
+        <h5 class="mt-4 mb-3">
+            <i class="bi bi-table me-2 text-primary"></i>Pré-visualização dos Dados Limpos
+        </h5>
+        <div class="data-preview">
+            <div class="preview-header">Primeiras 5 Linhas</div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr>
+                            {% for column in report.preview_columns %}
+                                <th>{{ column }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in report.preview_data %}
+                            <tr>
+                                {% for value in row %}
+                                    <td>{{ value }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="report-footer">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <small class="text-muted">
+                    <i class="bi bi-clock me-1"></i>Processado em: {{ report.timestamp }}
+                </small>
+            </div>
+            <div>
+                <a href="{% url 'material_list' %}" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i> Continuar para Materiais
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+    
+    {% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animações de entrada suaves
+            const statsItems = document.querySelectorAll('.stat-item');
+            statsItems.forEach((item, index) => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    item.style.transition = 'all 0.5s ease';
+                    item.style.opacity = '1';
+                    item.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+    {% endblock %}

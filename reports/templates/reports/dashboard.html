@@ -1,0 +1,166 @@
+# templates/reports/dashboard.html
+{% extends 'base.html' %}
+
+{% block title %}Relatórios - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Relatórios</h1>
+    
+    <a href="{% url 'generate_report' %}" class="btn btn-primary">
+        <i class="bi bi-file-earmark-plus"></i> Gerar Novo Relatório
+    </a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-primary h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-building display-4 text-primary mb-3"></i>
+                <h5 class="card-title">Laboratórios</h5>
+                <p class="card-text display-6">{{ total_labs }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card border-success h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-box-seam display-4 text-success mb-3"></i>
+                <h5 class="card-title">Materiais</h5>
+                <p class="card-text display-6">{{ total_materials }}</p>
+                <p class="text-danger mb-0">{{ materials_in_alert }} em alerta</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card border-info h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-calendar-check display-4 text-info mb-3"></i>
+                <h5 class="card-title">Agendamentos</h5>
+                <p class="card-text display-6">{{ appointments_this_month }}</p>
+                <p class="text-muted mb-0">Este mês</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card border-warning h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-file-earmark-text display-4 text-warning mb-3"></i>
+                <h5 class="card-title">Relatórios</h5>
+                <p class="card-text display-6">{{ recent_reports.count }}</p>
+                <p class="text-muted mb-0">Recentes</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Gerar Relatório</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'generate_report' %}">
+                    {% csrf_token %}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.report_type.id_for_label }}" class="form-label">Tipo de Relatório</label>
+                            {{ form.report_type }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="{{ form.laboratory.id_for_label }}" class="form-label">Laboratório (opcional)</label>
+                            {{ form.laboratory }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.date_range_start.id_for_label }}" class="form-label">Data Inicial</label>
+                            {{ form.date_range_start }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="{{ form.date_range_end.id_for_label }}" class="form-label">Data Final</label>
+                            {{ form.date_range_end }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.export_format.id_for_label }}" class="form-label">Formato de Exportação</label>
+                            {{ form.export_format }}
+                        </div>
+                        
+                        <div class="col-md-6 d-flex align-items-center">
+                            <div class="form-check mt-3">
+                                {{ form.include_charts }}
+                                <label class="form-check-label" for="{{ form.include_charts.id_for_label }}">
+                                    Incluir Gráficos
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-file-earmark-arrow-down"></i> Gerar Relatório
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Relatórios Recentes</h5>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for report in recent_reports %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">{{ report.title }}</h6>
+                                <small class="text-muted">{{ report.created_at|date:"d/m/Y H:i" }}</small>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownReport{{ report.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-download"></i>
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownReport{{ report.id }}">
+                                    {% if report.report_type == 'scheduling' %}
+                                    <li><a class="dropdown-item" href="{% url 'scheduling_report' report.id 'pdf' %}">PDF</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'scheduling_report' report.id 'excel' %}">Excel</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'scheduling_report' report.id 'csv' %}">CSV</a></li>
+                                    {% elif report.report_type == 'inventory' %}
+                                    <li><a class="dropdown-item" href="{% url 'inventory_report' report.id 'pdf' %}">PDF</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'inventory_report' report.id 'excel' %}">Excel</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'inventory_report' report.id 'csv' %}">CSV</a></li>
+                                    {% elif report.report_type == 'user_activity' %}
+                                    <li><a class="dropdown-item" href="{% url 'user_activity_report' report.id 'pdf' %}">PDF</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'user_activity_report' report.id 'excel' %}">Excel</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'user_activity_report' report.id 'csv' %}">CSV</a></li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-center py-4">
+                        <p class="mb-0 text-muted">Nenhum relatório gerado recentemente.</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

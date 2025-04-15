@@ -1,0 +1,330 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="LabConnect - Sistema de Gestão de Laboratórios para Faculdade Unopar-Anhanguera">
+    <meta name="author" content="LabConnectTeam">
+    
+    <title>{% block title %}LabConnect{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{% static 'img/logo.svg' %}">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Base CSS -->
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --primary-color-dark: #2c4677;
+            --secondary-color: #6c757d;
+            --success-color: #198754;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #0dcaf0;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            
+            --body-bg: #f5f8fa;
+            --card-bg: #ffffff;
+            --border-color: rgba(0, 0, 0, 0.1);
+            --text-color: #212529;
+            --text-muted: #6c757d;
+            
+            --transition-speed: 0.3s;
+            --box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            --box-shadow-medium: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            --box-shadow-large: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+            
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --border-radius: 0.5rem;
+        }
+        
+        [data-theme="dark"] {
+            --primary-color: #4a6fa5;
+            --primary-color-dark: #2c4677;
+            --body-bg: #121212;
+            --card-bg: #1e1e1e;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-color: #e0e0e0;
+            --text-muted: #adb5bd;
+            
+            --box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.25);
+            --box-shadow-medium: 0 0.5rem 1rem rgba(0, 0, 0, 0.5);
+            --box-shadow-large: 0 1rem 3rem rgba(0, 0, 0, 0.75);
+        }
+        
+        body {
+            font-family: var(--font-family);
+            background-color: var(--body-bg);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color var(--transition-speed);
+            overflow-x: hidden;
+        }
+        
+        .auth-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .auth-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            transition: all var(--transition-speed);
+        }
+        
+        .card:hover {
+            box-shadow: var(--box-shadow-medium);
+        }
+        
+        .card-header {
+            border-bottom: 1px solid var(--border-color);
+            background-color: transparent;
+            padding: 1rem 1.25rem;
+        }
+        
+        .card-title {
+            margin-bottom: 0;
+            font-weight: 600;
+        }
+        
+        /* Forms */
+        .form-control, .form-select {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            color: var(--text-color);
+            transition: all var(--transition-speed);
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(74, 111, 165, 0.25);
+        }
+        
+        /* Buttons */
+        .btn {
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            transition: all var(--transition-speed);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover, .btn-primary:focus {
+            background-color: var(--primary-color-dark);
+            border-color: var(--primary-color-dark);
+        }
+        
+        /* Alerts */
+        .alert {
+            border-radius: var(--border-radius);
+            border: 1px solid transparent;
+        }
+        
+        /* Footer */
+        .auth-footer {
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            transition: all var(--transition-speed);
+        }
+        
+        /* Theme toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            z-index: 1000;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .theme-toggle:hover {
+            transform: rotate(30deg);
+        }
+        
+        /* Utilities */
+        .bg-primary {
+            background-color: var(--primary-color) !important;
+        }
+        
+        .text-primary {
+            color: var(--primary-color) !important;
+        }
+        
+        .border-primary {
+            border-color: var(--primary-color) !important;
+        }
+    </style>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    <!-- Page-specific CSS -->
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Theme Toggle Button -->
+    <button type="button" class="theme-toggle" id="themeToggleBtn">
+        <i class="bi bi-sun-fill" id="themeIcon"></i>
+    </button>
+    
+    <!-- Auth Container -->
+    <div class="auth-container">
+        <!-- Messages/Alerts -->
+        {% if messages %}
+            <div class="container mt-3">
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Auth Content -->
+        <div class="auth-content">
+            {% block auth_content %}{% endblock %}
+        </div>
+        
+        <!-- Auth Footer -->
+        <div class="auth-footer">
+            <div class="container">
+                <p class="mb-0">&copy; {% now "Y" %} LabConnect - Unopar-Anhanguera</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Theme Toggle Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme Toggler
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            const themeIcon = document.getElementById('themeIcon');
+            const html = document.documentElement;
+            
+            // Check for saved theme
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            html.setAttribute('data-theme', savedTheme);
+            
+            // Update icon based on current theme
+            if (savedTheme === 'dark') {
+                themeIcon.classList.remove('bi-sun-fill');
+                themeIcon.classList.add('bi-moon-fill');
+            } else {
+                themeIcon.classList.remove('bi-moon-fill');
+                themeIcon.classList.add('bi-sun-fill');
+            }
+            
+            // Toggle theme on click
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', function() {
+                    const currentTheme = html.getAttribute('data-theme');
+                    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                    
+                    html.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                    
+                    // Update icon
+                    if (newTheme === 'dark') {
+                        themeIcon.classList.remove('bi-sun-fill');
+                        themeIcon.classList.add('bi-moon-fill');
+                    } else {
+                        themeIcon.classList.remove('bi-moon-fill');
+                        themeIcon.classList.add('bi-sun-fill');
+                    }
+                });
+            }
+                        // Validação de email corporativo
+            const emailInput = document.getElementById('registerEmail');
+            if (emailInput) {
+                emailInput.addEventListener('input', function() {
+                    const email = this.value.trim().toLowerCase();
+                    const allowedDomains = ['cogna.com.br', 'kroton.com.br'];
+                    
+                    // Verificar se o email possui um domínio válido
+                    let isValid = false;
+                    
+                    if (email && email.includes('@')) {
+                        const domain = email.split('@')[1];
+                        isValid = allowedDomains.some(allowedDomain => domain === allowedDomain);
+                    }
+                    
+                    // Mostrar feedback visual
+                    const validFeedback = this.parentNode.querySelector('.input-feedback.valid');
+                    const invalidFeedback = this.parentNode.querySelector('.input-feedback.invalid');
+                    
+                    if (email && !isValid) {
+                        this.setCustomValidity('Apenas emails corporativos são permitidos.');
+                        if (validFeedback) validFeedback.style.display = 'none';
+                        if (invalidFeedback) {
+                            invalidFeedback.style.display = 'block';
+                            invalidFeedback.textContent = 'Apenas emails corporativos são permitidos.';
+                        }
+                    } else {
+                        this.setCustomValidity('');
+                        if (email) {
+                            if (validFeedback) validFeedback.style.display = 'block';
+                            if (invalidFeedback) invalidFeedback.style.display = 'none';
+                        } else {
+                            if (validFeedback) validFeedback.style.display = 'none';
+                            if (invalidFeedback) invalidFeedback.style.display = 'none';
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+    
+    <!-- Page-specific JS -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,292 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block title %}{{ title }} | LabConnect{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        border-radius: var(--border-radius);
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--box-shadow);
+        transition: all 0.3s ease;
+    }
+    
+    .form-card:hover {
+        box-shadow: var(--box-shadow-medium);
+    }
+    
+    .form-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .form-body {
+        padding: 1.5rem;
+    }
+    
+    .form-footer {
+        padding: 1.5rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+    
+    .side-info {
+        background-color: rgba(74, 111, 165, 0.05);
+        border-radius: var(--border-radius);
+        border: 1px solid rgba(74, 111, 165, 0.1);
+        padding: 1.5rem;
+        height: 100%;
+    }
+    
+    .side-info-title {
+        font-weight: 600;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .side-info-title i {
+        margin-right: 0.5rem;
+        color: var(--primary-color);
+    }
+    
+    .info-section {
+        margin-bottom: 1.5rem;
+    }
+    
+    .info-section:last-child {
+        margin-bottom: 0;
+    }
+    
+    .info-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--primary-color);
+    }
+    
+    .type-selector {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .type-option {
+        flex: 1;
+        min-width: 120px;
+        border: 2px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .type-option.active {
+        border-color: var(--primary-color);
+        background-color: rgba(74, 111, 165, 0.05);
+    }
+    
+    .type-option:hover {
+        border-color: var(--primary-color);
+    }
+    
+    .type-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-muted);
+    }
+    
+    .type-option.active .type-icon {
+        color: var(--primary-color);
+    }
+    
+    .type-label {
+        font-weight: 600;
+    }
+    
+    .type-description {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Cabeçalho da página -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="page-title">{{ title }}</h1>
+                <p class="page-subtitle">
+                    {% if category %}
+                        Atualize as informações da categoria existente
+                    {% else %}
+                        Adicione uma nova categoria para organizar os materiais
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <a href="{% url 'category_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar para Lista
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Formulário principal -->
+            <div class="form-card mb-4">
+                <div class="form-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-tags me-2 text-primary"></i>
+                        {% if category %}
+                            Editar Categoria
+                        {% else %}
+                            Nova Categoria
+                        {% endif %}
+                    </h4>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="form-body">
+                        <div class="mb-3">
+                            <label for="id_name" class="form-label">Nome da Categoria</label>
+                            <input type="text" class="form-control" id="id_name" name="name" value="{{ form.name.value|default:'' }}" required>
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">{{ form.name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <label class="form-label">Tipo de Material</label>
+                        <div class="type-selector">
+                            <div class="type-option consumable {% if form.material_type.value == 'consumable' %}active{% endif %}" data-value="consumable">
+                                <div class="type-icon">
+                                    <i class="bi bi-box-seam"></i>
+                                </div>
+                                <div class="type-label">Consumível</div>
+                                <div class="type-description">Materiais que são consumidos no uso</div>
+                            </div>
+                            <div class="type-option permanent {% if form.material_type.value == 'permanent' %}active{% endif %}" data-value="permanent">
+                                <div class="type-icon">
+                                    <i class="bi bi-tools"></i>
+                                </div>
+                                <div class="type-label">Permanente</div>
+                                <div class="type-description">Equipamentos de uso contínuo</div>
+                            </div>
+                            <div class="type-option perishable {% if form.material_type.value == 'perishable' %}active{% endif %}" data-value="perishable">
+                                <div class="type-icon">
+                                    <i class="bi bi-hourglass-split"></i>
+                                </div>
+                                <div class="type-label">Perecível</div>
+                                <div class="type-description">Materiais com data de validade</div>
+                            </div>
+                        </div>
+                        
+                        <input type="hidden" id="id_material_type" name="material_type" value="{{ form.material_type.value|default:'consumable' }}">
+                    </div>
+                    
+                    <div class="form-footer">
+                        <a href="{% url 'category_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">
+                            {% if category %}
+                                <i class="bi bi-check-lg me-1"></i> Atualizar Categoria
+                            {% else %}
+                                <i class="bi bi-plus-lg me-1"></i> Adicionar Categoria
+                            {% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Informações laterais -->
+            <div class="side-info mb-4">
+                <h5 class="side-info-title">
+                    <i class="bi bi-info-circle"></i> Informações sobre Categorias
+                </h5>
+                
+                <div class="info-section">
+                    <div class="info-title">Categorias e Tipos</div>
+                    <p>
+                        As categorias ajudam a organizar materiais por tipo e finalidade, facilitando
+                        a gestão de inventário e a busca de itens.
+                    </p>
+                </div>
+                
+                <div class="info-section">
+                    <div class="info-title">Tipos de Categorias</div>
+                    <ul>
+                        <li><strong>Consumível:</strong> Materiais de uso único que são consumidos (papel, reagentes, etc)</li>
+                        <li><strong>Permanente:</strong> Equipamentos duráveis de uso contínuo (microscópios, ferramentas)</li>
+                        <li><strong>Perecível:</strong> Materiais com prazo de validade (reagentes químicos, amostras)</li>
+                    </ul>
+                </div>
+                
+                <div class="info-section">
+                    <div class="info-title">Dicas</div>
+                    <p>
+                        Use nomes claros e específicos para facilitar a identificação. Categorias bem
+                        organizadas melhoram a eficiência do sistema de inventário.
+                    </p>
+                </div>
+            </div>
+            
+            {% if category %}
+                <!-- Materiais nesta categoria (somente na edição) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Materiais nesta Categoria</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if category.material_set.count > 0 %}
+                            <p>Existem <strong>{{ category.material_set.count }}</strong> materiais associados a esta categoria.</p>
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                Alterar o tipo de material pode afetar o comportamento do sistema para estes itens.
+                            </div>
+                            <a href="{% url 'material_list' %}?category={{ category.id }}" class="btn btn-sm btn-outline-primary w-100">
+                                <i class="bi bi-box-seam me-1"></i> Ver Materiais
+                            </a>
+                        {% else %}
+                            <p class="text-muted">Não há materiais associados a esta categoria.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Seleção de tipo de material
+        const typeOptions = document.querySelectorAll('.type-option');
+        const materialTypeInput = document.getElementById('id_material_type');
+        
+        typeOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                // Remove active class from all options
+                typeOptions.forEach(opt => opt.classList.remove('active'));
+                
+                // Add active class to selected option
+                this.classList.add('active');
+                
+                // Update hidden input value
+                materialTypeInput.value = this.getAttribute('data-value');
+            });
+        });
+    });
+</script>
+{% endblock %}

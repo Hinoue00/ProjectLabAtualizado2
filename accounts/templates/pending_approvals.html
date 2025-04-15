@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Solicitações de Usuários | LabConnect{% endblock %}
+
+{% block extra_css %}
+<style>
+    .user-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .user-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .user-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+    
+    .user-info-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .user-info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .user-info-item:last-child {
+        border-bottom: none;
+    }
+    
+    .user-info-label {
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+    }
+    
+    .empty-state-icon {
+        font-size: 4rem;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 0.75rem;
+    }
+    
+    .modal-header-custom {
+        background-color: var(--primary-color);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="page-title">Solicitações de Usuários</h1>
+                <p class="page-subtitle">Gerencie as solicitações de novos usuários no sistema</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Users List -->
+    <div class="row">
+        {% if pending_users %}
+            {% for user in pending_users %}
+            <div class="col-md-4 mb-4">
+                <div class="card user-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="user-avatar me-3">
+                                {{ user.first_name|first }}{{ user.last_name|first }}
+                            </div>
+                            <div>
+                                <h5 class="mb-1">{{ user.get_full_name }}</h5>
+                                <span class="badge bg-warning">Pendente</span>
+                            </div>
+                        </div>
+                        
+                        <ul class="user-info-list">
+                            <li class="user-info-item">
+                                <span class="user-info-label">Email</span>
+                                <span>{{ user.email }}</span>
+                            </li>
+                            <li class="user-info-item">
+                                <span class="user-info-label">Tipo de Usuário</span>
+                                <span>{{ user.get_user_type_display }}</span>
+                            </li>
+                            <li class="user-info-item">
+                                <span class="user-info-label">Telefone</span>
+                                <span>{{ user.phone_number }}</span>
+                            </li>
+                            {% if user.user_type == 'technician' and user.lab_department %}
+                            <li class="user-info-item">
+                                <span class="user-info-label">Departamento</span>
+                                <span>{{ user.get_lab_department_display }}</span>
+                            </li>
+                            {% endif %}
+                            <li class="user-info-item">
+                                <span class="user-info-label">Data de Registro</span>
+                                <span>{{ user.registration_date|date:"d/m/Y H:i" }}</span>
+                            </li>
+                        </ul>
+                        
+                        <div class="action-buttons mt-3">
+                            <form method="post" class="w-100">
+                                {% csrf_token %}
+                                <input type="hidden" name="user_id" value="{{ user.id }}">
+                                <div class="d-flex gap-2">
+                                    <button type="submit" name="action" value="approve" class="btn btn-success flex-grow-1">
+                                        <i class="bi bi-check-circle me-1"></i> Aprovar
+                                    </button>
+                                    <button type="submit" name="action" value="reject" class="btn btn-danger flex-grow-1">
+                                        <i class="bi bi-x-circle me-1"></i> Rejeitar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <i class="bi bi-person-check"></i>
+                            </div>
+                            <h4>Nenhuma solicitação pendente</h4>
+                            <p class="text-muted">Todos os usuários já foram aprovados.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Optional: Add confirmation dialog for approval/rejection
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const action = e.submitter.value;
+                const userName = this.closest('.user-card').querySelector('.mb-1').textContent;
+                const confirmMessage = action === 'approve' 
+                    ? `Tem certeza que deseja aprovar o usuário ${userName}?`
+                    : `Tem certeza que deseja rejeitar o usuário ${userName}?`;
+                
+                if (!confirm(confirmMessage)) {
+                    e.preventDefault();
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Excluir {{ laboratory.name }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">Confirmar Exclusão</h5>
+            </div>
+            <div class="card-body">
+                <p>Você tem certeza que deseja excluir o laboratório <strong>{{ laboratory.name }}</strong>?</p>
+                
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Atenção: Esta ação não pode ser desfeita. Todos os agendamentos 
+                    e materiais associados a este laboratório também serão excluídos.
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'laboratory_detail' laboratory.id %}" class="btn btn-outline-secondary me-md-2">Cancelar</a>
+                        <button type="submit" class="btn btn-danger">Excluir</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

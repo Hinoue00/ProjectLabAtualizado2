@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Análise em lote | LabConnect{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Cabeçalho da página -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="page-title">Análise em Lote</h1>
+                <p class="page-subtitle">Analisar materiais usando inteligência artificial</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <a href="{% url 'material_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar para Lista
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-robot me-2"></i> Análise Inteligente de Materiais
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>
+                        Esta ferramenta usa inteligência artificial para analisar descrições de materiais, extrair palavras-chave 
+                        e sugerir categorias automaticamente.
+                    </p>
+                    
+                    <div class="alert alert-info">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="bi bi-info-circle-fill"></i>
+                            </div>
+                            <div>
+                                <h5 class="alert-heading">Status atual</h5>
+                                <p class="text-muted">
+                                    Existem <strong>{{ unanalyzed_count }}</strong> materiais que ainda não foram analisados pelo sistema.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if unanalyzed_count > 0 %}
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="batch_size" class="form-label">Quantidade para analisar:</label>
+                            <select name="batch_size" id="batch_size" class="form-select">
+                                <option value="10">10 materiais</option>
+                                <option value="25">25 materiais</option>
+                                <option value="50" selected>50 materiais</option>
+                                <option value="100">100 materiais</option>
+                                <option value="{{ unanalyzed_count }}">Todos ({{ unanalyzed_count }} materiais)</option>
+                            </select>
+                            <div class="form-text">
+                                Escolha quantos materiais devem ser analisados neste lote.
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-lightning-charge me-1"></i> Iniciar Análise
+                            </button>
+                        </div>
+                    </form>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                        <h4 class="mt-3">Todos os materiais já foram analisados!</h4>
+                        <p>
+                            Todos os materiais no sistema já possuem análise de IA. Novos materiais serão 
+                            analisados automaticamente quando forem adicionados.
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+          <!-- Cards de recursos -->
+            <div class="row mt-4">
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-tags me-2 text-primary"></i>
+                                Categorização Automática
+                            </h5>
+                            <p class="card-text">
+                                O sistema analisa a descrição dos materiais e sugere a categoria mais adequada baseado 
+                                no conteúdo e em padrões identificados.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-search me-2 text-primary"></i>
+                                Pesquisa Semântica
+                            </h5>
+                            <p class="card-text">
+                                Com a análise ativada, a pesquisa de materiais se torna mais inteligente, 
+                                compreendendo o significado ao invés de apenas corresponder palavras exatas.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}  

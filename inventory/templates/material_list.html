@@ -1,0 +1,693 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Inventário de Materiais | LabConnect{% endblock %}
+{% block extra_css %}
+<style>
+    .filter-box {
+        background-color: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--box-shadow);
+    }
+    
+    .material-card {
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .material-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .material-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 10;
+    }
+    
+    .material-category {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border-radius: 50rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .material-category.consumable {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    
+    .material-category.permanent {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+    
+    .material-category.perishable {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+    
+    .stock-indicator {
+        width: 100%;
+        height: 6px;
+        background-color: rgba(0, 0, 0, 0.1);
+        border-radius: 3px;
+        margin-top: 0.5rem;
+        overflow: hidden;
+    }
+    
+    .stock-indicator-bar {
+        height: 100%;
+        border-radius: 3px;
+    }
+    
+    .stock-normal {
+        background-color: #198754;
+    }
+    
+    .stock-warning {
+        background-color: #ffc107;
+    }
+    
+    .stock-danger {
+        background-color: #dc3545;
+    }
+    
+    .material-image {
+        height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--body-bg);
+        border-radius: var(--border-radius) var(--border-radius) 0 0;
+        overflow: hidden;
+    }
+    
+    .material-icon {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+    }
+
+    .material-info-label {
+        color: var(--text-muted);
+    }
+    
+    .material-info-value {
+        color: var(--text-color);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+    }
+    
+    .empty-state-icon {
+        font-size: 4rem;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+    
+    .btn-action {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+        transition: all 0.3s ease;
+    }
+    
+    .btn-action:hover {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+    
+    .btn-action.btn-edit:hover {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    
+    .btn-action.btn-delete:hover {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+    
+    .btn-clear-filter {
+        border-color: var(--border-color);
+        color: var(--text-muted);
+    }
+    
+    .btn-export {
+        background-color: #198754;
+        border-color: #198754;
+        color: white;
+    }
+    
+    .btn-export:hover {
+        background-color: #146c43;
+        border-color: #146c43;
+    }
+    
+    .btn-import {
+        background-color: #6f42c1;
+        border-color: #6f42c1;
+        color: white;
+    }
+    
+    .btn-import:hover {
+        background-color: #5e37a6;
+        border-color: #5e37a6;
+    }
+    
+    .pagination {
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    
+    .page-link {
+        color: var(--primary-color);
+        border-color: var(--border-color);
+        background-color: var(--card-bg);
+    }
+    
+    .page-item .page-link {
+
+        border-color: var(--primary-color);
+    }
+    
+    .alert-stock {
+        border-left: 4px solid #dc3545;
+    }
+    
+    .alert-stock-title {
+        color: #dc3545;
+        font-weight: 600;
+    }
+    
+    /* Animações */
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.03); }
+        100% { transform: scale(1); }
+    }
+    
+    .stock-alert {
+        animation: pulse 2s infinite;
+    }
+    
+    /* Layout em grade/lista */
+    .view-toggle-btn {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.25rem;
+        background-color: var(--body-bg);
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+        transition: all 0.3s ease;
+    }
+    
+    .view-toggle-btn.active {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+    
+    .material-list-view {
+        display: none;
+    }
+    
+    .list-view-active .material-list-view {
+        display: table;
+    }
+    
+    .list-view-active .material-grid-view {
+        display: none;
+    }
+    
+    .material-list-view th, .material-list-view td {
+        vertical-align: middle;
+    }
+
+    .input-group-text {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+        box-shadow: var(--box-shadow);
+    }
+    
+    /* Responsividade */
+    @media (max-width: 767.98px) {
+        .filter-box {
+            padding: 1rem;
+        }
+        
+        .action-buttons {
+            flex-wrap: wrap;
+        }
+        
+        .action-buttons .btn {
+            margin-bottom: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="content-container">
+    <!-- Cabeçalho da página -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="page-title">Inventário de Materiais</h1>
+                <p class="page-subtitle">Gerencie todos os materiais e equipamentos dos laboratórios</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <div class="d-flex flex-wrap justify-content-md-end gap-2">
+                    <a href="{% url 'material_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-lg me-1"></i> Adicionar Material
+                    </a>
+                    <a href="{% url 'import_materials' %}" class="btn btn-import">
+                        <i class="bi bi-file-earmark-arrow-up me-1"></i> Importar
+                    </a>
+                    <a href="{% url 'export_materials' %}" class="btn btn-export">
+                        <i class="bi bi-file-earmark-arrow-down me-1"></i> Exportar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% if materials_in_alert %}
+<!-- Alerta de estoque baixo -->
+<div class="card alert-stock mb-4">
+    <div class="card-body">
+        <div class="d-flex align-items-center">
+            <div class="me-3">
+                <i class="bi bi-exclamation-triangle-fill text-danger fs-4"></i>
+            </div>
+            <div>
+                <h5 class="alert-stock-title mb-1">Alerta de Estoque Baixo</h5>
+                <p class="mb-0">{{ materials_in_alert.count }} materiais estão com estoque abaixo do mínimo recomendado.</p>
+            </div>
+            <div class="ms-auto">
+                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#lowStockModal">
+                    Ver Detalhes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Filtros -->
+<div class="filter-box">
+    <form method="get" action="{% url 'material_list' %}">
+        <div class="row">
+            <div class="col-md-4 mb-3 mb-md-0">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-search custom-icon-muted"></i>
+                    </span>
+                    <input type="text" class="form-control" placeholder="Buscar materiais..." name="search" value="{{ search_query }}">
+                </div>
+            </div>
+            <div class="col-md-2 mb-3 mb-md-0">
+                <select class="form-select" name="category">
+                    <option value="">Categoria</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if category_filter == category.id|stringformat:"i" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 mb-3 mb-md-0">
+                <select class="form-select" name="laboratory">
+                    <option value="">Laboratório</option>
+                    {% for laboratory in laboratories %}
+                        <option value="{{ laboratory.id }}" {% if laboratory_filter == laboratory.id|stringformat:"i" %}selected{% endif %}>
+                            {{ laboratory.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 mb-3 mb-md-0">
+                <select class="form-select" name="stock_status">
+                    <option value="">Status de Estoque</option>
+                    <option value="low" {% if stock_status == 'low' %}selected{% endif %}>Abaixo do Mínimo</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1">
+                        <i class="bi bi-funnel"></i> Filtrar
+                    </button>
+                    {% if search_query or category_filter or laboratory_filter or stock_status %}
+                        <a href="{% url 'material_list' %}" class="btn btn-clear-filter">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Alternador de visualização Grid/Lista -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <span>{{ materials.count }} materiais encontrados</span>
+    </div>
+    <div class="view-toggle">
+        <div class="btn-group">
+            <button type="button" class="view-toggle-btn active" id="gridViewBtn" title="Visualização em Grade">
+                <i class="bi bi-grid"></i>
+            </button>
+            <button type="button" class="view-toggle-btn" id="listViewBtn" title="Visualização em Lista">
+                <i class="bi bi-list-ul"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+{% if materials %}
+    <!-- Visualização em Grade -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 material-grid-view">
+        {% for material in materials %}
+            <div class="col">
+                <div class="card material-card h-100 position-relative">
+                    {% if material.is_low_stock %}
+                        <div class="material-badge">
+                            <span class="badge bg-danger stock-alert">Estoque Baixo</span>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="material-image">
+                        {% if material.category.material_type == 'consumable' %}
+                            <i class="bi bi-box-seam material-icon"></i>
+                        {% elif material.category.material_type == 'permanent' %}
+                            <i class="bi bi-tools material-icon"></i>
+                        {% else %}
+                            <i class="bi bi-hourglass-split material-icon"></i>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="material-category 
+                                {% if material.category.material_type == 'consumable' %}consumable
+                                {% elif material.category.material_type == 'permanent' %}permanent
+                                {% else %}perishable{% endif %}">
+                                {{ material.category.get_material_type_display }}
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn-action" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'material_update' material.id %}">
+                                            <i class="bi bi-pencil me-2"></i>Editar
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'material_delete' material.id %}">
+                                            <i class="bi bi-trash me-2"></i>Excluir
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <h5 class="card-title">{{ material.name }}</h5>
+                        <p class="card-text small mb-2">{{ material.category.name }}</p>
+                        <p class="card-text mb-3">{{ material.description|truncatechars:80 }}</p>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="small material-info-label">Laboratório:</div>
+                            <div class="fw-semibold material-info-value">{{ material.laboratory.name }}</div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <div class="small material-info-label">Quantidade:</div>
+                            <div class="fw-semibold material-info-label {% if material.is_low_stock %}text-danger{% endif %}">
+                                {{ material.quantity }} / {{ material.minimum_stock }} mín.
+                            </div>
+                        </div>
+                        
+                        <div class="stock-indicator">
+                            <div class="stock-indicator-bar 
+                                {% if material.stock_percentage < 50 %}stock-danger 
+                                {% elif material.stock_percentage < 100 %}stock-warning 
+                                {% else %}stock-normal{% endif %}" 
+                                style="width: {{ material.stock_percentage|floatformat:2 }}%;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Visualização em Lista -->
+    <div class="table-responsive material-list-view">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Material</th>
+                    <th>Categoria</th>
+                    <th>Laboratório</th>
+                    <th>Quantidade</th>
+                    <th>Mínimo</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for material in materials %}
+                    <tr {% if material.is_low_stock %}class="table-danger"{% endif %}>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    {% if material.category.material_type == 'consumable' %}
+                                        <i class="bi bi-box-seam text-success"></i>
+                                    {% elif material.category.material_type == 'permanent' %}
+                                        <i class="bi bi-tools text-primary"></i>
+                                    {% else %}
+                                        <i class="bi bi-hourglass-split text-danger"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">{{ material.name }}</h6>
+                                    <small>{{ material.description|truncatechars:40 }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ material.category.name }}</td>
+                        <td>{{ material.laboratory.name }}</td>
+                        <td>{{ material.quantity }}</td>
+                        <td>{{ material.minimum_stock }}</td>
+                        <td>
+                            {% if material.is_low_stock %}
+                                <span class="badge bg-danger">Baixo</span>
+                            {% else %}
+                                <span class="badge bg-success">OK</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a href="{% url 'material_update' material.id %}" class="btn-action btn-edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'material_delete' material.id %}" class="btn-action btn-delete">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Paginação -->
+    <nav aria-label="Navegação de páginas">
+        <ul class="pagination">
+            <li class="page-item">
+                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Anterior</a>
+            </li>
+            <li class="page-item"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item">
+                <a class="page-link" href="#">Próximo</a>
+            </li>
+        </ul>
+    </nav>
+{% else %}
+    <!-- Estado vazio -->
+    <div class="card">
+        <div class="card-body">
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+                <h4>Nenhum material encontrado</h4>
+                <p>Não foram encontrados materiais para os filtros aplicados.</p>
+                {% if search_query or category_filter or laboratory_filter or stock_status %}
+                    <a href="{% url 'material_list' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-repeat me-1"></i> Limpar Filtros
+                    </a>
+                {% else %}
+                    <a href="{% url 'material_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-lg me-1"></i> Adicionar Material
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endif %}
+</div>
+
+{% if material.analyzed_data %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-lightbulb me-2 text-primary"></i>
+            Análise inteligente
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Palavras-chave detectadas:</h6>
+                <div class="mb-3">
+                    {% for keyword in material.analyzed_data.keywords|slice:":10" %}
+                        <span class="suggestion-chip">{{ keyword }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h6>Categoria sugerida:</h6>
+                <p>{{ material.suggested_category }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+<!-- Modal de Materiais em Alerta -->
+<div class="modal fade" id="lowStockModal" tabindex="-1" aria-labelledby="lowStockModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="lowStockModalLabel">Materiais com Estoque Baixo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Material</th>
+                                <th>Laboratório</th>
+                                <th>Atual</th>
+                                <th>Mínimo</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for material in materials_in_alert %}
+                                <tr>
+                                    <td>{{ material.name }}</td>
+                                    <td>{{ material.laboratory.name }}</td>
+                                    <td class="text-danger fw-bold">{{ material.quantity }}</td>
+                                    <td>{{ material.minimum_stock }}</td>
+                                    <td>
+                                        <a href="{% url 'material_update' material.id %}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-pencil"></i> Editar
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">Nenhum material em alerta de estoque.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <a href="{% url 'export_materials' %}?stock_status=low" class="btn btn-primary">
+                    <i class="bi bi-file-earmark-arrow-down me-1"></i> Exportar Lista
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Alternar entre visualizações de grade e lista
+        const gridViewBtn = document.getElementById('gridViewBtn');
+        const listViewBtn = document.getElementById('listViewBtn');
+        const contentContainer = document.querySelector('.content-container');
+        
+        gridViewBtn.addEventListener('click', function() {
+            contentContainer.classList.remove('list-view-active');
+            gridViewBtn.classList.add('active');
+            listViewBtn.classList.remove('active');
+            localStorage.setItem('materialsViewMode', 'grid');
+        });
+        
+        listViewBtn.addEventListener('click', function() {
+            contentContainer.classList.add('list-view-active');
+            listViewBtn.classList.add('active');
+            gridViewBtn.classList.remove('active');
+            localStorage.setItem('materialsViewMode', 'list');
+        });
+        
+        // Verificar preferência salva
+        const savedViewMode = localStorage.getItem('materialsViewMode');
+        if (savedViewMode === 'list') {
+            contentContainer.classList.add('list-view-active');
+            listViewBtn.classList.add('active');
+            gridViewBtn.classList.remove('active');
+        }
+        
+        // Função para calcular a porcentagem de estoque
+        function calculateStockPercentage(current, minimum) {
+            return Math.min((current / minimum) * 100, 100);
+        }
+        
+        // Aplicar a porcentagem de estoque às barras de progresso
+        const stockIndicators = document.querySelectorAll('.stock-indicator-bar');
+        stockIndicators.forEach(indicator => {
+            const current = parseInt(indicator.dataset.current);
+            const minimum = parseInt(indicator.dataset.minimum);
+            const percentage = calculateStockPercentage(current, minimum);
+            indicator.style.width = percentage + '%';
+            
+            if (percentage < 50) {
+                indicator.classList.add('stock-danger');
+            } else if (percentage < 100) {
+                indicator.classList.add('stock-warning');
+            } else {
+                indicator.classList.add('stock-normal');
+            }
+        });
+    });
+</script>
+{% endblock %}
