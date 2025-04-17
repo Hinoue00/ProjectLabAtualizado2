@@ -54,35 +54,40 @@
         color:var(--text-muted)
     }
 
-/* Estilo para células de tabela usando variáveis do tema */
-[data-theme="dark"] .table td {
-    background-color: var(--card-bg);
-    color: var(--text-color);
-    border-color: var(--border-color);
-}
+    /* Estilo para células de tabela usando variáveis do tema */
+    [data-theme="dark"] .table td {
+        background-color: var(--card-bg);
+        color: var(--text-color);
+        border-color: var(--border-color);
+    }
 
-/* Hover para linhas da tabela */
-[data-theme="dark"] .table tr:hover td {
-    background-color: var(--body-bg);
-}
+    /* Hover para linhas da tabela */
+    [data-theme="dark"] .table tr:hover td {
+        background-color: var(--body-bg);
+    }
 
-/* Cabeçalhos de tabela */
-[data-theme="dark"] .table th {
-    background-color: var(--card-bg);
-    color: var(--text-color);
-    border-color: var(--border-color);
-}
+    /* Cabeçalhos de tabela */
+    [data-theme="dark"] .table th {
+        background-color: var(--card-bg);
+        color: var(--text-color);
+        border-color: var(--border-color);
+    }
 
-/* Toda a tabela */
-[data-theme="dark"] .table {
-    border-color: var(--border-color);
-}
+    /* Toda a tabela */
+    [data-theme="dark"] .table {
+        border-color: var(--border-color);
+    }
 
 
     .upcoming-class {
         position: relative;
         border-left: 4px solid var(--primary-color);
         padding-left: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .upcoming-class:last-child {
+        margin-bottom: 0;
     }
     
     .upcoming-class::before {
@@ -96,8 +101,13 @@
         top: 1.5rem;
     }
     
+    .schedule-card {
+        transition: all 0.3s ease;
+    }
+    
     .schedule-card:hover {
         transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
     
     .lab-icon {
@@ -113,8 +123,8 @@
     }
     
     .schedule-date {
-        width: 80px;
-        height: 80px;
+        width: 70px;
+        height: 70px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -124,22 +134,23 @@
         border-radius: 12px;
         position: relative;
         overflow: hidden;
+        flex-shrink: 0;
     }
     
     .schedule-day {
-        font-size: 2rem;
+        font-size: 1.75rem;
         font-weight: 700;
         line-height: 1;
     }
     
     .schedule-month {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
     
     .schedule-time {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         margin-top: 0.25rem;
         display: inline-block;
         padding: 0.25rem 0.5rem;
@@ -147,20 +158,45 @@
         border-radius: 4px;
     }
     
+    /* Calendário semanal melhorado */
+    .calendar-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 5px;
+        margin-bottom: 15px;
+        scrollbar-width: thin;
+        scrollbar-color: var(--primary-color) transparent;
+    }
+    
+    .calendar-container::-webkit-scrollbar {
+        height: 5px;
+    }
+    
+    .calendar-container::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .calendar-container::-webkit-scrollbar-thumb {
+        background-color: var(--primary-color);
+        border-radius: 20px;
+    }
+    
     .calendar-week {
-        display: flex;
+        display: grid;
+        grid-template-columns: repeat(7, minmax(70px, 1fr));
         gap: 0.5rem;
-        margin-bottom: 1.5rem;
+        min-width: 500px;
+        width: 100%;
     }
     
     .calendar-day {
-        flex: 1;
         text-align: center;
-        padding: 0.75rem;
+        padding: 0.75rem 0.5rem;
         border-radius: 10px;
         background-color: var(--card-bg);
         border: 1px solid var(--border-color);
-        transition: all var(--transition-speed);
+        transition: all 0.3s ease;
+        cursor: pointer;
     }
     
     .calendar-day.today {
@@ -170,6 +206,15 @@
     
     .calendar-day.has-events {
         background-color: rgba(74, 111, 165, 0.1);
+    }
+    
+    .calendar-day.selected {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .calendar-day.selected .calendar-weekday {
+        color: rgba(255, 255, 255, 0.7);
     }
     
     .calendar-date {
@@ -196,6 +241,7 @@
         display: inline-block;
     }
     
+    /* Estilo refinado para o alerta */
     .notice-alert {
         display: flex;
         padding: 1.25rem;
@@ -203,6 +249,12 @@
         background-color: rgba(255, 193, 7, 0.1);
         border-left: 4px solid #ffc107;
         margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .notice-alert:hover {
+        background-color: rgba(255, 193, 7, 0.15);
+        box-shadow: 0 5px 15px rgba(255, 193, 7, 0.15);
     }
     
     .notice-icon {
@@ -233,31 +285,132 @@
         margin-bottom: 0;
     }
     
-    /* Responsive fixes */
-    @media (max-width: 767.98px) {
-        .calendar-week {
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            padding-bottom: 1rem;
-            margin-bottom: 1rem;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        .calendar-day {
-            min-width: 80px;
-            flex: 0 0 auto;
-        }
+    /* Lista de rascunhos melhorada */
+    .draft-list {
+        max-height: 350px;
+        overflow-y: auto;
+        padding: 0.5rem;
+        margin: -0.5rem;
+        scrollbar-width: thin;
+        scrollbar-color: var(--primary-color) transparent;
+    }
+    
+    .draft-list::-webkit-scrollbar {
+        width: 5px;
+    }
+    
+    .draft-list::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .draft-list::-webkit-scrollbar-thumb {
+        background-color: var(--primary-color);
+        border-radius: 20px;
+    }
+    
+    .draft-item {
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .draft-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .draft-item:hover {
+        background-color: rgba(74, 111, 165, 0.05);
+        transform: translateY(-3px);
+        box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    }
 
-        .draft-requests-card {
-            border-left: 4px solid #ffc107;
+    .draft-requests-card {
+        border-left: 4px solid #ffc107;
+    }
+    
+    .draft-badge {
+        display: inline-flex;
+        align-items: center;
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+        padding: 0.25rem 0.5rem;
+        border-radius: 50rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .draft-badge .badge-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: #ffc107;
+        margin-right: 0.4rem;
+    }
+    
+    /* Melhoria nos cards de estatísticas */
+    .stats-card {
+        transition: all 0.3s ease;
+        border-radius: 10px;
+        overflow: hidden;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .stats-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        background-color: rgba(74, 111, 165, 0.1);
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    
+    .stats-label {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stats-value {
+        font-weight: 700;
+        font-size: 1.75rem;
+        margin-bottom: 0;
+    }
+    
+    /* Responsividade melhorada */
+    @media (max-width: 767.98px) {
+        .d-flex.gap-3 {
+            flex-direction: column;
         }
         
-        .draft-badge {
-            background-color: rgba(255, 193, 7, 0.1);
-            color: #ffc107;
-            padding: 0.25rem 0.5rem;
-            border-radius: 50rem;
-            font-size: 0.75rem;
+        .schedule-date {
+            width: 100%;
+            height: auto;
+            flex-direction: row;
+            justify-content: space-between;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        
+        .schedule-date > div {
+            margin: 0 0.5rem;
+        }
+    }
+    
+    @media (min-width: 768px) and (max-width: 991.98px) {
+        .d-flex.gap-3 {
+            align-items: flex-start;
         }
     }
 </style>
@@ -284,316 +437,437 @@
             </div>
         </div>
     </div>
-<!-- Alerta informativo sobre agendamentos -->
-{% if not is_scheduling_day %}
-<div class="notice-alert">
-    <div class="notice-icon">
-        <i class="bi bi-info-circle"></i>
-    </div>
-    <div class="notice-content">
-        <h5 class="notice-title">Lembrando sobre os agendamentos</h5>
-        <p class="notice-text">Agendamentos para a próxima semana só podem ser feitos às quintas e sextas-feiras. Planeje suas aulas com antecedência!</p>
-    </div>
-</div>
-{% endif %}
 
-<!-- Próximas aulas e calendário semanal -->
-<div class="row">
-    <div class="col-lg-8">
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">Próximas Aulas</h5>
-                <a href="{% url 'schedule_calendar' %}" class="btn btn-sm btn-outline-primary">Ver Calendário</a>
-            </div>
-            <div class="card-body">
-                {% if upcoming_reservations %}
-                    {% for reservation in upcoming_reservations|slice:":3" %}
-                        <div class="upcoming-class mb-4 {% if forloop.last %}mb-0{% endif %}">
-                            <div class="d-flex gap-3">
-                                <div class="schedule-date">
-                                    <div class="schedule-day">{{ reservation.scheduled_date|date:"d" }}</div>
-                                    <div class="schedule-month">{{ reservation.scheduled_date|date:"M" }}</div>
-                                    <div class="schedule-time">{{ reservation.start_time|time:"H:i" }}</div>
-                                </div>
-                                <div class="flex-fill">
-                                    <h5 class="mb-1">{{ reservation.laboratory.name }}</h5>
-                                    <p class="text-muted mb-2">{{ reservation.subject }}</p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="text-muted small">Duração: {{ reservation.duration }} horas</span>
-                                        <div class="status-badge status-approved">
-                                            <span class="badge-dot"></span> Aprovado
+    <!-- Alerta informativo sobre agendamentos -->
+    {% if not is_scheduling_day %}
+    <div class="notice-alert">
+        <div class="notice-icon">
+            <i class="bi bi-info-circle"></i>
+        </div>
+        <div class="notice-content">
+            <h5 class="notice-title">Lembrando sobre os agendamentos</h5>
+            <p class="notice-text">Agendamentos para a próxima semana só podem ser feitos às quintas e sextas-feiras. Planeje suas aulas com antecedência!</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Próximas aulas e calendário semanal -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Próximas Aulas</h5>
+                    <a href="{% url 'schedule_calendar' %}" class="btn btn-sm btn-outline-primary">Ver Calendário</a>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_reservations %}
+                        {% for reservation in upcoming_reservations|slice:":3" %}
+                            <div class="upcoming-class {% if forloop.last %}mb-0{% endif %}">
+                                <div class="d-flex gap-3">
+                                    <div class="schedule-date">
+                                        <div class="schedule-day">{{ reservation.scheduled_date|date:"d" }}</div>
+                                        <div class="schedule-month">{{ reservation.scheduled_date|date:"M" }}</div>
+                                        <div class="schedule-time">{{ reservation.start_time|time:"H:i" }}</div>
+                                    </div>
+                                    <div class="flex-fill">
+                                        <h5 class="mb-1">{{ reservation.laboratory.name }}</h5>
+                                        <p class="text-muted mb-2">{{ reservation.subject }}</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="text-muted small">Duração: {{ reservation.duration }} horas</span>
+                                            <div class="status-badge status-approved">
+                                                <span class="badge-dot"></span> Aprovado
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    {% endfor %}
-                    
-                    {% if upcoming_reservations.count > 3 %}
-                        <div class="text-center mt-3">
-                            <a href="{% url 'schedule_calendar' %}" class="btn btn-sm btn-light">
-                                Ver todos os {{ upcoming_reservations.count }} agendamentos
-                            </a>
+                        {% endfor %}
+                        
+                        {% if upcoming_reservations.count > 3 %}
+                            <div class="text-center mt-3">
+                                <a href="{% url 'schedule_calendar' %}" class="btn btn-sm btn-light">
+                                    Ver todos os {{ upcoming_reservations.count }} agendamentos
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="mb-3">
+                                <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5>Nenhuma aula agendada</h5>
+                            <p>Você não possui agendamentos de laboratório para os próximos dias.</p>
+                            {% if is_scheduling_day %}
+                                <a href="{% url 'create_schedule_request' %}" class="btn btn-primary">
+                                    <i class="bi bi-plus-lg me-1"></i> Solicitar Agendamento
+                                </a>
+                            {% endif %}
                         </div>
                     {% endif %}
-                {% else %}
-                    <div class="text-center py-5">
-                        <div class="mb-3">
-                            <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Calendário Semanal</h5>
+                </div>
+                <div class="card-body">
+                    <div class="calendar-container">
+                        <div class="calendar-week">
+                            {% for day in calendar_days %}
+                                <div class="calendar-day {% if day.is_today %}today{% endif %} {% if day.has_events %}has-events{% endif %}" data-date="{{ day.date|date:'Y-m-d' }}">
+                                    <div class="calendar-date">{{ day.date|date:"d" }}</div>
+                                    <div class="calendar-weekday">{{ day.date|date:"D" }}</div>
+                                    {% if day.has_events %}
+                                        <div class="calendar-events">
+                                            <div class="calendar-event-indicator"></div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
                         </div>
-                        <h5>Nenhuma aula agendada</h5>
-                        <p>Você não possui agendamentos de laboratório para os próximos dias.</p>
-                        {% if is_scheduling_day %}
-                            <a href="{% url 'create_schedule_request' %}" class="btn btn-primary">
-                                <i class="bi bi-plus-lg me-1"></i> Solicitar Agendamento
-                            </a>
+                    </div>
+                    
+                    <div class="upcoming-events" id="dayEvents">
+                        <h6 class="mb-3">Hoje - {{ today|date:"d/m/Y" }}</h6>
+                        {% if today_events %}
+                            <div id="events-container">
+                                {% for event in today_events %}
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="lab-icon me-3">
+                                            <i class="bi bi-building"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">{{ event.laboratory.name }}</h6>
+                                            <p class="text-muted mb-0">{{ event.start_time|time:"H:i" }} - {{ event.end_time|time:"H:i" }}</p>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p id="no-events-message">Nenhum evento para hoje.</p>
                         {% endif %}
                     </div>
-                {% endif %}
+                </div>
+            </div>
+
+            <!-- Rascunhos de Agendamento -->
+            <div class="card mb-4 draft-requests-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-file-earmark-text me-1"></i> Rascunhos
+                    </h5>
+                    <span class="badge bg-warning">{{ draft_requests.count }}</span>
+                </div>
+                <div class="card-body p-0">
+                    {% if draft_requests %}
+                        <div class="draft-list p-3">
+                            {% for draft in draft_requests %}
+                                <div class="draft-item">
+                                    <div class="draft-badge">
+                                        <span class="badge-dot"></span> Rascunho
+                                    </div>
+                                    <!-- Link para edição -->
+                                    <a href="{% url 'edit_draft_schedule_request' draft.id %}" class="text-decoration-none">
+                                        <h6 class="mb-1">{{ draft.laboratory.name }}</h6>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <p class="text-muted mb-0 small">{{ draft.scheduled_date|date:"d/m/Y" }}</p>
+                                            <p class="text-muted mb-0 small">{{ draft.start_time|time:"H:i" }} - {{ draft.end_time|time:"H:i" }}</p>
+                                        </div>
+                                        <p class="text-primary small mb-2">
+                                            <i class="bi bi-pencil-square me-1"></i> Clique para editar
+                                        </p>
+                                    </a>
+                                    
+                                    {% if is_scheduling_day %}
+                                    <div class="d-flex gap-2">
+                                        <form method="post" action="{% url 'confirm_draft_schedule_request' draft.id %}" class="flex-fill">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-success w-100">
+                                                <i class="bi bi-check-circle me-1"></i> Confirmar
+                                            </button>
+                                        </form>
+                                        
+                                        <form method="post" action="{% url 'delete_draft_schedule_request' draft.id %}" class="flex-fill">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                                                <i class="bi bi-trash me-1"></i> Excluir
+                                            </button>
+                                        </form>
+                                    </div>
+                                    {% else %}
+                                    <div class="mt-2">
+                                        <span class="text-muted small">
+                                            <i class="bi bi-info-circle me-1"></i> 
+                                            Disponível para confirmação apenas às quintas e sextas-feiras
+                                        </span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="p-3">
+                            <p class="text-muted">Você não possui rascunhos de agendamento.</p>
+                            {% if is_scheduling_day %}
+                                <a href="{% url 'create_schedule_request' %}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-plus-lg me-1"></i> Criar Novo Agendamento
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Solicitações Pendentes</h5>
+                    <span class="badge bg-primary">{{ pending_requests.count }}</span>
+                </div>
+                <div class="card-body">
+                    {% if pending_requests %}
+                        {% for request in pending_requests %}
+                            <div class="d-flex align-items-start {% if not forloop.last %}mb-3{% endif %}">
+                                <div class="status-badge status-pending me-3">
+                                    <span class="badge-dot"></span> Pendente
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">{{ request.laboratory.name }}</h6>
+                                    <p class="text-muted mb-0 small">Solicitado para {{ request.scheduled_date|date:"d/m/Y" }}</p>
+                                </div>
+                            </div>
+                            {% if not forloop.last %}<hr class="my-2">{% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <p>Você não possui solicitações pendentes.</p>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
-    
-    <div class="col-lg-4">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Calendário Semanal</h5>
-            </div>
-            <div class="card-body">
-                <div class="calendar-week">
-                    {% for day in calendar_days %}
-                        <div class="calendar-day {% if day.is_today %}today{% endif %} {% if day.has_events %}has-events{% endif %}">
-                            <div class="calendar-date">{{ day.date|date:"d" }}</div>
-                            <div class="calendar-weekday">{{ day.date|date:"D" }}</div>
-                            {% if day.has_events %}
-                                <div class="calendar-events">
-                                    <div class="calendar-event-indicator"></div>
+
+    <!-- Estatísticas e Histórico -->
+    <div class="row">
+        <!-- Estatísticas Rápidas -->
+        <div class="col-lg-4">
+            <div class="row">
+                <div class="col-md-6 col-lg-12">
+                    <div class="card stats-card mb-4">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stats-icon">
+                                    <i class="bi bi-calendar-check"></i>
                                 </div>
-                            {% endif %}
+                                <div class="ms-3">
+                                    <p class="stats-label">Aulas Agendadas</p>
+                                    <h3 class="stats-value">{{ upcoming_reservations.count }}</h3>
+                                </div>
+                            </div>
                         </div>
-                    {% endfor %}
+                    </div>
                 </div>
                 
-                <div class="upcoming-events">
-                    <h6 class="mb-3">Hoje - {{ today|date:"d/m/Y" }}</h6>
-                    {% if today_events %}
-                        {% for event in today_events %}
+                <div class="col-md-6 col-lg-12">
+                    <div class="card stats-card mb-4">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stats-icon">
+                                    <i class="bi bi-hourglass-split"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <p class="stats-label">Solicitações Pendentes</p>
+                                    <h3 class="stats-value">{{ pending_requests.count }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Histórico de Aulas -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Histórico de Aulas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Laboratório</th>
+                                    <th>Horário</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if past_reservations %}
+                                    {% for reservation in past_reservations %}
+                                        <tr>
+                                            <td>{{ reservation.scheduled_date|date:"d/m/Y" }}</td>
+                                            <td>{{ reservation.laboratory.name }}</td>
+                                            <td>{{ reservation.start_time|time:"H:i" }} - {{ reservation.end_time|time:"H:i" }}</td>
+                                            <td>
+                                                {% if reservation.status == 'approved' %}
+                                                    <div class="status-badge status-approved">
+                                                        <span class="badge-dot"></span> Aprovado
+                                                    </div>
+                                                {% elif reservation.status == 'rejected' %}
+                                                    <div class="status-badge status-rejected">
+                                                        <span class="badge-dot"></span> Rejeitado
+                                                    </div>
+                                                {% else %}
+                                                    <div class="status-badge status-pending">
+                                                        <span class="badge-dot"></span> Pendente
+                                                    </div>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center py-3">Nenhum histórico de agendamento disponível.</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Funcionalidade do calendário semanal
+        const calendarDays = document.querySelectorAll('.calendar-day');
+        
+        // Mostrar eventos para o dia selecionado
+        function showEventsForDay(dateString) {
+            // Aqui você pode fazer uma requisição AJAX para buscar eventos do dia
+            // ou construir um objeto com os eventos do dia usando os dados já carregados
+            
+            // Exemplo: mostrar mensagem temporária
+            const eventsTitle = document.querySelector('#dayEvents h6');
+            const date = new Date(dateString);
+            const formattedDate = date.toLocaleDateString('pt-BR');
+            
+            eventsTitle.textContent = formattedDate;
+            
+            // Você poderia implementar uma busca real aos eventos aqui
+            // Simulação de mensagem de carregamento
+            const eventsContainer = document.getElementById('events-container');
+            const noEventsMessage = document.getElementById('no-events-message');
+            
+            if (eventsContainer) {
+                eventsContainer.innerHTML = '<div class="text-center py-2"><div class="spinner-border spinner-border-sm text-primary" role="status"></div><span class="ms-2">Carregando...</span></div>';
+                
+                // Aqui você implementaria a lógica para buscar eventos
+                // Simulação de resposta após 500ms
+                setTimeout(function() {
+                    const hasEventsForDate = Math.random() > 0.5; // Simulação aleatória
+                    
+                    if (hasEventsForDate) {
+                        eventsContainer.innerHTML = `
                             <div class="d-flex align-items-center mb-3">
                                 <div class="lab-icon me-3">
                                     <i class="bi bi-building"></i>
                                 </div>
                                 <div>
-                                    <h6 class="mb-0">{{ event.laboratory.name }}</h6>
-                                    <p class="text-muted mb-0">{{ event.start_time|time:"H:i" }} - {{ event.end_time|time:"H:i" }}</p>
+                                    <h6 class="mb-0">Laboratório de Informática</h6>
+                                    <p class="text-muted mb-0">08:00 - 12:00</p>
                                 </div>
                             </div>
-                        {% endfor %}
-                    {% else %}
-                        <p >Nenhum evento para hoje.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Rascunhos de Agendamento -->
-        <div class="card mb-4 draft-requests-card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-file-earmark-text me-1"></i> Rascunhos de Agendamento
-                </h5>
-                <span class="badge bg-warning">{{ draft_requests.count }}</span>
-            </div>
-            <div class="card-body">
-                {% if draft_requests %}
-                    {% for draft in draft_requests %}
-                        <div class="d-flex align-items-start mb-3">
-                            <div class="draft-badge me-3">
-                                <span class="badge-dot"></span> Rascunho
-                            </div>
-                            <div class="flex-grow-1">
-                                <!-- Transformando as informações em um link clicável -->
-                                <a href="{% url 'edit_draft_schedule_request' draft.id %}" class="text-decoration-none">
-                                    <h6 class="mb-1">{{ draft.laboratory.name }}</h6>
-                                    <p class="text-muted mb-1 small">Agendado para {{ draft.scheduled_date|date:"d/m/Y" }}</p>
-                                    <p class="text-muted mb-1 small">Horário: {{ draft.start_time|time:"H:i" }} - {{ draft.end_time|time:"H:i" }}</p>
-                                    <p class="text-primary small">
-                                        <i class="bi bi-pencil-square me-1"></i> Clique para editar
-                                    </p>
-                                </a>
-                                
-                                {% if is_scheduling_day %}
-                                <div class="mt-2">
-                                    <form method="post" action="{% url 'confirm_draft_schedule_request' draft.id %}" class="d-inline">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-success">
-                                            <i class="bi bi-check-circle me-1"></i> Confirmar
-                                        </button>
-                                    </form>
-                                    
-                                    <form method="post" action="{% url 'delete_draft_schedule_request' draft.id %}" class="d-inline ms-2">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                            <i class="bi bi-trash me-1"></i> Excluir
-                                        </button>
-                                    </form>
-                                </div>
-                                {% else %}
-                                <div class="mt-2">
-                                    <span class="text-muted small">
-                                        <i class="bi bi-info-circle me-1"></i> 
-                                        Disponível para confirmação apenas às quintas e sextas-feiras
-                                    </span>
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% if not forloop.last %}<hr class="my-3">{% endif %}
-                    {% endfor %}
-                {% else %}
-                    <p class="text-muted">Você não possui rascunhos de agendamento.</p>
-                    {% if is_scheduling_day %}
-                        <a href="{% url 'create_schedule_request' %}" class="btn btn-sm btn-primary">
-                            <i class="bi bi-plus-lg me-1"></i> Criar Novo Agendamento
-                        </a>
-                    {% endif %}
-                {% endif %}
-            </div>
-        </div>
-        
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">Solicitações Pendentes</h5>
-                <span class="badge bg-primary">{{ pending_requests.count }}</span>
-            </div>
-            <div class="card-body">
-                {% if pending_requests %}
-                    {% for request in pending_requests %}
-                        <div class="d-flex align-items-start mb-3">
-                            <div class="status-badge status-pending me-3">
-                                <span class="badge-dot"></span> Pendente
-                            </div>
-                            <div>
-                                <h6 class="mb-1">{{ request.laboratory.name }}</h6>
-                                <p class="text-muted mb-0 small">Solicitado para {{ request.scheduled_date|date:"d/m/Y" }}</p>
-                            </div>
-                        </div>
-                    {% endfor %}
-                {% else %}
-                    <p >Você não possui solicitações pendentes.</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-
-
-<!-- Estatísticas e Histórico -->
-<div class="row">
-    <!-- Estatísticas Rápidas -->
-    <div class="col-lg-4">
-        <div class="row">
-            <div class="col-md-6 col-lg-12">
-                <div class="card stats-card mb-4">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="stats-icon">
-                                <i class="bi bi-calendar-check"></i>
-                            </div>
-                            <div class="ms-3">
-                                <p class="stats-label">Aulas Agendadas</p>
-                                <h3 class="stats-value">{{ upcoming_reservations.count }}</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-6 col-lg-12">
-                <div class="card stats-card mb-4">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="stats-icon">
-                                <i class="bi bi-hourglass-split"></i>
-                            </div>
-                            <div class="ms-3">
-                                <p class="stats-label">Solicitações Pendentes</p>
-                                <h3 class="stats-value">{{ pending_requests.count }}</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Histórico de Aulas -->
-    <div class="col-lg-8">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Histórico de Aulas</h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Data</th>
-                                <th>Laboratório</th>
-                                <th>Horário</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% if past_reservations %}
-                                {% for reservation in past_reservations %}
-                                    <tr>
-                                        <td>{{ reservation.scheduled_date|date:"d/m/Y" }}</td>
-                                        <td>{{ reservation.laboratory.name }}</td>
-                                        <td>{{ reservation.start_time|time:"H:i" }} - {{ reservation.end_time|time:"H:i" }}</td>
-                                        <td>
-                                            {% if reservation.status == 'approved' %}
-                                                <div class="status-badge status-approved">
-                                                    <span class="badge-dot"></span> Aprovado
-                                                </div>
-                                            {% elif reservation.status == 'rejected' %}
-                                                <div class="status-badge status-rejected">
-                                                    <span class="badge-dot"></span> Rejeitado
-                                                </div>
-                                            {% else %}
-                                                <div class="status-badge status-pending">
-                                                    <span class="badge-dot"></span> Pendente
-                                                </div>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            {% else %}
-                                <tr>
-                                    <td colspan="4" class="text-center py-3">Nenhum histórico de agendamento disponível.</td>
-                                </tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-{% endblock %}
-{% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Exemplo de código para adicionar funcionalidade ao calendário semanal
-        const calendarDays = document.querySelectorAll('.calendar-day');
+                        `;
+                        if (noEventsMessage) noEventsMessage.style.display = 'none';
+                    } else {
+                        if (eventsContainer) eventsContainer.style.display = 'none';
+                        if (noEventsMessage) {
+                            noEventsMessage.style.display = 'block';
+                            noEventsMessage.textContent = 'Nenhum evento para este dia.';
+                        } else {
+                            eventsContainer.innerHTML = '<p>Nenhum evento para este dia.</p>';
+                        }
+                    }
+                }, 500);
+            }
+        }
         
         calendarDays.forEach(day => {
             day.addEventListener('click', function() {
-                // Aqui você pode adicionar uma ação ao clicar no dia,
-                // como mostrar os eventos específicos daquele dia
+                // Remover seleção anterior
                 calendarDays.forEach(d => d.classList.remove('selected'));
+                
+                // Adicionar seleção ao dia clicado
                 this.classList.add('selected');
+                
+                // Mostrar eventos do dia
+                const dateString = this.getAttribute('data-date');
+                showEventsForDay(dateString);
+            });
+        });
+        
+        // Selecionar o dia atual por padrão
+        const today = document.querySelector('.calendar-day.today');
+        if (today) {
+            today.classList.add('selected');
+        }
+        
+        // Animação de hover para os botões de confirmação/exclusão de rascunhos
+        const actionButtons = document.querySelectorAll('.draft-item button');
+        
+        actionButtons.forEach(button => {
+            button.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+            });
+            
+            button.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+        
+        // Validar formulários de confirmação/exclusão
+        const confirmForms = document.querySelectorAll('form[action*="confirm"]');
+        const deleteForms = document.querySelectorAll('form[action*="delete"]');
+        
+        confirmForms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                if (!confirm('Tem certeza que deseja confirmar este rascunho?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+        
+        deleteForms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                if (!confirm('Tem certeza que deseja excluir este rascunho?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+        
+        // Elementos para animação em hover
+        const cards = document.querySelectorAll('.card');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                if (!this.classList.contains('stats-card') && !this.classList.contains('draft-item')) {
+                    this.style.transform = 'translateY(-5px)';
+                    this.style.boxShadow = '0 5px 20px rgba(0,0,0,0.1)';
+                }
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                if (!this.classList.contains('stats-card') && !this.classList.contains('draft-item')) {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)';
+                }
             });
         });
     });

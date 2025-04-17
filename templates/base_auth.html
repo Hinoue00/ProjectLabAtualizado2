@@ -112,23 +112,7 @@
             margin-bottom: 0;
             font-weight: 600;
         }
-        
-        /* Forms */
-        .form-control, .form-select {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius);
-            color: var(--text-color);
-            transition: all var(--transition-speed);
-        }
-        
-        .form-control:focus, .form-select:focus {
-            background-color: var(--card-bg);
-            color: var(--text-color);
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.25rem rgba(74, 111, 165, 0.25);
-        }
-        
+
         /* Buttons */
         .btn {
             border-radius: var(--border-radius);
@@ -197,6 +181,11 @@
         .border-primary {
             border-color: var(--primary-color) !important;
         }
+
+        .form-floating input:placeholder {
+            color: var(--text-muted)
+        }
+
     </style>
     
     <!-- Custom CSS -->

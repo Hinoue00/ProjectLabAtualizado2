@@ -6,30 +6,48 @@
 
 {% block extra_css %}
 <style>
-    .schedule-request-container {
-        background-color: var(--card-bg);
-        border-radius: var(--border-radius);
-        box-shadow: var(--box-shadow);
+    :root {
+        --primary-gradient: linear-gradient(135deg, #4a6fa5 0%, #2c4677 100%);
+        --form-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        --card-radius: 16px;
+        --element-radius: 12px;
+        --transition-speed: 0.3s;
     }
 
-    .textarea
+    /* Main container styling */
+    .schedule-request-container {
+        background-color: var(--card-bg);
+        border-radius: var(--card-radius);
+        box-shadow: var(--form-shadow);
+        overflow: hidden;
+        transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+        margin-bottom: 2rem;
+    }
+
+    .schedule-request-container:hover {
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    }
     
+    /* Form sections styling */
     .request-header {
         background-color: rgba(74, 111, 165, 0.05);
         border-bottom: 1px solid var(--border-color);
-        padding: 1.5rem;
+        padding: 1.75rem;
     }
     
     .request-body {
-        padding: 1.5rem;
+        padding: 1.75rem;
     }
     
     .request-body h5 {
-        color:var(--text-color)
+        color: var(--text-color);
+        margin-bottom: 1.25rem;
+        font-weight: 600;
     }
 
-     .request-body label {
-        color:var(--text-color)
+    .request-body label {
+        color: var(--text-color);
+        font-weight: 500;
     }
 
     .request-footer {
@@ -38,104 +56,358 @@
         padding: 1.5rem;
     }
     
-    .laboratory-selection {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
+    /* Laboratory selection styling */
+        /* Lab selection styles */
+    .lab-selection-container {
+        border: 1px solid var(--border-color);
+        border-radius: var(--element-radius);
+        overflow: hidden;
+        transition: all var(--transition-speed);
+    }
+    
+    .lab-row {
+        cursor: pointer;
+        transition: all var(--transition-speed);
+    }
+    
+    .lab-row:hover {
+        background-color: rgba(74, 111, 165, 0.05);
+    }
+    
+    [data-theme="dark"] .lab-row:hover {
+        background-color: rgba(100, 130, 180, 0.1);
+    }
+    
+    .lab-row.selected {
+        background-color: rgba(74, 111, 165, 0.1);
+        position: relative;
+    }
+    
+    [data-theme="dark"] .lab-row.selected {
+        background-color: rgba(100, 130, 180, 0.2);
+    }
+    
+    .lab-row.selected::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 4px;
+        background: var(--primary-gradient);
+    }
+    
+    .lab-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: rgba(74, 111, 165, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all var(--transition-speed);
+    }
+    
+    [data-theme="dark"] .lab-icon {
+        background-color: rgba(100, 130, 180, 0.2);
+    }
+    
+    .lab-row:hover .lab-icon {
+        transform: scale(1.1);
+    }
+    
+    .select-lab-btn {
+        border-radius: 50px;
+        transition: all var(--transition-speed);
+    }
+    
+    .select-lab-btn:hover {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    /* Selected lab info */
+    #selectedLabInfo {
+        background-color: rgba(74, 111, 165, 0.05);
+        border: 1px solid var(--border-color);
+        transition: all var(--transition-speed);
+    }
+    
+    [data-theme="dark"] #selectedLabInfo {
+        background-color: rgba(100, 130, 180, 0.1);
+    }
+    
+    #selectedLabInfo:hover {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+    
+    [data-theme="dark"] #selectedLabInfo:hover {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .selected-lab-icon {
+        background-color: rgba(74, 111, 165, 0.1);
+        color: var(--primary-color);
+    }
+    
+    [data-theme="dark"] .selected-lab-icon {
+        background-color: rgba(100, 130, 180, 0.2);
+    }
+
+    .table-responsive span, td {
+        color:var(--text-muted)
+    }
+
+    .table-hover td {
+        color:var(--text-muted)
+    }
+    
+    .form-section .form-text{
+        color:var(--text-muted)
+    }
+
+    /* Table styling */
+
+    .table {
+        margin-bottom: 0;
+        color: var(--text-color);
+    }
+    
+    .table th {
+        background-color: var(--card-bg);
+        border-bottom: 2px solid var(--border-color);
+        padding: 0.75rem 1rem;
+        color: var(--text-color);
+    }
+    
+    .table td {
+        vertical-align: middle;
+        padding: 0.75rem 1rem;
+        border-color: var(--border-color);
+        background-color: var(--card-bg);
+    }
+    
+    /* Search and filter controls */
+    #labSearch, #departmentFilter {
+        border-radius: var(--element-radius);
+        transition: all var(--transition-speed);
+        background-color: var(--card-bg);
+        color: var(--text-color);
+        border-color: var(--border-color);
+    }
+    
+    .input-group-text {
+        background-color: var(--card-bg);
+        color: var(--text-color);
+        border-color: var(--border-color);
+    }
+    
+    #labSearch:focus, #departmentFilter:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(74, 111, 165, 0.25);
+    }
+    
+    /* Form controls styling */
+    .form-control, .form-select {
+        border-radius: var(--element-radius);
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        background-color: transparent;
+        transition: all var(--transition-speed);
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(74, 111, 165, 0.25);
+    }
+    
+    /* Draft warning styling */
+    .draft-warning {
+        background-color: rgba(255, 193, 7, 0.1);
+        border-left: 4px solid #ffc107;
+        padding: 1.25rem;
+        margin-bottom: 1.75rem;
+        border-radius: var(--element-radius);
+        transition: transform var(--transition-speed);
+    }
+    
+    .draft-warning:hover {
+        transform: translateX(5px);
+    }
+    
+    .draft-warning-icon {
+        font-size: 2.25rem;
+        color: #ffc107;
+        margin-right: 1.25rem;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    /* Alert styling */
+    .alert {
+        border-radius: var(--element-radius);
+        border: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .alert-info {
+        background-color: rgba(13, 202, 240, 0.1);
+        border-left: 4px solid #0dcaf0;
+    }
+    
+    /* Button styling */
+    .btn {
+        border-radius: 50px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 500;
+        transition: all var(--transition-speed);
+    }
+    
+    .btn-primary {
+        background: var(--primary-gradient);
+        border: none;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(74, 111, 165, 0.3);
+    }
+    
+    .btn-outline-secondary {
+        border: 1px solid var(--border-color);
+    }
+    
+    .btn-outline-secondary:hover {
+        background-color: var(--card-bg);
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    /* File upload styling */
+    .custom-file-upload {
+        border: 2px dashed var(--border-color);
+        border-radius: var(--element-radius);
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all var(--transition-speed);
         margin-bottom: 1.5rem;
     }
     
-    .laboratory-option {
-        border: 2px solid var(--border-color);
-        border-radius: var(--border-radius);
-        padding: 1rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-    
-    .laboratory-option:hover,
-    .laboratory-option.selected {
+    .custom-file-upload:hover {
         border-color: var(--primary-color);
         background-color: rgba(74, 111, 165, 0.05);
     }
     
-    .laboratory-option-icon {
+    .custom-file-icon {
         font-size: 2.5rem;
+        color: var(--text-muted);
         margin-bottom: 1rem;
-        color: var(--text-muted);
     }
     
-    .laboratory-option.selected .laboratory-option-icon {
-        color: var(--primary-color);
+    .file-preview {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1rem;
     }
     
-    .laboratory-option-title {
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-    
-    .laboratory-option-capacity {
-        color: var(--text-muted);
-        font-size: 0.875rem;
-    }
-    
-    .time-slots {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-        gap: 0.5rem;
-    }
-    
-    .time-slot {
-        border: 1px solid var(--border-color);
-        border-radius: var(--border-radius);
-        padding: 0.5rem;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    
-    .time-slot:hover,
-    .time-slot.selected {
-        border-color: var(--primary-color);
+    .file-item {
         background-color: rgba(74, 111, 165, 0.1);
-    }
-    
-    .availability-indicator {
-        display: inline-flex;
+        border-radius: var(--element-radius);
+        padding: 0.5rem 1rem;
+        display: flex;
         align-items: center;
-        gap: 0.25rem;
         font-size: 0.875rem;
     }
     
-    .availability-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
+    .file-item i {
+        margin-right: 0.5rem;
     }
     
-    .availability-available {
-        background-color: #28a745;
+    .file-item .remove-file {
+        margin-left: 0.5rem;
+        cursor: pointer;
     }
     
-    .availability-partial {
-        background-color: #ffc107;
-    }
-
-    .draft-warning {
-        background-color: rgba(255, 193, 7, 0.1);
-        border-left: 4px solid #ffc107;
-        padding: 1rem;
-        margin-bottom: 1.5rem;
+    /* Animated form section transitions */
+    .form-section {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeIn 0.5s forwards;
     }
     
-    .draft-warning-icon {
-        font-size: 2rem;
-        color: #ffc107;
-        margin-right: 1rem;
+    @keyframes fadeIn {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .form-section:nth-child(2) {
+        animation-delay: 0.1s;
+    }
+    
+    .form-section:nth-child(3) {
+        animation-delay: 0.2s;
+    }
+    
+    .form-section:nth-child(4) {
+        animation-delay: 0.3s;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .laboratory-selection {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        }
+        
+        .laboratory-option {
+            padding: 1rem;
+        }
+        
+        .laboratory-option-icon {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .request-body {
+            padding: 1.25rem;
+        }
+        
+        .draft-warning {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .draft-warning-icon {
+            margin-right: 0;
+            margin-bottom: 1rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .laboratory-selection {
+            grid-template-columns: 1fr 1fr;
+        }
+        
+        .laboratory-option-title {
+            font-size: 0.875rem;
+        }
+        
+        .laboratory-option-capacity {
+            font-size: 0.75rem;
+        }
+        
+        .request-footer .btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
     }
 </style>
 {% endblock %}
@@ -178,8 +450,8 @@
 
     <!-- Scheduling Request Container -->
     <div class="row">
-        <div class="col-lg-8 mx-auto">
-            <div class="schedule-request-container card border-0 shadow-sm">
+        <div class="col-lg-10 mx-auto">
+            <div class="schedule-request-container">
                 <!-- Informative Alert -->
                 <div class="alert alert-info m-3" role="alert">
                     <i class="bi bi-info-circle me-2"></i>
@@ -195,79 +467,180 @@
                 <!-- Request Form -->
                 <form method="post" id="scheduleRequestForm" enctype="multipart/form-data">
                     {% csrf_token %}
+                    
+                    <!-- Hidden lab selection field -->
+                    {{ form.laboratory.as_hidden }}
 
                     <div class="request-body">
-                        <!-- Rest of the form remains the same... -->
                         <!-- Laboratory Selection -->
-                        <div class="mb-4">
-                            <h5 class="mb-3">Selecione o Laboratório</h5>
-                            <div class="laboratory-selection">
-                                {% for laboratory in form.laboratory.field.queryset %}
-                                <div class="laboratory-option" data-laboratory-id="{{ laboratory.id }}">
-                                    <div class="laboratory-option-icon">
-                                        {% if 'eng' in laboratory.department|lower %}
-                                            <i class="bi bi-gear"></i>
-                                        {% elif 'saúde' in laboratory.department|lower %}
-                                            <i class="bi bi-heart-pulse"></i>
-                                        {% else %}
-                                            <i class="bi bi-laptop"></i>
-                                        {% endif %}
+                        <div class="form-section mb-5">
+                            <h5><i class="bi bi-building me-2"></i>Selecione o Laboratório</h5>
+                            
+                            <div class="mb-4">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                            <input type="text" id="labSearch" class="form-control" placeholder="Buscar laboratório...">
+                                        </div>
                                     </div>
-                                    <div class="laboratory-option-title">{{ laboratory.name }}</div>
-                                    <div class="laboratory-option-capacity">Capacidade: {{ laboratory.capacity }} pessoas</div>
+                                    <div class="col-md-6 mb-3">
+                                        <select id="departmentFilter" class="form-select">
+                                            <option value="all">Todos os departamentos</option>
+                                            <option value="eng">Engenharias</option>
+                                            <option value="saúde">Saúde</option>
+                                            <option value="info">Informática</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                {% endfor %}
                             </div>
-                            {{ form.laboratory }}
+                            
+                            <div class="lab-selection-container">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Laboratório</th>
+                                                <th>Departamento</th>
+                                                <th>Capacidade</th>
+                                                <th>Ação</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="labsTableBody">
+                                            {% for laboratory in form.laboratory.field.queryset %}
+                                            <tr class="lab-row" data-laboratory-id="{{ laboratory.id }}" data-department="{{ laboratory.department|lower }}">
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="lab-icon me-2">
+                                                            {% if 'eng' in laboratory.department|lower %}
+                                                                <i class="bi bi-gear text-primary"></i>
+                                                            {% elif 'saúde' in laboratory.department|lower %}
+                                                                <i class="bi bi-heart-pulse text-danger"></i>
+                                                            {% else %}
+                                                                <i class="bi bi-laptop text-success"></i>
+                                                            {% endif %}
+                                                        </div>
+                                                        <span>{{ laboratory.name }}</span>
+                                                    </div>
+                                                </td>
+                                                <td>{{ laboratory.department }}</td>
+                                                <td>{{ laboratory.capacity }} pessoas</td>
+                                                <td>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary select-lab-btn">
+                                                        Selecionar
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div id="noLabsFound" class="text-center py-4 d-none">
+                                    <i class="bi bi-search text-muted" style="font-size: 2rem;"></i>
+                                    <h6 class="mt-3 mb-0">Nenhum laboratório encontrado</h6>
+                                    <p class="text-muted">Tente outro termo de busca ou filtro</p>
+                                </div>
+                                
+                                <div id="selectedLabInfo" class="mt-4 p-3 rounded d-none">
+                                    <div class="d-flex align-items-start">
+                                        <div class="selected-lab-icon me-3 p-3 rounded">
+                                            <i class="bi bi-building-check fs-1"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1">Laboratório selecionado:</h6>
+                                            <h5 id="selectedLabName" class="mb-2">Nome do laboratório</h5>
+                                            <p id="selectedLabDetails" class="mb-0 text-muted">Departamento | Capacidade: x pessoas</p>
+                                        </div>
+                                        <button type="button" id="changeLabBtn" class="btn btn-sm btn-outline-secondary ms-auto">
+                                            <i class="bi bi-pencil"></i> Alterar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Rest of the form... -->
-                        <!-- Request Details -->
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                {{ form.subject|as_crispy_field }}
+                        <!-- Basic Information -->
+                        <div class="form-section mb-5">
+                            <h5><i class="bi bi-info-circle me-2"></i>Informações Básicas</h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label for="{{ form.subject.id_for_label }}" class="form-label">Disciplina/Assunto</label>
+                                    <input type="text" name="{{ form.subject.name }}" id="{{ form.subject.id_for_label }}" 
+                                           class="form-control" placeholder="Ex: Física Experimental" required>
+                                    <div class="form-text">Informe a disciplina ou o assunto da aula</div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-4">
+                                    <label for="id_scheduled_date" class="form-label">Data Agendada</label>
+                                    <input type="date" name="scheduled_date" id="id_scheduled_date" class="form-control" 
+                                           min="{{ next_week_start|date:'Y-m-d' }}" max="{{ next_week_end|date:'Y-m-d' }}" required>
+                                    <div class="form-text">Apenas dias úteis (segunda a sexta) da próxima semana</div>
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="id_scheduled_date" class="form-label">Data Agendada</label>
-                                <input type="date" name="scheduled_date" id="id_scheduled_date" class="form-control" 
-                                       min="{{ next_week_start|date:'Y-m-d' }}" max="{{ next_week_end|date:'Y-m-d' }}" required>
-                                <div class="form-text">Apenas dias úteis (segunda a sexta) da próxima semana.</div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label for="id_shift" class="form-label">Turno</label>
+                                    <select name="shift" id="id_shift" class="form-select" required>
+                                        <option value="" {% if not form.shift.value %}selected{% endif %}>Selecione o turno</option>
+                                        <option value="morning" {% if form.shift.value == "morning" %}selected{% endif %}>
+                                            <i class="bi bi-sunrise"></i> Matutino (08:00 - 12:00)
+                                        </option>
+                                        <option value="evening" {% if form.shift.value == "evening" %}selected{% endif %}>
+                                            <i class="bi bi-moon-stars"></i> Noturno (19:00 - 22:00)
+                                        </option>
+                                    </select>
+                                    <div class="form-text">Escolha o período do dia para sua aula</div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-4">
+                                    <label for="{{ form.number_of_students.id_for_label }}" class="form-label">Número de Alunos</label>
+                                    <input type="number" name="{{ form.number_of_students.name }}" 
+                                           id="{{ form.number_of_students.id_for_label }}" class="form-control" 
+                                           placeholder="Ex: 30" min="1">
+                                    <div class="form-text">Quantidade de alunos que participarão da aula</div>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="id_shift" class="form-label">Turno</label>
-                            <select name="shift" id="id_shift" class="form-select" required>
-                                <option value="" {% if not form.shift.value %}selected{% endif %}>Selecione o turno</option>
-                                <option value="morning" {% if form.shift.value == "morning" %}selected{% endif %}>Matutino (08:00 - 12:00)</option>
-                                <option value="evening" {% if form.shift.value == "evening" %}selected{% endif %}>Noturno (19:00 - 22:00)</option>
-                            </select>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                {{ form.number_of_students|as_crispy_field }}
+                        <!-- Description and Materials -->
+                        <div class="form-section mb-5">
+                            <h5><i class="bi bi-file-text me-2"></i>Detalhes da Atividade</h5>
+                            <div class="mb-4">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">Descrição da Atividade</label>
+                                <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" 
+                                          class="form-control" rows="4" 
+                                          placeholder="Descreva detalhadamente a atividade que será realizada..."></textarea>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                {{ form.description|as_crispy_field }}
+                            
+                            <div class="mb-4">
+                                <label for="{{ form.materials.id_for_label }}" class="form-label">Materiais Necessários</label>
+                                <textarea name="{{ form.materials.name }}" id="{{ form.materials.id_for_label }}" 
+                                          class="form-control" rows="3" 
+                                          placeholder="Liste os materiais necessários, separados por vírgula..."></textarea>
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            {{ form.materials|as_crispy_field }}
+                        <!-- Attachments Section -->
+                        <div class="form-section">
+                            <h5><i class="bi bi-paperclip me-2"></i>Anexos</h5>
+                            <div class="custom-file-upload" id="dropArea">
+                                <input type="file" name="attachments" id="id_attachments" multiple class="d-none">
+                                <div class="custom-file-icon">
+                                    <i class="bi bi-cloud-arrow-up"></i>
+                                </div>
+                                <h6>Arraste arquivos ou clique para anexar</h6>
+                                <p>Você pode anexar roteiros de aula, imagens ou qualquer outro documento</p>
+                                <div id="filePreview" class="file-preview"></div>
+                            </div>
                         </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="id_attachments" class="form-label">Arquivos</label>
-                        <input type="file" name="attachments" id="id_attachments" multiple class="form-control">
-                        <div class="form-text">Você pode anexar roteiros de aula, imagens ou qualquer outro documento.</div>
                     </div>
 
                     <!-- Request Footer -->
                     <div class="request-footer">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <a href="{% url 'professor_dashboard' %}" class="btn btn-outline-secondary">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap">
+                            <a href="{% url 'professor_dashboard' %}" class="btn btn-outline-secondary mb-2 mb-md-0">
                                 <i class="bi bi-x-lg me-1"></i> Cancelar
                             </a>
                             <button type="submit" class="btn btn-primary">
@@ -290,39 +663,242 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Laboratory Selection
-        const labOptions = document.querySelectorAll('.laboratory-option');
         const labSelect = document.getElementById('id_laboratory');
+        const labRows = document.querySelectorAll('.lab-row');
+        const labSearch = document.getElementById('labSearch');
+        const departmentFilter = document.getElementById('departmentFilter');
+        const selectedLabInfo = document.getElementById('selectedLabInfo');
+        const selectedLabName = document.getElementById('selectedLabName');
+        const selectedLabDetails = document.getElementById('selectedLabDetails');
+        const changeLabBtn = document.getElementById('changeLabBtn');
+        const noLabsFound = document.getElementById('noLabsFound');
+        const labsTableBody = document.getElementById('labsTableBody');
         
-        // Marcar o laboratório selecionado
+        // Show selected lab if one is already selected
         if (labSelect && labSelect.value) {
-            const selectedOption = document.querySelector(`.laboratory-option[data-laboratory-id="${labSelect.value}"]`);
-            if (selectedOption) {
-                selectedOption.classList.add('selected');
+            const selectedRow = document.querySelector(`.lab-row[data-laboratory-id="${labSelect.value}"]`);
+            if (selectedRow) {
+                selectLab(selectedRow);
             }
         }
         
-        // Adicionar eventos de clique nos laboratórios
-        labOptions.forEach(option => {
-            option.addEventListener('click', function() {
-                const labId = this.dataset.laboratoryId;
+        // Filter labs by search term and department
+        function filterLabs() {
+            const searchTerm = labSearch.value.toLowerCase();
+            const departmentValue = departmentFilter.value;
+            let visibleCount = 0;
+            
+            labRows.forEach(row => {
+                const labName = row.querySelector('td:first-child span').textContent.toLowerCase();
+                const labDepartment = row.dataset.department;
                 
-                // Remover a seleção anterior
-                labOptions.forEach(opt => opt.classList.remove('selected'));
+                const matchesSearch = labName.includes(searchTerm);
+                const matchesDepartment = departmentValue === 'all' || labDepartment.includes(departmentValue);
                 
-                // Adicionar a nova seleção
-                this.classList.add('selected');
-                
-                // Atualizar o select
-                if (labSelect) {
-                    labSelect.value = labId;
+                if (matchesSearch && matchesDepartment) {
+                    row.classList.remove('d-none');
+                    visibleCount++;
+                } else {
+                    row.classList.add('d-none');
                 }
+            });
+            
+            // Show "no labs found" message if no results
+            if (visibleCount === 0) {
+                noLabsFound.classList.remove('d-none');
+            } else {
+                noLabsFound.classList.add('d-none');
+            }
+        }
+        
+        // Select a lab
+        function selectLab(row) {
+            // Remove previous selection
+            labRows.forEach(r => r.classList.remove('selected'));
+            
+            // Add new selection
+            row.classList.add('selected');
+            
+            // Update hidden select field
+            const labId = row.dataset.laboratoryId;
+            if (labSelect) {
+                labSelect.value = labId;
+            }
+            
+            // Update the lab info section
+            const labName = row.querySelector('td:first-child span').textContent;
+            const labDepartment = row.querySelector('td:nth-child(2)').textContent;
+            const labCapacity = row.querySelector('td:nth-child(3)').textContent;
+            
+            selectedLabName.textContent = labName;
+            selectedLabDetails.textContent = `${labDepartment} | ${labCapacity}`;
+            
+            // Show the selected lab info
+            selectedLabInfo.classList.remove('d-none');
+            
+            // Hide the table for a cleaner UI
+            document.querySelector('.table-responsive').classList.add('d-none');
+        }
+        
+        // Add event listeners
+        labSearch.addEventListener('input', filterLabs);
+        departmentFilter.addEventListener('change', filterLabs);
+        
+        // Event listener for lab selection
+        labRows.forEach(row => {
+            const selectBtn = row.querySelector('.select-lab-btn');
+            
+            // Select on button click
+            selectBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                selectLab(row);
+            });
+            
+            // Also select on row click
+            row.addEventListener('click', function() {
+                selectLab(this);
             });
         });
         
-        // Add confirmation dialog for draft/confirmation
+        // Change lab button
+        if (changeLabBtn) {
+            changeLabBtn.addEventListener('click', function() {
+                // Show the table again
+                document.querySelector('.table-responsive').classList.remove('d-none');
+                // Hide the selected lab info
+                selectedLabInfo.classList.add('d-none');
+            });
+        }
+        
+        // Drag and drop file upload
+        const dropArea = document.getElementById('dropArea');
+        const fileInput = document.getElementById('id_attachments');
+        const filePreview = document.getElementById('filePreview');
+        
+        if (dropArea && fileInput) {
+            // Click em qualquer lugar da área para selecionar arquivos
+            dropArea.addEventListener('click', function(e) {
+                if (e.target.id !== 'id_attachments') {
+                    fileInput.click();
+                }
+            });
+            
+            // Eventos de drag and drop
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                dropArea.classList.add('border-primary');
+                dropArea.style.backgroundColor = 'rgba(74, 111, 165, 0.05)';
+            }
+            
+            function unhighlight() {
+                dropArea.classList.remove('border-primary');
+                dropArea.style.backgroundColor = '';
+            }
+            
+            // Processar arquivos carregados
+            dropArea.addEventListener('drop', handleDrop, false);
+            fileInput.addEventListener('change', handleFiles, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                fileInput.files = files;
+                handleFiles();
+            }
+            
+            function handleFiles() {
+                const files = fileInput.files;
+                filePreview.innerHTML = '';
+                
+                if (files.length > 0) {
+                    Array.from(files).forEach(file => {
+                        const fileItem = document.createElement('div');
+                        fileItem.className = 'file-item';
+                        
+                        // Identificar ícone com base no tipo de arquivo
+                        let fileIcon = 'bi-file';
+                        if (file.type.includes('image')) {
+                            fileIcon = 'bi-file-image';
+                        } else if (file.type.includes('pdf')) {
+                            fileIcon = 'bi-file-pdf';
+                        } else if (file.type.includes('word')) {
+                            fileIcon = 'bi-file-word';
+                        } else if (file.type.includes('text')) {
+                            fileIcon = 'bi-file-text';
+                        }
+                        
+                        fileItem.innerHTML = `
+                            <i class="bi ${fileIcon}"></i>
+                            <span>${file.name}</span>
+                        `;
+                        filePreview.appendChild(fileItem);
+                    });
+                }
+            }
+        }
+        
+        // Data de agendamento - bloquear fins de semana
+        const dateInput = document.getElementById('id_scheduled_date');
+        if (dateInput) {
+            dateInput.addEventListener('input', function() {
+                const selectedDate = new Date(this.value);
+                const dayOfWeek = selectedDate.getDay();
+                
+                // 0 = domingo, 6 = sábado
+                if (dayOfWeek === 0 || dayOfWeek === 6) {
+                    this.setCustomValidity('Por favor, selecione apenas dias úteis (segunda a sexta).');
+                    
+                    // Visual feedback
+                    this.classList.add('is-invalid');
+                    
+                    // Adicionar mensagem de erro
+                    let errorDiv = this.nextElementSibling;
+                    if (!errorDiv || !errorDiv.classList.contains('invalid-feedback')) {
+                        errorDiv = document.createElement('div');
+                        errorDiv.className = 'invalid-feedback';
+                        errorDiv.textContent = 'Por favor, selecione apenas dias úteis (segunda a sexta).';
+                        this.parentNode.appendChild(errorDiv);
+                    }
+                } else {
+                    this.setCustomValidity('');
+                    this.classList.remove('is-invalid');
+                    
+                    // Remover mensagem de erro se existir
+                    const errorDiv = this.nextElementSibling;
+                    if (errorDiv && errorDiv.classList.contains('invalid-feedback')) {
+                        errorDiv.remove();
+                    }
+                }
+            });
+        }
+        
+        // Form submission confirmation
         const form = document.getElementById('scheduleRequestForm');
         if (form) {
             form.addEventListener('submit', function(e) {
+                // Verificar se um laboratório foi selecionado
+                if (!labSelect.value) {
+                    e.preventDefault();
+                    alert('Por favor, selecione um laboratório antes de prosseguir.');
+                    return;
+                }
+                
                 const isConfirmationDay = {{ is_confirmation_day|yesno:"true,false" }};
                 
                 if (!isConfirmationDay) {
@@ -331,47 +907,20 @@
                     
                     if (!confirm(confirmMessage)) {
                         e.preventDefault();
+                    } else {
+                        // Adicionar efeito de loading no botão
+                        const submitBtn = form.querySelector('button[type="submit"]');
+                        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Salvando...';
+                        submitBtn.disabled = true;
                     }
+                } else {
+                    // Adicionar efeito de loading no botão
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Enviando...';
+                    submitBtn.disabled = true;
                 }
             });
         }
     });
-        document.addEventListener('DOMContentLoaded', function() {
-            // Bloqueio de seleção para fins de semana
-            const dateInput = document.getElementById('id_scheduled_date');
-            
-            if (dateInput) {
-                dateInput.addEventListener('input', function() {
-                    const selectedDate = new Date(this.value);
-                    const dayOfWeek = selectedDate.getDay();
-                    
-                    // 6 = domingo, 5 = sábado
-                    if (dayOfWeek === 5 || dayOfWeek === 6) {
-                        this.setCustomValidity('Por favor, selecione apenas dias úteis (segunda a sexta).');
-                        
-                        // Visual feedback
-                        this.classList.add('is-invalid');
-                        
-                        // Adicionar mensagem de erro
-                        let errorDiv = this.nextElementSibling;
-                        if (!errorDiv || !errorDiv.classList.contains('invalid-feedback')) {
-                            errorDiv = document.createElement('div');
-                            errorDiv.className = 'invalid-feedback';
-                            errorDiv.textContent = 'Por favor, selecione apenas dias úteis (segunda a sexta).';
-                            this.parentNode.appendChild(errorDiv);
-                        }
-                    } else {
-                        this.setCustomValidity('');
-                        this.classList.remove('is-invalid');
-                        
-                        // Remover mensagem de erro se existir
-                        const errorDiv = this.nextElementSibling;
-                        if (errorDiv && errorDiv.classList.contains('invalid-feedback')) {
-                            errorDiv.remove();
-                        }
-                    }
-                });
-            }
-        });
 </script>
 {% endblock %}

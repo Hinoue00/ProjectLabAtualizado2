@@ -3,156 +3,669 @@
 {% block title %}Calendário de Agendamentos | LabConnect{% endblock %}
 {% block extra_css %}
 <style>
+    /* Variáveis para facilitar ajustes */
+    :root {
+        --calendar-header-bg: rgba(74, 111, 165, 0.05);
+        --event-bg: rgba(74, 111, 165, 0.1);
+        --event-hover-bg: rgba(74, 111, 165, 0.2);
+        --event-color: var(--primary-color);
+        --today-bg: var(--primary-color);
+        --today-color: white;
+        --past-day-color: var(--text-muted);
+        --weekend-bg: rgba(0, 0, 0, 0.02);
+        --border-radius: 8px;
+        --box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        --box-shadow-lg: 0 10px 25px rgba(0,0,0,0.15);
+        --primary-color: #4a6fa5;
+        --text-color: #333;
+        --text-muted: #6c757d;
+        --body-bg: #f8f9fa;
+        --card-bg: #fff;
+        --border-color: #dee2e6;
+    }
+    
+    [data-theme="dark"] {
+        --calendar-header-bg: rgba(74, 111, 165, 0.1);
+        --event-bg: rgba(74, 111, 165, 0.2);
+        --event-hover-bg: rgba(74, 111, 165, 0.3);
+        --weekend-bg: rgba(255, 255, 255, 0.03);
+        --text-color: #f8f9fa;
+        --text-muted: #adb5bd;
+        --body-bg: #212529;
+        --card-bg: #343a40;
+        --border-color: #495057;
+    }
+    
+    /* Container principal do calendário */
     .calendar-container {
         background-color: var(--card-bg);
         border-radius: var(--border-radius);
         box-shadow: var(--box-shadow);
         overflow: hidden;
+        transition: all 0.3s ease;
     }
     
+    .calendar-container:hover {
+        box-shadow: var(--box-shadow-lg);
+    }
+    
+    /* Cabeçalho do calendário com controles */
     .calendar-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1.25rem;
-        background-color: rgba(74, 111, 165, 0.05);
+        padding: 1.5rem;
+        background-color: var(--calendar-header-bg);
         border-bottom: 1px solid var(--border-color);
+        position: relative;
+    }
+    
+    .calendar-header::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+        opacity: 0.5;
     }
     
     .calendar-title {
         font-weight: 600;
         display: flex;
         align-items: center;
+        font-size: 1.2rem;
+        color: var(--text-color);
     }
     
     .calendar-title i {
         margin-right: 0.75rem;
         color: var(--primary-color);
+        font-size: 1.4rem;
     }
     
     .calendar-navigation {
         display: flex;
-        gap: 0.5rem;
+        gap: 0.75rem;
     }
     
+    .calendar-nav-btn {
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background-color: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .calendar-nav-btn:hover {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .calendar-nav-btn:active {
+        transform: translateY(0);
+    }
+    
+    .calendar-nav-btn i {
+        font-size: 1rem;
+    }
+    
+    .calendar-today-btn {
+        margin-right: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        background-color: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+    
+    .calendar-today-btn:hover {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+    
+    /* Filtro de laboratórios - Versão com dropdown */
+    .calendar-filter {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .filter-title {
+        display: flex;
+        align-items: center;
+        margin: 0;
+        font-weight: 600;
+        color: var(--text-color);
+    }
+    
+    .filter-title i {
+        margin-right: 0.5rem;
+        color: var(--primary-color);
+    }
+    
+    /* Dropdown de filtro */
+    .filter-dropdown-container {
+        position: relative;
+        min-width: 220px;
+    }
+    
+    .filter-dropdown-select {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.6rem 1rem;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        user-select: none;
+        color: var(--text-color);
+    }
+    
+    .filter-dropdown-select:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .filter-dropdown-select.active {
+        border-color: var(--primary-color);
+        box-shadow: 0 3px 10px rgba(74, 111, 165, 0.2);
+    }
+    
+    .filter-dropdown-select i {
+        transition: transform 0.2s ease;
+    }
+    
+    .filter-dropdown-select.active i {
+        transform: rotate(180deg);
+    }
+    
+    /* Lista de opções */
+    .filter-dropdown-options {
+        position: absolute;
+        top: calc(100% + 5px);
+        left: 0;
+        width: 100%;
+        max-height: 250px;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: var(--primary-color) transparent;
+        opacity: 0;
+        transform: translateY(-10px);
+        pointer-events: none;
+        transition: all 0.2s ease;
+    }
+    
+    .filter-dropdown-options.show {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+    
+    .filter-dropdown-options::-webkit-scrollbar {
+        width: 4px;
+    }
+    
+    .filter-dropdown-options::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .filter-dropdown-options::-webkit-scrollbar-thumb {
+        background-color: var(--primary-color);
+        border-radius: 4px;
+    }
+    
+    /* Opção individual */
+    .filter-option {
+        padding: 0.6rem 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        color: var(--text-color);
+    }
+    
+    .filter-option:hover {
+        background-color: var(--event-bg);
+    }
+    
+    .filter-option.active {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .filter-option::before {
+        content: '';
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        margin-right: 0.75rem;
+    }
+    
+    .filter-option.active::before {
+        background-color: white;
+    }
+    
+    /* Pesquisa dentro do dropdown */
+    .filter-search-container {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .filter-search-input {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background-color: var(--body-bg);
+        color: var(--text-color);
+    }
+    
+    .filter-search-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+    }
+    
+    /* Dias da semana */
     .calendar-weeks {
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(7, 1fr);
+        background-color: var(--card-bg);
         border-bottom: 1px solid var(--border-color);
+        position: sticky;
+        top: 0;
+        z-index: 10;
     }
     
     .calendar-weekday {
         text-align: center;
-        padding: 0.5rem;
+        padding: 1rem 0.5rem;
         font-weight: 600;
         text-transform: uppercase;
-        font-size: 0.875rem;
+        font-size: 0.8rem;
         color: var(--text-muted);
-        border-right: 1px solid var(--border-color);
+        letter-spacing: 0.5px;
     }
     
-    .calendar-weekday:last-child {
-        border-right: none;
-    }
-    
-    .calendar-days {
+    /* Grade de dias do mês */
+    .calendar-month-grid {
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(7, 1fr);
+        background-color: var(--card-bg);
     }
     
     .calendar-day {
-        border: 1px solid var(--border-color);
+        border-right: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
         min-height: 120px;
-        padding: 0.5rem;
+        padding: 0.75rem;
         display: flex;
         flex-direction: column;
         position: relative;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
+        cursor: pointer;
     }
     
     .calendar-day:hover {
         background-color: rgba(74, 111, 165, 0.05);
     }
     
+    .calendar-day.weekend {
+        background-color: var(--weekend-bg);
+    }
+    
+    .calendar-day.other-month {
+        opacity: 0.5;
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+    
+    .calendar-day:nth-child(7n) {
+        border-right: none;
+    }
+    
+    /* Cabeçalho do dia */
     .calendar-day-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.75rem;
     }
     
     .calendar-day-number {
         font-weight: 600;
-        font-size: 1rem;
+        font-size: 1.1rem;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+        color: var(--text-color);
     }
     
     .calendar-day-number.today {
-        background-color: var(--primary-color);
-        color: white;
-        padding: 0.25rem 0.5rem;
-        border-radius: 50%;
+        background-color: var(--today-bg);
+        color: var(--today-color);
+        box-shadow: 0 4px 10px rgba(74, 111, 165, 0.3);
     }
     
     .calendar-day-number.past {
-        color: var(--text-muted);
+        color: var(--past-day-color);
+    }
+    
+    /* Eventos no calendário */
+    .calendar-events-container {
+        overflow-y: auto;
+        flex-grow: 1;
+        margin-top: auto;
+        max-height: 100px;
     }
     
     .calendar-event {
-        background-color: rgba(74, 111, 165, 0.1);
-        color: var(--primary-color);
-        border-radius: 4px;
-        padding: 0.25rem 0.5rem;
-        margin-bottom: 0.25rem;
+        background-color: var(--event-bg);
+        color: var(--event-color);
+        border-radius: 6px;
+        padding: 0.4rem 0.6rem;
+        margin-bottom: 0.35rem;
         font-size: 0.75rem;
         display: flex;
         align-items: center;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        transition: all 0.2s ease;
+        border-left: 3px solid var(--primary-color);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .calendar-event:hover {
+        background-color: var(--event-hover-bg);
+        transform: translateX(3px);
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .calendar-event:last-child {
+        margin-bottom: 0;
     }
     
     .calendar-event i {
-        margin-right: 0.25rem;
-        font-size: 0.75rem;
+        margin-right: 0.4rem;
+        font-size: 0.8rem;
     }
     
     .calendar-event-time {
         font-weight: 600;
-        margin-right: 0.25rem;
+        margin-right: 0.4rem;
     }
     
+    .calendar-event.status-approved {
+        border-left-color: #198754;
+    }
+    
+    .calendar-event.status-pending {
+        border-left-color: #ffc107;
+    }
+    
+    .calendar-event.status-rejected {
+        border-left-color: #dc3545;
+    }
+
+    /* Atualizar grid para 5 colunas (dias úteis) */
+    .calendar-weeks {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        background-color: var(--card-bg);
+        border-bottom: 1px solid var(--border-color);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    /* Grade de dias do mês - apenas 5 colunas */
+    .calendar-month-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        background-color: var(--card-bg);
+    }
+
+    /* Ajustar o border-right para a última coluna (sexta-feira) */
+    .calendar-day:nth-child(5n) {
+        border-right: none;
+    }
+
+    
+    /* Variáveis para suportar temas claro e escuro */
+    :root {
+        --calendar-events-scrollbar-track: rgba(0, 0, 0, 0.05);
+        --calendar-events-scrollbar-thumb: rgba(74, 111, 165, 0.3);
+        --calendar-events-scrollbar-thumb-hover: rgba(74, 111, 165, 0.5);
+    }
+
+    [data-theme="dark"] {
+        --calendar-events-scrollbar-track: rgba(255, 255, 255, 0.05);
+        --calendar-events-scrollbar-thumb: rgba(74, 111, 165, 0.5);
+        --calendar-events-scrollbar-thumb-hover: rgba(74, 111, 165, 0.7);
+    }
+
+    /* Container de eventos do calendário */
+    .calendar-events-container {
+        max-height: 120px; /* Altura máxima fixa */
+        overflow-y: auto; /* Adiciona scroll vertical apenas quando necessário */
+        overflow-x: hidden; /* Impede scroll horizontal */
+        padding-right: 8px; /* Espaço para a scrollbar */
+        
+        /* Personalização da scrollbar para navegadores webkit (Chrome, Safari, Edge) */
+        scrollbar-width: thin; /* Para Firefox */
+        scrollbar-color: var(--calendar-events-scrollbar-thumb) var(--calendar-events-scrollbar-track); /* Para Firefox */
+    }
+
+    /* Scrollbar para navegadores webkit */
+    .calendar-events-container::-webkit-scrollbar {
+        width: 6px; /* Largura da scrollbar */
+    }
+
+    .calendar-events-container::-webkit-scrollbar-track {
+        background: var(--calendar-events-scrollbar-track);
+        border-radius: 10px;
+    }
+
+    .calendar-events-container::-webkit-scrollbar-thumb {
+        background-color: var(--calendar-events-scrollbar-thumb);
+        border-radius: 10px;
+        transition: background-color 0.3s ease;
+    }
+
+    .calendar-events-container::-webkit-scrollbar-thumb:hover {
+        background-color: var(--calendar-events-scrollbar-thumb-hover);
+    }
+
+    /* Suavizar a transição dos eventos */
+    .calendar-event {
+        transition: all 0.2s ease;
+        opacity: 1;
+    }
+
+    .calendar-events-container .calendar-event:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Efeito de sombra sutil para indicar mais conteúdo */
+    .calendar-events-container.has-overflow::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 20px;
+        background: linear-gradient(transparent, rgba(0,0,0,0.05));
+        pointer-events: none;
+    }
+
+    [data-theme="dark"] .calendar-events-container.has-overflow::after {
+        background: linear-gradient(transparent, rgba(255,255,255,0.05));
+    }
+
+        
+    /* Mensagem de sem eventos */
     .no-events {
         color: var(--text-muted);
         text-align: center;
-        padding: 1rem;
-        font-size: 0.875rem;
-    }
-    
-    .calendar-filter {
+        padding: 0.5rem;
+        font-size: 0.8rem;
         display: flex;
-        justify-content: space-between;
+        flex-direction: column;
         align-items: center;
-        padding: 1rem;
-        border-bottom: 1px solid var(--border-color);
-    }
-    
-    .laboratory-filter {
-        display: flex;
-        gap: 0.5rem;
-    }
-    
-    .laboratory-filter-btn {
-        padding: 0.25rem 0.5rem;
-        border-radius: 50rem;
-        font-size: 0.75rem;
-        background-color: rgba(74, 111, 165, 0.1);
-        color: var(--primary-color);
+        justify-content: center;
+        height: 100%;
+        opacity: 0.7;
         transition: all 0.3s ease;
     }
     
-    .laboratory-filter-btn.active {
+    .no-events i {
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+        opacity: 0.6;
+    }
+    
+    .calendar-day:hover .no-events {
+        opacity: 0.9;
+    }
+    
+    /* Badges para quantidade de eventos */
+    .events-badge {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
         background-color: var(--primary-color);
         color: white;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+    
+    /* Modal de detalhes do evento */
+    .event-details-modal .modal-header {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .event-details-modal .event-detail-item {
+        margin-bottom: 1rem;
+    }
+    
+    .event-details-modal .event-detail-label {
+        font-weight: 600;
+        color: var(--text-muted);
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+    
+    .event-details-modal .event-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        border-radius: 50rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .event-details-modal .event-status.status-approved {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    
+    .event-details-modal .event-status.status-pending {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+    }
+    
+    .event-details-modal .event-status.status-rejected {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+    
+    /* Legenda do calendário */
+    .calendar-legend {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--border-color);
+        flex-wrap: wrap;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    
+    .legend-color {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+    
+    .legend-approved {
+        background-color: #198754;
+    }
+    
+    .legend-pending {
+        background-color: #ffc107;
+    }
+    
+    .legend-rejected {
+        background-color: #dc3545;
+    }
+    
+    /* Animações */
+    @keyframes fadeIn {
+        0% { opacity: 0; transform: translateY(10px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes pulseToday {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    @keyframes slideInRight {
+        0% { opacity: 0; transform: translateX(20px); }
+        100% { opacity: 1; transform: translateX(0); }
     }
     
     /* Responsividade */
@@ -162,8 +675,21 @@
         }
         
         .calendar-weeks,
-        .calendar-days {
+        .calendar-month-grid {
             min-width: 800px;
+        }
+        
+        .calendar-filter {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .laboratory-filter {
+            margin-top: 0.5rem;
+            justify-content: flex-start;
+            width: 100%;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
         }
     }
 </style>
@@ -175,7 +701,7 @@
         <div class="row align-items-center">
             <div class="col-md-6">
                 <h1 class="page-title">Calendário de Agendamentos</h1>
-                <p class="page-subtitle">Visualize os agendamentos dos laboratórios</p>
+                <p class="page-subtitle">Visualize e gerencie todos os agendamentos dos laboratórios</p>
             </div>
             <div class="col-md-6 text-md-end">
                 {% if user.user_type == 'professor' %}
@@ -186,128 +712,1143 @@
             </div>
         </div>
     </div>
-<div class="calendar-container">
-    <!-- Filtro de Laboratórios -->
-    <div class="calendar-filter">
-        <h5 class="mb-0">
-            <i class="bi bi-calendar2-event me-2 text-primary"></i>
-            Calendário de Laboratórios
-        </h5>
-        <div class="laboratory-filter">
-            <button class="laboratory-filter-btn active" data-filter="all">
-                Todos
-            </button>
-            {% for lab in laboratories %}
-                <button class="laboratory-filter-btn" data-filter="{{ lab.id }}">
-                    {{ lab.name }}
-                </button>
-            {% endfor %}
-        </div>
-    </div>
 
-    <!-- Navegação do Calendário -->
-    <div class="calendar-header">
-        <div class="calendar-title">
-            <i class="bi bi-calendar-week"></i>
-            Próximas 4 Semanas
-        </div>
-        <div class="calendar-navigation">
-            <button class="btn btn-sm btn-outline-secondary" id="prevWeeks">
-                <i class="bi bi-chevron-left"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-secondary" id="nextWeeks">
-                <i class="bi bi-chevron-right"></i>
-            </button>
-        </div>
-    </div>
-
-    <!-- Cabeçalho de Dias da Semana -->
-    <div class="calendar-weeks">
-        
-        <div class="calendar-weekday">Seg</div>
-        <div class="calendar-weekday">Ter</div>
-        <div class="calendar-weekday">Qua</div>
-        <div class="calendar-weekday">Qui</div>
-        <div class="calendar-weekday">Sex</div>
-        
-    </div>
-
-    <!-- Dias do Calendário -->
-    {% for week in calendar_weeks %}
-        <div class="calendar-days">
-            {% for day in week %}
-                {% with weekday=day.date.weekday %}
-                    {% if weekday < 5 %}
-                        <div class="calendar-day" data-date="{{ day.date }}" data-lab="all">
-                            <div class="calendar-day-header">
-                                <span class="calendar-day-number {% if day.is_today %}today{% endif %} {% if day.is_past %}past{% endif %}">
-                                    {{ day.date.day }}
-                                </span>
-                                
-                                {% if day.is_today %}
-                                    <span class="badge bg-primary">Hoje</span>
-                                {% endif %}
-                            </div>
-
-                            {% if day.schedules %}
-                                {% for schedule in day.schedules %}
-                                    <div class="calendar-event" data-lab="{{ schedule.laboratory.id }}">
-                                        <i class="bi bi-calendar-check"></i>
-                                        <span class="calendar-event-time">
-                                            {{ schedule.start_time|time:"H:i" }}
-                                        </span>
-                                        {{ schedule.laboratory.name }}
-                                    </div>
-                                {% endfor %}
-                            {% else %}
-                                <div class="no-events">
-                                    <i class="bi bi-calendar-x"></i>
-                                    Sem agendamentos
-                                </div>
-                            {% endif %}
+    <div class="calendar-container">
+        <!-- Filtro de Laboratórios - Versão com Dropdown -->
+        <div class="calendar-filter">
+            <h5 class="filter-title">
+                <i class="bi bi-funnel"></i>
+                Filtrar Visualização
+            </h5>
+            
+            <div class="filter-dropdown-container">
+                <div class="filter-dropdown-select" id="labFilterDropdown">
+                    <span id="selectedLabText">Todos os Laboratórios</span>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+                
+                <div class="filter-dropdown-options" id="labFilterOptions">
+                    <div class="filter-search-container">
+                        <input type="text" placeholder="Buscar laboratório..." class="filter-search-input" id="labSearchInput">
+                    </div>
+                    
+                    <div class="filter-option active" data-filter="all">
+                        Todos os Laboratórios
+                    </div>
+                    
+                    {% for lab in laboratories %}
+                        <div class="filter-option" data-filter="{{ lab.id }}">
+                            {{ lab.name }}
                         </div>
-                    {% endif %}
-                {% endwith %}
-            {% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
         </div>
-    {% endfor %}
+
+        <!-- Navegação do Calendário -->
+        <div class="calendar-header">
+            <div class="calendar-title">
+                <i class="bi bi-calendar-month"></i>
+                <span id="currentMonthYear">Abril 2025</span>
+            </div>
+            <div class="calendar-navigation">
+                <button class="calendar-today-btn" id="todayBtn">
+                    <i class="bi bi-calendar-check me-1"></i> Hoje
+                </button>
+                <button class="calendar-nav-btn" id="prevMonth">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <button class="calendar-nav-btn" id="nextMonth">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Cabeçalho de Dias da Semana -->
+        <div class="calendar-weeks">
+            <div class="calendar-weekday">Dom</div>
+            <div class="calendar-weekday">Seg</div>
+            <div class="calendar-weekday">Ter</div>
+            <div class="calendar-weekday">Qua</div>
+            <div class="calendar-weekday">Qui</div>
+            <div class="calendar-weekday">Sex</div>
+            <div class="calendar-weekday">Sáb</div>
+        </div>
+
+        <!-- Grade do Calendário Mensal -->
+        <div class="calendar-month-grid" id="calendarGrid">
+            <!-- Dias serão gerados dinamicamente via JavaScript -->
+        </div>
+
+        <!-- Legenda do calendário -->
+        <div class="calendar-legend">
+            <div class="legend-item">
+                <span class="legend-color legend-approved"></span>
+                Aprovado
+            </div>
+            <div class="legend-item">
+                <span class="legend-color legend-pending"></span>
+                Pendente
+            </div>
+            <div class="legend-item">
+                <span class="legend-color legend-rejected"></span>
+                Rejeitado
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Modal de Detalhes do Evento -->
+<div class="modal fade event-details-modal" id="eventDetailsModal" tabindex="-1" aria-labelledby="eventDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventDetailsModalLabel">Detalhes do Agendamento</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Conteúdo será preenchido via JavaScript -->
+                <div class="text-center py-4" id="eventModalLoading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                    <p class="mt-2">Carregando detalhes...</p>
+                </div>
+                
+                <div id="eventModalContent" style="display: none;">
+                    <div class="event-detail-item">
+                        <span class="event-detail-label">Status</span>
+                        <span class="event-status" id="eventStatus"></span>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="event-detail-item">
+                                <span class="event-detail-label">Professor</span>
+                                <div id="eventProfessor"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="event-detail-item">
+                                <span class="event-detail-label">Laboratório</span>
+                                <div id="eventLaboratory"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="event-detail-item">
+                                <span class="event-detail-label">Data</span>
+                                <div id="eventDate"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="event-detail-item">
+                                <span class="event-detail-label">Horário</span>
+                                <div id="eventTime"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="event-detail-item">
+                        <span class="event-detail-label">Disciplina</span>
+                        <div id="eventSubject"></div>
+                    </div>
+                    
+                    <div class="event-detail-item">
+                        <span class="event-detail-label">Descrição</span>
+                        <div id="eventDescription"></div>
+                    </div>
+                    
+                    <div id="userSpecificActions"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <a href="#" class="btn btn-primary" id="viewDetailsBtn">Ver Detalhes Completos</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Lista de Eventos do Dia -->
+<div class="modal fade" id="dayEventsModal" tabindex="-1" aria-labelledby="dayEventsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dayEventsModalLabel">Agendamentos do Dia</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center py-4" id="dayEventsLoading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                    <p class="mt-2">Carregando agendamentos...</p>
+                </div>
+                
+                <div id="dayEventsContent" style="display: none;">
+                    <h6 id="dayEventsDate" class="mb-3 text-center"></h6>
+                    <div id="dayEventsList"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
+
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Laboratório Filter
-        const labFilterBtns = document.querySelectorAll('.laboratory-filter-btn');
-        const calendarDays = document.querySelectorAll('.calendar-day');
+        // --------- Variáveis Globais ---------
+        const calendarGrid = document.getElementById('calendarGrid');
+        const currentMonthYearDisplay = document.getElementById('currentMonthYear');
+        const prevMonthBtn = document.getElementById('prevMonth');
+        const nextMonthBtn = document.getElementById('nextMonth');
+        const todayBtn = document.getElementById('todayBtn');
         
-        labFilterBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                // Remover classe ativa de todos os botões
-                labFilterBtns.forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
+        // Data atual
+        let currentDate = new Date();
+        let currentMonth = currentDate.getMonth();
+        let currentYear = currentDate.getFullYear();
+        
+        // Mês que está sendo exibido
+        let displayMonth = currentMonth;
+        let displayYear = currentYear;
+        
+        // Configuração do filtro de laboratórios
+        const filterDropdown = document.getElementById('labFilterDropdown');
+        const filterOptions = document.getElementById('labFilterOptions');
+        const labSearchInput = document.getElementById('labSearchInput');
+        let activeFilters = new Set(['all']);
+        
+        // Configuração dos modais
+        const eventDetailsModal = document.getElementById('eventDetailsModal');
+        const dayEventsModal = document.getElementById('dayEventsModal');
+        
+        // --------- Funções para manipulação de datas ---------
+        // Formatar data para exibição
+        const formatDateForDisplay = (date) => {
+            const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+            return date.toLocaleDateString('pt-BR', options);
+        };
+        
+        // Formatar mês e ano para exibição no cabeçalho
+        const formatMonthYear = (month, year) => {
+            const months = [
+                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+            ];
+            return `${months[month]} ${year}`;
+        };
+        
+        // Obter o número de dias em um mês
+        const getDaysInMonth = (month, year) => {
+            return new Date(year, month + 1, 0).getDate();
+        };
+        
+        // Obter o dia da semana do primeiro dia do mês (0 = domingo, 1 = segunda, etc.)
+        const getFirstDayOfMonth = (month, year) => {
+            return new Date(year, month, 1).getDay();
+        };
+        
+        // Verificar se uma data é hoje
+        const isToday = (day, month, year) => {
+            const today = new Date();
+            return day === today.getDate() && 
+                   month === today.getMonth() && 
+                   year === today.getFullYear();
+        };
+        
+        // Verificar se uma data é no passado
+        const isPastDate = (day, month, year) => {
+            const today = new Date();
+            const checkDate = new Date(year, month, day);
+            return checkDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        };
+        
+        // --------- Funções do Calendário ---------
+        // Renderizar o calendário para o mês e ano específicos
+        function renderCalendar(month, year) {
+            // Atualizar o título do mês e ano
+            currentMonthYearDisplay.textContent = formatMonthYear(month, year);
+            
+            // Limpar o grid atual
+            calendarGrid.innerHTML = '';
+            
+            // Obter informações do mês
+            const daysInMonth = getDaysInMonth(month, year);
+            const firstDayOfMonth = getFirstDayOfMonth(month, year);
+
+            // Calcular o primeiro dia da semana (pulando domingo - 0)
+            // Se o primeiro dia for domingo (0), começar de segunda (1)
+            // Caso contrário, usar o dia normalizado (1-6 para segunda-sábado)
+            const adjustedFirstDay = firstDayOfMonth === 0 ? 1 : firstDayOfMonth;
+
+            // Determinar quantos dias do mês anterior mostrar (para preencher a primeira semana)
+            // Apenas de segunda a sexta (1-5)
+            const daysFromPrevMonth = adjustedFirstDay > 5 ? 0 : adjustedFirstDay - 1;
+            
+            // Obter o último dia do mês anterior
+            const daysInPrevMonth = getDaysInMonth(month - 1 < 0 ? 11 : month - 1, 
+                                                  month - 1 < 0 ? year - 1 : year);
+            
+            // Criar células para os dias do mês anterior (para preencher a primeira semana)
+            for (let i = 0; i < firstDayOfMonth; i++) {
+                const day = daysInPrevMonth - firstDayOfMonth + i + 1;
+                const prevMonth = month - 1 < 0 ? 11 : month - 1;
+                const prevYear = month - 1 < 0 ? year - 1 : year;
                 
-                const filter = this.dataset.filter;
+                createDayCell(day, prevMonth, prevYear, true);
+            }
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                // Verificar se o dia é um dia útil (segunda a sexta)
+                const date = new Date(year, month, day);
+                const dayOfWeek = date.getDay();
                 
-                calendarDays.forEach(day => {
-                    day.style.display = 'block';
+                // Pular finais de semana (0 = domingo, 6 = sábado)
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                    createDayCell(day, month, year, false);
+                }
+            }
+
+            // Atualizar a estrutura das semanas para mostrar apenas dias úteis
+            const calendarWeeks = document.querySelector('.calendar-weeks');
+            if (calendarWeeks) {
+                calendarWeeks.innerHTML = `
+                    <div class="calendar-weekday">Seg</div>
+                    <div class="calendar-weekday">Ter</div>
+                    <div class="calendar-weekday">Qua</div>
+                    <div class="calendar-weekday">Qui</div>
+                    <div class="calendar-weekday">Sex</div>
+                `;
+            }
+            
+            // Modificar o grid do calendário para 5 colunas em vez de 7
+            const calendarMonthGrid = document.querySelector('.calendar-month-grid');
+            if (calendarMonthGrid) {
+                calendarMonthGrid.style.gridTemplateColumns = 'repeat(5, 1fr)';
+            }
                     
-                    // Esconder eventos de laboratórios diferentes
-                    const events = day.querySelectorAll('.calendar-event');
-                    events.forEach(event => {
-                        event.style.display = filter === 'all' || event.dataset.lab === filter ? 'flex' : 'none';
-                    });
+            // Calcular quantos dias do próximo mês precisamos mostrar
+            const totalCellsShown = firstDayOfMonth + daysInMonth;
+            const cellsNeeded = Math.ceil(totalCellsShown / 5) * 5;
+            const nextMonthDays = cellsNeeded - totalCellsShown;
+            
+            // Criar células para os dias do próximo mês
+            for (let day = 1; day <= nextMonthDays; day++) {
+                const nextMonth = month + 1 > 11 ? 0 : month + 1;
+                const nextYear = month + 1 > 11 ? year + 1 : year;
+                
+                createDayCell(day, nextMonth, nextYear, true);
+            }
+            
+            // Carregar eventos para o mês atual
+            loadEvents(month, year);
+        }
+
+        function renderCurrentMonthOnly(month, year) {
+            // Atualizar o título do mês e ano
+            currentMonthYearDisplay.textContent = formatMonthYear(month, year);
+            
+            // Limpar o grid atual
+            calendarGrid.innerHTML = '';
+            
+            // Obter informações do mês
+            const daysInMonth = getDaysInMonth(month, year);
+            
+            // Criar células apenas para os dias do mês atual (apenas dias úteis)
+            for (let day = 1; day <= daysInMonth; day++) {
+                // Verificar se o dia é um dia útil (segunda a sexta)
+                const date = new Date(year, month, day);
+                const dayOfWeek = date.getDay();
+                
+                // Pular finais de semana (0 = domingo, 6 = sábado)
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                    createDayCell(day, month, year, false);
+                }
+            }
+            
+            // Carregar eventos para o mês atual
+            loadEvents(month, year);
+        }
+        
+        // Criar uma célula de dia individual
+        function createDayCell(day, month, year, isOtherMonth) {
+            const cell = document.createElement('div');
+            cell.className = 'calendar-day';
+            
+            // Adicionar classes condicionais
+            if (isOtherMonth) {
+                cell.classList.add('other-month');
+            }
+            
+            // Formatar a data como atributo para uso posterior
+            const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            cell.setAttribute('data-date', formattedDate);
+            cell.setAttribute('data-lab', 'all');
+            
+            // Criar a estrutura interna da célula
+            const dayHeader = document.createElement('div');
+            dayHeader.className = 'calendar-day-header';
+            
+            const dayNumber = document.createElement('span');
+            dayNumber.className = 'calendar-day-number';
+            dayNumber.textContent = day;
+            
+            // Adicionar classes para hoje e dias passados
+            if (isToday(day, month, year)) {
+                dayNumber.classList.add('today');
+            } else if (isPastDate(day, month, year)) {
+                dayNumber.classList.add('past');
+            }
+            
+            dayHeader.appendChild(dayNumber);
+            
+            // Adicionar badge para Hoje
+            if (isToday(day, month, year)) {
+                const todayBadge = document.createElement('span');
+                todayBadge.className = 'badge bg-primary';
+                todayBadge.textContent = 'Hoje';
+                dayHeader.appendChild(todayBadge);
+            }
+            
+            cell.appendChild(dayHeader);
+            
+            // Container para eventos
+            const eventsContainer = document.createElement('div');
+            eventsContainer.className = 'calendar-events-container';
+            
+            // Placeholder para "Sem eventos"
+            const noEvents = document.createElement('div');
+            noEvents.className = 'no-events';
+            noEvents.innerHTML = `
+                <i class="bi bi-calendar-x"></i>
+                <span>Sem agendamentos</span>
+            `;
+            eventsContainer.appendChild(noEvents);
+            
+            cell.appendChild(eventsContainer);
+            
+            // Adicionar evento de clique para abrir o modal do dia
+            cell.addEventListener('click', function() {
+                // Mostrar o modal com eventos deste dia
+                showDayEventsModal(formattedDate, day, month, year);
+            });
+            
+            calendarGrid.appendChild(cell);
+        }
+
+        function renderCurrentMonthOnly(month, year) {
+            // Atualizar o título do mês e ano
+            currentMonthYearDisplay.textContent = formatMonthYear(month, year);
+            
+            // Limpar o grid atual
+            calendarGrid.innerHTML = '';
+            
+            // Obter informações do mês
+            const daysInMonth = getDaysInMonth(month, year);
+            
+            // Criar células apenas para os dias do mês atual (apenas dias úteis)
+            for (let day = 1; day <= daysInMonth; day++) {
+                // Verificar se o dia é um dia útil (segunda a sexta)
+                const date = new Date(year, month, day);
+                const dayOfWeek = date.getDay();
+                
+                // Pular finais de semana (0 = domingo, 6 = sábado)
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                    createDayCell(day, month, year, false);
+                }
+            }
+            
+            // Carregar eventos para o mês atual
+            loadEvents(month, year);
+        }
+        
+        // Carregar eventos para o mês
+        function loadEvents(month, year) {
+            // Formatar mês e ano para a API
+            const formattedMonth = String(month + 1).padStart(2, '0');
+            const apiUrl = `/scheduling/api/events/?month=${formattedMonth}&year=${year}`;
+            
+            // Exibir carregamento
+            document.querySelectorAll('.calendar-day').forEach(day => {
+                const eventsContainer = day.querySelector('.calendar-events-container');
+                eventsContainer.style.opacity = '0.6';
+            });
+            
+            // Simular carregamento de eventos na versão de demonstração
+            // Em produção, use fetch() para buscar do servidor
+            setTimeout(() => {
+                // Simular carregamento aleatório de eventos
+                simulateEvents();
+                
+                // Restaurar opacidade
+                document.querySelectorAll('.calendar-day').forEach(day => {
+                    const eventsContainer = day.querySelector('.calendar-events-container');
+                    eventsContainer.style.opacity = '1';
+                });
+                
+                // Aplicar filtros após carregar eventos
+                applyFilters();
+            }, 500);
+        }
+
+        // Função para verificar e marcar eventos com overflow
+        function checkEventsOverflow() {
+            document.querySelectorAll('.calendar-events-container').forEach(container => {
+                // Remove qualquer classe de overflow existente
+                container.classList.remove('has-overflow');
+                
+                // Verificar se há mais eventos do que cabem na altura padrão
+                const maxHeight = 120; // Deve corresponder ao max-height no CSS
+                
+                if (container.scrollHeight > maxHeight) {
+                    // Adicionar classe para indicar overflow
+                    container.classList.add('has-overflow');
+                }
+            });
+        }
+
+        // Adicionar a verificação de overflow após carregar os eventos
+        function simulateEvents() {
+            // Código de simulação de eventos original...
+            
+            // No final, chamar a função de verificação de overflow
+            checkEventsOverflow();
+        }
+
+        // Adicionar listener para mudanças de tema para recalcular overflow
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', function() {
+                // Pequeno atraso para garantir que o tema seja atualizado
+                setTimeout(checkEventsOverflow, 300);
+            });
+        }
+
+        // Chamar no carregamento inicial
+        document.addEventListener('DOMContentLoaded', checkEventsOverflow);
+        
+        // Simular eventos (apenas para demonstração)
+        function simulateEvents() {
+            // Limpar eventos existentes
+            document.querySelectorAll('.calendar-event').forEach(event => event.remove());
+            
+            // Obter todos os dias do mês atual (excluindo outros meses)
+            const dayCells = document.querySelectorAll('.calendar-day:not(.other-month)');
+            
+            // Adicionar eventos a alguns dias aleatórios
+            dayCells.forEach(dayCell => {
+                // 60% de chance de ter eventos
+                if (Math.random() > 0.4) {
+                    // Número aleatório de eventos (1-3)
+                    const numEvents = Math.floor(Math.random() * 3) + 1;
                     
-                    // Esconder dias sem eventos quando filtro específico
-                    if (filter !== 'all') {
-                        const visibleEvents = day.querySelectorAll('.calendar-event[data-lab="' + filter + '"]');
-                        if (visibleEvents.length === 0) {
-                            day.style.display = 'none';
-                        }
+                    // Container de eventos
+                    const eventsContainer = dayCell.querySelector('.calendar-events-container');
+                    
+                    // Esconder a mensagem "Sem eventos"
+                    const noEvents = eventsContainer.querySelector('.no-events');
+                    if (noEvents) noEvents.style.display = 'none';
+                    
+                    // Adicionar eventos
+                    for (let i = 0; i < numEvents; i++) {
+                        addEventToDay(dayCell, {
+                            id: Math.floor(Math.random() * 1000) + 1,
+                            labId: Math.floor(Math.random() * 5) + 1,
+                            labName: ['Lab Informática', 'Lab Química', 'Lab Física', 'Lab Engenharia', 'Lab Biologia'][
+                                Math.floor(Math.random() * 5)
+                            ],
+                            status: ['approved', 'pending', 'rejected'][Math.floor(Math.random() * 3)],
+                            startTime: ['08:00', '10:00', '14:00', '16:00', '19:00'][Math.floor(Math.random() * 5)]
+                        });
+                    }
+                    
+                    // Adicionar badge com número de eventos
+                    if (numEvents > 0) {
+                        const badge = document.createElement('div');
+                        badge.className = 'events-badge';
+                        badge.textContent = numEvents;
+                        dayCell.appendChild(badge);
+                    }
+                }
+            });
+        }
+        
+        // Adicionar um evento ao dia
+        function addEventToDay(dayCell, event) {
+            const eventsContainer = dayCell.querySelector('.calendar-events-container');
+            
+            const eventDiv = document.createElement('div');
+            eventDiv.className = `calendar-event status-${event.status}`;
+            eventDiv.setAttribute('data-lab', event.labId);
+            eventDiv.setAttribute('data-schedule-id', event.id);
+
+            // Truncate lab name if too long (over 15 characters)
+            let labName = event.labName;
+            if (labName.length > 12) {
+                labName = labName.substring(0, 10) + '...';
+            }
+            
+            eventDiv.innerHTML = `
+                <i class="bi bi-calendar-check"></i>
+                <span class="calendar-event-time">${event.startTime}</span>
+                <span class="calendar-event-lab">${event.labName}</span>
+            `;
+            
+            eventsContainer.appendChild(eventDiv);
+            
+            // Adicionar evento de clique no evento
+            eventDiv.addEventListener('click', function(e) {
+                e.stopPropagation(); // Impedir que o clique chegue ao dia
+                showEventDetails(event.id);
+            });
+        }
+
+        // Force the calendar to respect container width
+        function adjustCalendarWidth() {
+            // Get the container width
+            const containerWidth = document.querySelector('.content-container').offsetWidth;
+            
+            // Set the calendar container width
+            const calendarContainer = document.querySelector('.calendar-container');
+            if (calendarContainer) {
+                calendarContainer.style.maxWidth = '100%';
+                calendarContainer.style.width = '100%';
+            }
+            
+            // Ensure the calendar grid doesn't exceed container width
+            const calendarGrid = document.querySelector('.calendar-month-grid');
+            if (calendarGrid) {
+                calendarGrid.style.maxWidth = '100%';
+                calendarGrid.style.width = '100%';
+            }
+        }
+
+        // Call this function when the page loads and when the window is resized
+        window.addEventListener('load', adjustCalendarWidth);
+        window.addEventListener('resize', adjustCalendarWidth);
+        
+        // --------- Funções para Modais ---------
+        // Mostrar detalhes de um evento
+        function showEventDetails(eventId) {
+            // Iniciar o loading no modal
+            const modalLoading = document.getElementById('eventModalLoading');
+            const modalContent = document.getElementById('eventModalContent');
+            
+            if (modalLoading && modalContent) {
+                modalLoading.style.display = 'block';
+                modalContent.style.display = 'none';
+                
+                // Abrir o modal
+                const eventModal = new bootstrap.Modal(document.getElementById('eventDetailsModal'));
+                eventModal.show();
+                
+                // Simular carregamento de dados
+                setTimeout(() => {
+                    // Criar dados simulados para o evento
+                    const eventData = {
+                        id: eventId,
+                        status: ['approved', 'pending', 'rejected'][Math.floor(Math.random() * 3)],
+                        professor: ['Dr. João Silva', 'Profa. Maria Santos', 'Dr. Ricardo Oliveira'][Math.floor(Math.random() * 3)],
+                        laboratory: ['Laboratório de Informática', 'Laboratório de Química', 'Laboratório de Física'][Math.floor(Math.random() * 3)],
+                        date: new Date().toISOString().split('T')[0],
+                        startTime: ['08:00', '10:00', '14:00'][Math.floor(Math.random() * 3)],
+                        endTime: ['10:00', '12:00', '16:00'][Math.floor(Math.random() * 3)],
+                        subject: ['Programação em Python', 'Química Orgânica', 'Física Quântica'][Math.floor(Math.random() * 3)],
+                        description: 'Aula prática para demonstração de conceitos teóricos vistos em sala de aula. Os alunos realizarão experimentos supervisionados.'
+                    };
+                    
+                    // Atualizar o modal com os dados
+                    updateEventModal(eventData);
+                    
+                    // Esconder loading e mostrar conteúdo
+                    modalLoading.style.display = 'none';
+                    modalContent.style.display = 'block';
+                }, 800);
+            }
+        }
+
+        
+        // Atualizar o modal de eventos com dados
+        function updateEventModal(eventData) {
+            // Status
+            const statusElem = document.getElementById('eventStatus');
+            if (statusElem) {
+                let statusText, statusClass;
+                
+                switch(eventData.status) {
+                    case 'approved':
+                        statusText = 'Aprovado';
+                        statusClass = 'status-approved';
+                        break;
+                    case 'pending':
+                        statusText = 'Pendente';
+                        statusClass = 'status-pending';
+                        break;
+                    case 'rejected':
+                        statusText = 'Rejeitado';
+                        statusClass = 'status-rejected';
+                        break;
+                    default:
+                        statusText = 'Desconhecido';
+                        statusClass = '';
+                }
+                
+                statusElem.textContent = statusText;
+                statusElem.className = 'event-status ' + statusClass;
+            }
+            
+            // Detalhes básicos
+            document.getElementById('eventProfessor').textContent = eventData.professor;
+            document.getElementById('eventLaboratory').textContent = eventData.laboratory;
+            
+            // Formatar data para exibição
+            const date = new Date(eventData.date);
+            const formattedDate = formatDateForDisplay(date);
+            document.getElementById('eventDate').textContent = formattedDate;
+            
+            document.getElementById('eventTime').textContent = `${eventData.startTime} - ${eventData.endTime}`;
+            document.getElementById('eventSubject').textContent = eventData.subject;
+            document.getElementById('eventDescription').textContent = eventData.description || 'Nenhuma descrição disponível.';
+            
+            // Botão de detalhes
+            const detailsBtn = document.getElementById('viewDetailsBtn');
+            if (detailsBtn) {
+                detailsBtn.href = `/schedule_request/${eventData.id}/`;
+            }
+            
+            // Ações específicas por tipo de usuário
+            const actionsContainer = document.getElementById('userSpecificActions');
+            if (actionsContainer) {
+                // Verificar tipo de usuário atual
+                const isUserTechnician = false; // Substituir por uma verificação real
+                const isUserProfessor = true; // Substituir por uma verificação real
+                
+                // Limpar ações anteriores
+                actionsContainer.innerHTML = '';
+                
+                if (isUserTechnician && eventData.status === 'pending') {
+                    actionsContainer.innerHTML = `
+                        <div class="mt-4 d-flex gap-2">
+                            <button class="btn btn-success w-100">
+                                <i class="bi bi-check-circle me-1"></i> Aprovar
+                            </button>
+                            <button class="btn btn-danger w-100">
+                                <i class="bi bi-x-circle me-1"></i> Rejeitar
+                            </button>
+                        </div>
+                    `;
+                } else if (isUserProfessor && eventData.status === 'pending') {
+                    actionsContainer.innerHTML = `
+                        <div class="mt-4">
+                            <button class="btn btn-danger">
+                                <i class="bi bi-trash me-1"></i> Cancelar Solicitação
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        // Mostrar o modal com eventos de um dia
+        function showDayEventsModal(dateStr, day, month, year) {
+            const dayEventsModal = document.getElementById('dayEventsModal');
+            const dayEventsLoading = document.getElementById('dayEventsLoading');
+            const dayEventsContent = document.getElementById('dayEventsContent');
+            const dayEventsList = document.getElementById('dayEventsList');
+            const dayEventsDate = document.getElementById('dayEventsDate');
+            
+            if (dayEventsModal && dayEventsLoading && dayEventsContent && dayEventsList && dayEventsDate) {
+                // Formatar a data para exibição
+                const date = new Date(year, month, day);
+                dayEventsDate.textContent = formatDateForDisplay(date);
+                
+                // Mostrar loading e esconder conteúdo
+                dayEventsLoading.style.display = 'block';
+                dayEventsContent.style.display = 'none';
+                
+                // Abrir o modal
+                const modal = new bootstrap.Modal(dayEventsModal);
+                modal.show();
+                
+                // Simular carregamento de eventos para este dia
+                setTimeout(() => {
+                    // Limpar lista de eventos
+                    dayEventsList.innerHTML = '';
+                    
+                    // Obter eventos do dia (na versão real, buscar do servidor)
+                    const dayCell = document.querySelector(`.calendar-day[data-date="${dateStr}"]`);
+                    const events = dayCell ? Array.from(dayCell.querySelectorAll('.calendar-event')) : [];
+                    
+                    if (events.length > 0) {
+                        // Criar lista de eventos para o modal
+                        events.forEach((event, index) => {
+                            // Extrair dados do evento
+                            const scheduleId = event.getAttribute('data-schedule-id');
+                            const labId = event.getAttribute('data-lab');
+                            const time = event.querySelector('.calendar-event-time').textContent;
+                            const lab = event.querySelector('.calendar-event-lab').textContent;
+                            const status = event.className.includes('status-approved') ? 'approved' : 
+                                         event.className.includes('status-pending') ? 'pending' : 'rejected';
+                            
+                            // Criar elemento para o evento
+                            const eventItem = document.createElement('div');
+                            eventItem.className = 'list-group-item list-group-item-action';
+                            eventItem.setAttribute('data-bs-toggle', 'modal');
+                            eventItem.setAttribute('data-bs-target', '#eventDetailsModal');
+                            eventItem.setAttribute('data-schedule-id', scheduleId);
+                            
+                            let statusBadge = '';
+                            if (status === 'approved') {
+                                statusBadge = '<span class="badge bg-success">Aprovado</span>';
+                            } else if (status === 'pending') {
+                                statusBadge = '<span class="badge bg-warning text-dark">Pendente</span>';
+                            } else {
+                                statusBadge = '<span class="badge bg-danger">Rejeitado</span>';
+                            }
+                            
+                            eventItem.innerHTML = `
+                                <div class="d-flex w-100 justify-content-between align-items-center">
+                                    <h6 class="mb-1">${time} - ${lab}</h6>
+                                    ${statusBadge}
+                                </div>
+                                <p class="mb-1 text-muted">Professor: ${'Dr. João Silva'}</p>
+                                <small>Clique para ver detalhes</small>
+                            `;
+                            
+                            dayEventsList.appendChild(eventItem);
+                            
+                            // Adicionar evento de clique
+                            eventItem.addEventListener('click', function() {
+                                // Fechar o modal de dias
+                                bootstrap.Modal.getInstance(dayEventsModal).hide();
+                                
+                                // Abrir o modal de detalhes
+                                setTimeout(() => {
+                                    showEventDetails(scheduleId);
+                                }, 400);
+                            });
+                        });
+                    } else {
+                        // Mensagem de nenhum evento
+                        dayEventsList.innerHTML = `
+                            <div class="text-center py-4">
+                                <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
+                                <p class="mt-3">Nenhum agendamento para este dia.</p>
+                            </div>
+                        `;
+                    }
+                    
+                    // Esconder loading e mostrar conteúdo
+                    dayEventsLoading.style.display = 'none';
+                    dayEventsContent.style.display = 'block';
+                }, 600);
+            }
+        }
+        
+        // --------- Funções para Filtros ---------
+        // Abrir/fechar dropdown ao clicar
+        if (filterDropdown) {
+            filterDropdown.addEventListener('click', function(e) {
+                e.stopPropagation();
+                this.classList.toggle('active');
+                filterOptions.classList.toggle('show');
+                
+                if (filterOptions.classList.contains('show')) {
+                    labSearchInput.focus();
+                }
+            });
+        }
+        
+        // Fechar dropdown ao clicar fora
+        document.addEventListener('click', function(e) {
+            if (filterOptions && !filterOptions.contains(e.target) && !filterDropdown.contains(e.target)) {
+                filterDropdown?.classList.remove('active');
+                filterOptions?.classList.remove('show');
+            }
+        });
+        
+        // Impedir que cliques dentro do dropdown fechem o dropdown
+        filterOptions?.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+        
+        // Pesquisa nos laboratórios
+        if (labSearchInput) {
+            labSearchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const options = filterOptions.querySelectorAll('.filter-option');
+                
+                options.forEach(option => {
+                    const text = option.textContent.toLowerCase();
+                    if (text.includes(searchTerm) || option.dataset.filter === 'all') {
+                        option.style.display = 'flex';
+                    } else {
+                        option.style.display = 'none';
                     }
                 });
             });
+        }
+        
+        // Selecionar opção de filtro
+        const filterOptionElems = document.querySelectorAll('.filter-option');
+        
+        filterOptionElems.forEach(option => {
+            option.addEventListener('click', function() {
+                const filter = this.dataset.filter;
+                
+                // Atualizar estado de seleção visual
+                if (filter === 'all') {
+                    // Se "Todos" for selecionado, limpar outros filtros
+                    filterOptionElems.forEach(opt => {
+                        opt.classList.toggle('active', opt.dataset.filter === 'all');
+                    });
+                    activeFilters.clear();
+                    activeFilters.add('all');
+                } else {
+                    // Remover "Todos" se algum filtro específico for selecionado
+                    activeFilters.delete('all');
+                    document.querySelector('.filter-option[data-filter="all"]').classList.remove('active');
+                    
+                    // Alternar o estado deste filtro específico
+                    this.classList.toggle('active');
+                    
+                    if (this.classList.contains('active')) {
+                        activeFilters.add(filter);
+                    } else {
+                        activeFilters.delete(filter);
+                    }
+                    
+                    // Se nenhum filtro específico estiver ativo, voltar para "Todos"
+                    if (activeFilters.size === 0) {
+                        document.querySelector('.filter-option[data-filter="all"]').classList.add('active');
+                        activeFilters.add('all');
+                    }
+                }
+                
+                // Exibir contagem e filtros selecionados no botão
+                updateSelectedDisplay();
+                
+                // Atualizar a visualização do calendário
+                applyFilters();
+                
+                // Esconder dropdown automaticamente ao selecionar "Todos"
+                if (filter === 'all') {
+                    filterDropdown.classList.remove('active');
+                    filterOptions.classList.remove('show');
+                }
+            });
         });
+        
+        // Atualizar texto do filtro selecionado
+        function updateSelectedDisplay() {
+            // Atualizar texto no dropdown
+            const selectedText = document.getElementById('selectedLabText');
+            if (selectedText) {
+                if (activeFilters.has('all')) {
+                    selectedText.textContent = 'Todos os Laboratórios';
+                } else if (activeFilters.size === 1) {
+                    const filterId = Array.from(activeFilters)[0];
+                    const option = document.querySelector(`.filter-option[data-filter="${filterId}"]`);
+                    selectedText.textContent = option ? option.textContent.trim() : 'Filtro selecionado';
+                } else {
+                    selectedText.textContent = `${activeFilters.size} laboratórios selecionados`;
+                }
+            }
+        }
+        
+        // Aplicar filtros ao calendário
+        function applyFilters() {
+            // Obter todos os eventos no calendário
+            const calendarEvents = document.querySelectorAll('.calendar-event');
+            
+            // Para cada evento, verificar se deve ser mostrado ou não
+            calendarEvents.forEach(event => {
+                const labId = event.getAttribute('data-lab');
+                
+                // Se "Todos" está selecionado ou este lab está nos filtros ativos
+                if (activeFilters.has('all') || activeFilters.has(labId)) {
+                    event.style.display = 'flex';
+                } else {
+                    event.style.display = 'none';
+                }
+            });
+            
+            // Atualizar mensagens "Sem eventos" e badges
+            document.querySelectorAll('.calendar-day').forEach(day => {
+                const eventsContainer = day.querySelector('.calendar-events-container');
+                const events = Array.from(day.querySelectorAll('.calendar-event'))
+                                  .filter(e => e.style.display !== 'none');
+                const noEvents = day.querySelector('.no-events');
+                const eventsBadge = day.querySelector('.events-badge');
+                
+                // Atualizar mensagem "Sem eventos"
+                if (noEvents) {
+                    noEvents.style.display = events.length > 0 ? 'none' : 'flex';
+                }
+                
+                // Atualizar badge de eventos
+                if (eventsBadge) {
+                    if (events.length > 0) {
+                        eventsBadge.textContent = events.length;
+                        eventsBadge.style.display = 'flex';
+                    } else {
+                        eventsBadge.style.display = 'none';
+                    }
+                }
+            });
+        }
+        
+        // --------- Navegação do Calendário ---------
+        // Ir para o mês anterior
+        if (prevMonthBtn) {
+            prevMonthBtn.addEventListener('click', function() {
+                displayMonth--;
+                
+                if (displayMonth < 0) {
+                    displayMonth = 11;
+                    displayYear--;
+                }
+                
+                renderCalendar(displayMonth, displayYear);
+                addTransitionEffect('slideRight');
+            });
+        }
+        
+        // Ir para o próximo mês
+        if (nextMonthBtn) {
+            nextMonthBtn.addEventListener('click', function() {
+                displayMonth++;
+                
+                if (displayMonth > 11) {
+                    displayMonth = 0;
+                    displayYear++;
+                }
+                
+                renderCalendar(displayMonth, displayYear);
+                addTransitionEffect('slideLeft');
+            });
+        }
+        
+        // Ir para o mês atual
+        if (todayBtn) {
+            todayBtn.addEventListener('click', function() {
+                displayMonth = currentMonth;
+                displayYear = currentYear;
+                
+                renderCalendar(displayMonth, displayYear);
+                addTransitionEffect('fade');
+                
+                // Destacar a célula de hoje
+                setTimeout(() => {
+                    const todayCell = document.querySelector('.calendar-day .calendar-day-number.today')?.closest('.calendar-day');
+                    if (todayCell) {
+                        todayCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        todayCell.style.boxShadow = '0 0 0 2px var(--primary-color)';
+                        
+                        setTimeout(() => {
+                            todayCell.style.boxShadow = 'none';
+                        }, 1500);
+                    }
+                }, 300);
+            });
+        }
+        
+        // Efeito de transição
+        function addTransitionEffect(direction) {
+            const container = calendarGrid;
+            if (container) {
+                container.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                
+                if (direction === 'slideLeft') {
+                    container.style.transform = 'translateX(-20px)';
+                } else if (direction === 'slideRight') {
+                    container.style.transform = 'translateX(20px)';
+                }
+                
+                container.style.opacity = '0';
+                
+                setTimeout(() => {
+                    container.style.transform = 'translateX(0)';
+                    container.style.opacity = '1';
+                }, 300);
+            }
+        }
+        
+        // --------- Inicialização ---------
+        // Renderizar o calendário inicial
+        renderCalendar(displayMonth, displayYear);
+        
+        // Animar entrada dos elementos
+        setTimeout(() => {
+            document.querySelectorAll('.calendar-day').forEach((day, index) => {
+                day.style.opacity = '0';
+                
+                setTimeout(() => {
+                    day.style.transition = 'all 0.3s ease';
+                    day.style.opacity = '1';
+                }, 30 * index);
+            });
+        }, 300);
     });
+
+        // Modify CSS for calendar container
+        document.querySelector('.calendar-container').style.overflowX = 'hidden';
+
+        // Ensure calendar grid doesn't force horizontal scrolling
+        document.querySelector('.calendar-month-grid').style.minWidth = 'auto';
+        document.querySelector('.calendar-weeks').style.minWidth = 'auto';
+
+        // Update the calendar event style to truncate long lab names
+        const style = document.createElement('style');
+            style.textContent = `
+                /* Ensure calendar event respects day cell boundaries */
+                .calendar-event {
+                    max-width: 100%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    box-sizing: border-box;
+                    width: calc(100% - 4px); /* Slightly smaller than 100% to avoid edge issues */
+                    margin-left: 2px;
+                    margin-right: 2px;
+                }
+                
+                /* Adjust hover effect to stay within bounds */
+                .calendar-event:hover {
+                    background-color: var(--event-hover-bg);
+                    transform: translateX(2px); /* Reduced from 3px to prevent overflow */
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    max-width: calc(100% - 4px); /* Ensure hover state doesn't expand too much */
+                }
+                
+                /* Ensure day cell has controlled overflow */
+                .calendar-day {
+                    overflow: hidden;
+                    position: relative;
+                }
+                
+                /* Control events container size */
+                .calendar-events-container {
+                    width: 100%;
+                    overflow: hidden;
+                }
+                
+                /* Ensure lab name text doesn't cause overflow */
+                .calendar-event-lab {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    max-width: 60%;
+                }
+            `;
+        document.head.appendChild(style);
 </script>
 {% endblock %}

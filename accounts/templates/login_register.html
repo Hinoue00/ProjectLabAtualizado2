@@ -138,21 +138,21 @@
         margin-bottom: 25px;
     }
     
-    .form-floating {
+    .form-group {
         margin-bottom: 20px;
-    }
-    
-    .form-floating label {
-        color: var(--text-muted);
+        position: relative;
     }
     
     .auth-input {
+        width: 100%;
         border-radius: 10px;
         padding: 12px 15px;
         height: calc(3rem + 2px);
         border: 1px solid rgba(0, 0, 0, 0.1);
         background-color: rgba(255, 255, 255, 0.9);
         transition: all 0.3s ease;
+        color: var(--text-color);
+        font-size: 1rem;
     }
     
     [data-theme="dark"] .auth-input {
@@ -164,6 +164,7 @@
     .auth-input:focus {
         box-shadow: 0 0 0 0.25rem rgba(74, 111, 165, 0.25);
         border-color: #4a6fa5;
+        outline: none;
     }
     
     .auth-submit {
@@ -206,37 +207,6 @@
         text-decoration: underline;
     }
     
-    .social-login {
-        display: flex;
-        justify-content: center;
-        margin-top: 15px;
-        margin-bottom: 15px;
-    }
-    
-    .social-btn {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 10px;
-        color: #fff;
-        transition: all 0.3s ease;
-    }
-    
-    .social-btn:hover {
-        transform: translateY(-3px);
-    }
-    
-    .social-btn.google {
-        background-color: #DB4437;
-    }
-    
-    .social-btn.microsoft {
-        background-color: #00a4ef;
-    }
-    
     .password-toggle {
         position: absolute;
         right: 15px;
@@ -245,6 +215,20 @@
         cursor: pointer;
         color: #6c757d;
         z-index: 10;
+    }
+
+    .form-group1 .password-toggle {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-100%);
+        cursor: pointer;
+        color: #6c757d;
+        z-index: 10;
+    }
+    
+    [data-theme="dark"] .password-toggle {
+        color: rgba(255, 255, 255, 0.7);
     }
     
     .divider {
@@ -315,6 +299,32 @@
         to { transform: rotate(360deg); }
     }
     
+    /* Form text help */
+    .form-text {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+    }
+    
+    /* Form check styling */
+    .form-check-input {
+        margin-top: 0.25rem;
+    }
+    
+    [data-theme="dark"] .form-check-input {
+        background-color: rgba(33, 37, 41, 0.8);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    [data-theme="dark"] .form-check-input:checked {
+        background-color: #4a6fa5;
+        border-color: #4a6fa5;
+    }
+    
+    [data-theme="dark"] .form-check-label {
+        color: var(--text-color);
+    }
+    
     /* Responsividade */
     @media (max-width: 576px) {
         .auth-card {
@@ -351,16 +361,16 @@
                     <form id="actualLoginForm" method="post" action="{% url 'login' %}">
                         {% csrf_token %}
                         
-                        <div class="form-floating mb-3">
-                            <input type="email" class="form-control auth-input" id="loginEmail" name="username" placeholder="nome@exemplo.com" required>
-                            <label for="loginEmail">Email</label>
+                        <div class="form-group">
+                            <input type="email" class="auth-input" id="loginEmail" name="username" 
+                                placeholder="Email" required>
                             <div class="input-feedback valid">Email válido</div>
                             <div class="input-feedback invalid">Por favor, informe um email válido</div>
                         </div>
                         
-                        <div class="form-floating mb-3 position-relative">
-                            <input type="password" class="form-control auth-input" id="loginPassword" name="password" placeholder="Sua senha" required>
-                            <label for="loginPassword">Senha</label>
+                        <div class="form-group position-relative">
+                            <input type="password" class="auth-input" id="loginPassword" name="password" 
+                                placeholder="Senha" required>
                             <i class="bi bi-eye-slash password-toggle" id="loginPasswordToggle"></i>
                         </div>
                         
@@ -385,54 +395,50 @@
                         
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="form-floating mb-3">
-                                    <input type="text" class="form-control auth-input" id="firstName" name="first_name" placeholder="Seu nome" required>
-                                    <label for="firstName">Nome</label>
+                                <div class="form-group">
+                                    <input type="text" class="auth-input" id="firstName" name="first_name" 
+                                        placeholder="Nome" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="form-floating mb-3">
-                                    <input type="text" class="form-control auth-input" id="lastName" name="last_name" placeholder="Seu sobrenome" required>
-                                    <label for="lastName">Sobrenome</label>
+                                <div class="form-group">
+                                    <input type="text" class="auth-input" id="lastName" name="last_name" 
+                                        placeholder="Sobrenome" required>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="form-floating mb-3">
-                            <input type="email" class="form-control auth-input" id="registerEmail" name="email" placeholder="nome@exemplo.com" required>
-                            <label for="registerEmail">Email</label>
+                        <div class="form-group">
+                            <input type="email" class="auth-input" id="registerEmail" name="email" 
+                                placeholder="Email corporativo" required>
                             <div class="input-feedback valid">Email corporativo válido</div>
                             <div class="input-feedback invalid">Apenas emails corporativos são permitidos (@cogna.com.br e @kroton.com.br)</div>
                         </div>
                         
-                        <div class="form-floating mb-3">
-                            <input type="tel" class="form-control auth-input" id="phoneNumber" name="phone_number" 
-                                pattern="[0-9]{10,11}" placeholder="(99) 99999-9999" required>
-                            <label for="phoneNumber">Telefone</label>
+                        <div class="form-group">
+                            <input type="tel" class="auth-input" id="phoneNumber" name="phone_number" 
+                                pattern="[0-9]{10,11}" placeholder="Telefone (apenas números)" required>
                             <div class="form-text">Formato: DDD + número (apenas números)</div>
                         </div>
                         
-                        <div class="form-floating mb-3">
-                            <select class="form-select auth-input" id="userType" name="user_type" required>
-                                <option value="" selected disabled>Selecione...</option>
+                        <div class="form-group">
+                            <select class="auth-input" id="userType" name="user_type" required>
+                                <option value="" selected disabled>Selecione o tipo de usuário</option>
                                 <option value="professor">Professor</option>
                                 <option value="technician">Laboratorista</option>
                             </select>
-                            <label for="userType">Tipo de Usuário</label>
                         </div>
                         
-                        <div class="form-floating mb-3 position-relative">
-                            <input type="password" class="form-control auth-input" id="registerPassword" name="password1" 
-                                placeholder="Sua senha" required pattern=".{8,}" title="A senha deve ter pelo menos 8 caracteres">
-                            <label for="registerPassword">Senha</label>
+                        <div class="form-group1 position-relative">
+                            <input type="password" class="auth-input" id="registerPassword" name="password1" 
+                                placeholder="Senha" required pattern=".{8,}">
                             <i class="bi bi-eye-slash password-toggle" id="registerPasswordToggle"></i>
                             <div class="form-text">Mínimo de 8 caracteres, incluindo números e letras</div>
                         </div>
                         
-                        <div class="form-floating mb-3 position-relative">
-                            <input type="password" class="form-control auth-input" id="confirmPassword" name="password2" 
+                        <div class="form-group position-relative">
+                            <input type="password" class="auth-input" id="confirmPassword" name="password2" 
                                 placeholder="Confirme sua senha" required>
-                            <label for="confirmPassword">Confirmar Senha</label>
                             <i class="bi bi-eye-slash password-toggle" id="confirmPasswordToggle"></i>
                         </div>
                         
@@ -476,9 +482,15 @@
         const passwordToggles = document.querySelectorAll('.password-toggle');
         passwordToggles.forEach(toggle => {
             toggle.addEventListener('click', function() {
-                const input = this.previousElementSibling;
-                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-                input.setAttribute('type', type);
+                // Find the password input within the same parent element
+                const inputContainer = this.closest('.form-group, .form-group1');
+                const passwordInput = inputContainer.querySelector('input');
+                
+                // Toggle between password and text type
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+
+                // Toggle the eye icon
                 this.classList.toggle('bi-eye');
                 this.classList.toggle('bi-eye-slash');
             });

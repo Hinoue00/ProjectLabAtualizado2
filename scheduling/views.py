@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.utils import timezone
-from datetime import timedelta
+from datetime import datetime, timedelta
 from accounts.models import User
 from accounts.views import is_technician, is_professor
 from .models import Laboratory, ScheduleRequest, DraftScheduleRequest, FileAttachment
@@ -11,6 +11,10 @@ from .forms import ScheduleRequestForm
 from django.core.mail import send_mail
 from django.conf import settings
 from django.urls import reverse
+from django.http import JsonResponse
+
+
+
 
 @login_required
 def schedule_calendar(request):
@@ -449,4 +453,132 @@ def edit_draft_schedule_request(request, draft_id):
     return render(request, 'create_request.html', context)
 
 
+def calendar_data_api(request):
+    # Obter parâmetros da requisição
+    week_offset = int(request.GET.get('week_offset', 0))
+    filter_labs = request.GET.getlist('labs[]', [])
+    
+    # Determinar período de datas
+    today = timezone.now().date()
+    start_date = today - timedelta(days=today.weekday())  # Início da semana atual
+    
+    # Aplicar deslocamento de semanas
+    start_date = start_date + timedelta(weeks=week_offset)
+    end_date = start_date + timedelta(days=27)  # 4 semanas (28 dias)
+    
+    # Construir filtro para laboratórios
+    lab_filter = {}
+    if filter_labs and 'all' not in filter_labs:
+        lab_filter['laboratory__id__in'] = filter_labs
+    
+    # Buscar agendamentos
+    schedule_requests = ScheduleRequest.objects.filter(
+        scheduled_date__range=[start_date, end_date],
+        **lab_filter
+    ).select_related('professor', 'laboratory')
+    
+    # Organizar dados por semanas e dias
+    calendar_data = []
+    
+    # Gerar 4 semanas
+    current_date = start_date
+    for week in range(4):
+        week_data = []
+        
+        # Gerar 7 dias para cada semana
+        for day in range(7):
+            day_schedules = []
+            
+            # Filtrar agendamentos para este dia
+            day_requests = schedule_requests.filter(scheduled_date=current_date)
+            
+            for request in day_requests:
+                day_schedules.append({
+                    'id': request.id,
+                    'professor_name': request.professor.get_full_name(),
+                    'laboratory_name': request.laboratory.name,
+                    'laboratory_id': request.laboratory.id,
+                    'start_time': request.start_time.strftime('%H:%M'),
+                    'end_time': request.end_time.strftime('%H:%M'),
+                    'subject': request.subject,
+                    'status': request.status
+                })
+            
+            week_data.append({
+                'date': current_date.strftime('%Y-%m-%d'),
+                'day': current_date.day,
+                'is_today': current_date == today,
+                'is_past': current_date < today,
+                'weekday': current_date.weekday(),
+                'schedules': day_schedules
+            })
+            
+            current_date += timedelta(days=1)
+        
+        calendar_data.append(week_data)
+    
+    # Obter lista de laboratórios para o filtro
+    laboratories = Laboratory.objects.filter(is_active=True).values('id', 'name')
+    
+    return JsonResponse({
+        'calendar_weeks': calendar_data,
+        'laboratories': list(laboratories),
+        'period': {
+            'start_date': start_date.strftime('%Y-%m-%d'),
+            'end_date': end_date.strftime('%Y-%m-%d')
+        }
+    })
+
+
+def schedule_detail_api(request, schedule_id):
+    try:
+        schedule = ScheduleRequest.objects.select_related(
+            'professor', 'laboratory', 'reviewed_by'
+        ).get(id=schedule_id)
+        
+        # Verificar permissões (se o professor só pode ver seus próprios agendamentos)
+        if request.user.user_type == 'professor' and schedule.professor != request.user:
+            return JsonResponse({'error': 'Acesso negado'}, status=403)
+        
+        data = {
+            'id': schedule.id,
+            'status': schedule.status,
+            'professor': {
+                'id': schedule.professor.id,
+                'name': schedule.professor.get_full_name(),
+                'email': schedule.professor.email
+            },
+            'laboratory': {
+                'id': schedule.laboratory.id,
+                'name': schedule.laboratory.name,
+                'location': schedule.laboratory.location
+            },
+            'date': schedule.scheduled_date.strftime('%Y-%m-%d'),
+            'start_time': schedule.start_time.strftime('%H:%M'),
+            'end_time': schedule.end_time.strftime('%H:%M'),
+            'subject': schedule.subject,
+            'description': schedule.description,
+            'materials': schedule.materials,
+            'request_date': schedule.request_date.strftime('%Y-%m-%d %H:%M'),
+            'number_of_students': schedule.number_of_students
+        }
+        
+        # Adicionar informações de revisão se já foi revisado
+        if schedule.reviewed_by:
+            data['review'] = {
+                'date': schedule.review_date.strftime('%Y-%m-%d %H:%M'),
+                'reviewer': schedule.reviewed_by.get_full_name(),
+                'rejection_reason': schedule.rejection_reason
+            }
+            
+        # Verificar tipo de usuário atual
+        data['user_info'] = {
+            'is_technician': request.user.user_type == 'technician',
+            'is_professor': request.user.user_type == 'professor',
+            'is_owner': schedule.professor == request.user
+        }
+            
+        return JsonResponse(data)
+    except ScheduleRequest.DoesNotExist:
+        return JsonResponse({'error': 'Agendamento não encontrado'}, status=404)
 
