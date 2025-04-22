@@ -1,0 +1,37 @@
+{% load tz %}
+{% load i18n %}
+{% load l10n %}
+
+{# Usar a classe calendar-grid para o layout #}
+<div class="calendar-grid">
+    {% for day in calendar_data %}
+        {# Adicionar classe 'today' dinamicamente #}
+        <div class="calendar-day {% if day.is_today %}today{% endif %}">
+            <div class="day-header">
+                {# Nome do dia e data separados para melhor estilo #}
+                <span class="day-name">{{ day.date|date:"D"|slice:":3"|upper }}</span>
+                <span class="day-date">{{ day.date|date:"d/m" }}</span>
+            </div>
+            <div class="day-content">
+                {% for appointment in day.appointments %}
+                    <div class="appointment-item">
+                        {# Agrupar detalhes do agendamento #}
+                        <div class="appointment-details">
+                            <span class="appointment-professor">{{ appointment.professor__first_name }} {{ appointment.professor__last_name|slice:":1" }}.</span>
+                            <span class="appointment-lab">{{ appointment.laboratory__name }}</span>
+                            <span class="appointment-time">
+                                <i class="bi bi-clock"></i> {{ appointment.start_time|time:"H:i" }} - {{ appointment.end_time|time:"H:i" }}
+                            </span>
+                        </div>
+                    </div>
+                {% empty %}
+                    {# Mensagem mais clara para dias vazios #}
+                    <div class="no-appointments">
+                        <i class="bi bi-calendar-x"></i>
+                        <span>Sem agendamentos</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
