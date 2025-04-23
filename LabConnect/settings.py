@@ -209,3 +209,7 @@ DOCLING_MODEL = "pt_core_news_sm"  # Modelo em português
 DOCLING_CACHE_DIR = os.path.join(BASE_DIR, 'docling_cache')
 
 ALLOW_SCHEDULING_ANY_DAY = True
+
+# Configuração do serviço WhatsApp
+WHATSAPP_UNOFFICIAL_API_URL = 'http://localhost:3000'
+USE_WHATSAPP_NOTIFICATIONS = True

@@ -4,12 +4,23 @@ from accounts.models import User
 from django.utils import timezone
 
 class Laboratory(models.Model):
+
+    DEPARTMENT_CHOICES = (
+    ('exatas', 'Exatas'),
+    ('saude', 'Saúde'),
+    ('informatica', 'Informática'),
+    )
+        
     name = models.CharField(max_length=100)
     location = models.CharField(max_length=100)
     capacity = models.PositiveIntegerField()
     description = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
-    department = models.CharField(max_length=100)  # Engenharias, Saúde, Informática, etc.
+    department = models.CharField(
+        max_length=100, 
+        choices=DEPARTMENT_CHOICES,
+        verbose_name="Departamento"
+    )
     equipment = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
