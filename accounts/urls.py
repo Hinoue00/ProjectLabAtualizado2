@@ -14,4 +14,5 @@ urlpatterns = [
     path('profile/change-password/', views.change_password, name='change_password'),
     path('', views.dashboard_redirect, name='dashboard_redirect'),
     path('check-approval-status/', views.check_approval_status, name='check_approval_status'),
+    path('test-whatsapp/', views.test_whatsapp_message, name='test_whatsapp'),
 ]
