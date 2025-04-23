@@ -5,6 +5,7 @@
 
 {% block extra_css %}
 <style>
+
     .stats-card {
         transition: all 0.3s ease;
     }
@@ -19,11 +20,11 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1.5rem; /* Aumentar espaço abaixo */
-        padding-bottom: 1rem;
+        margin-bottom: var(--spacing-large); /* Usando variável */
+        padding-bottom: var(--spacing-medium); /* Usando variável */
         border-bottom: 1px solid var(--border-color);
         flex-wrap: wrap;
-        gap: 1rem;
+        gap: var(--spacing-medium); /* Usando variável */
     }
 
     .calendar-title {
@@ -37,7 +38,7 @@
     .department-filter-form {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: var(--spacing-small); /* Usando variável */
     }
 
     .department-filter-form label {
@@ -53,7 +54,7 @@
 
     .calendar-nav {
         display: flex;
-        gap: 0.5rem; /* Espaçamento entre botões */
+        gap: var(--spacing-small); /* Usando variável */
     }
 
     .calendar-nav a, .calendar-nav button { /* Estilo unificado para links/botões */
@@ -74,7 +75,7 @@
         color: var(--primary-color); /* Texto na cor primária */
     }
     .calendar-nav i {
-        margin-right: 0.4rem;
+        margin-right: 0.4rem; /* Mantido específico por enquanto */
         font-size: 1rem; /* Tamanho do ícone */
     }
      .calendar-nav a#today-link { /* Destaque sutil para o botão Hoje */
@@ -92,7 +93,7 @@
     .calendar-grid { /* Adicionaremos esta classe no HTML parcial */
         display: grid;
         grid-template-columns: repeat(5, 1fr); /* 5 colunas iguais */
-        gap: 1rem; /* Espaçamento entre os dias */
+        gap: var(--spacing-medium); /* Usando variável */
     }
 
     .calendar-day {
@@ -114,7 +115,7 @@
 
     .calendar-day .day-header {
         font-weight: 600;
-        padding: 0.75rem; /* Mais padding */
+        padding: 0.75rem; /* Mantido específico por enquanto */
         border-bottom: 1px solid var(--border-color);
         text-align: center;
         background-color: rgba(0,0,0,0.02); /* Fundo sutil */
@@ -139,16 +140,19 @@
 
 
     .calendar-day .day-content {
-        padding: 0.75rem;
+        padding: 0.75rem; /* Mantido específico por enquanto */
         flex-grow: 1; /* Ocupa o espaço restante */
         overflow-y: auto; /* Scroll se necessário */
         max-height: none; /* Remover max-height anterior se houver */
+        display: flex; /* Adicionado para usar gap */
+        flex-direction: column; /* Adicionado para usar gap */
+        gap: var(--spacing-small); /* Usando variável para espaçar itens */
     }
 
     /* Estilo dos Agendamentos */
     .appointment-item {
-        margin-bottom: 0.6rem;
-        padding: 0.6rem;
+        /* margin-bottom: 0.6rem; */ /* Removido - agora usa gap no container */
+        padding: 0.6rem; /* Mantido específico por enquanto */
         border-radius: 0.3rem;
         background-color: var(--primary-color-lighter); /* Fundo bem claro */
         border-left: 3px solid var(--primary-color); /* Borda lateral colorida */
@@ -169,7 +173,7 @@
 
 
     .appointment-item:last-child {
-        margin-bottom: 0;
+        /* margin-bottom: 0; */ /* Removido - não mais necessário com gap */
     }
 
     .appointment-details { /* Novo container para detalhes */
@@ -190,7 +194,7 @@
         display: block; /* Garante que ocupe a linha */
     }
     .appointment-time i {
-        margin-right: 0.2rem;
+        margin-right: 0.2rem; /* Mantido específico */
     }
 
     /* Estilo para dias vazios */
@@ -207,7 +211,7 @@
     }
     .day-content .no-appointments i {
         font-size: 1.5rem;
-        margin-bottom: 0.5rem;
+        margin-bottom: var(--spacing-small); /* Usando variável */
         opacity: 0.6;
     }
 
@@ -219,6 +223,148 @@
         pointer-events: none;
         transition: opacity 0.3s ease;
     }
+    /* --- Estilos Modernizados do Histórico de Agendamentos --- */
+    .recent-activity-list {
+        padding: 0; /* Remover padding se o card-body já tiver */
+        max-height: 400px; /* Altura máxima com scroll, ajuste se necessário */
+        overflow-y: auto;
+    }
+
+    .activity-item {
+        padding: 1rem 1.25rem; /* Mais padding interno */
+        border-bottom: 1px solid var(--border-color);
+        transition: background-color 0.2s ease;
+    }
+
+    .activity-item:last-child {
+        border-bottom: none; /* Remover borda do último item */
+    }
+
+    .activity-item:hover {
+        background-color: rgba(0, 0, 0, 0.02); /* Fundo sutil no hover */
+    }
+    [data-theme="dark"] .activity-item:hover {
+         background-color: rgba(255, 255, 255, 0.03);
+    }
+
+
+    .activity-title {
+        font-weight: 600;
+        color: var(--text-color);
+        font-size: 0.95rem; /* Levemente maior */
+    }
+
+    .activity-details p {
+        font-size: 0.85rem; /* Tamanho da fonte dos detalhes */
+        color: var(--text-muted);
+        margin-bottom: 0.25rem; /* Mantido específico */
+        line-height: 1.5;
+    }
+    .activity-details i {
+        width: 1em; /* Alinhar ícones */
+        text-align: center;
+        margin-right: 0.3rem; /* Mantido específico */
+        color: var(--primary-color); /* Cor dos ícones */
+    }
+
+
+    .activity-date {
+        font-size: 0.75rem; /* Data menor */
+        color: var(--text-muted-light); /* Cor mais suave para a data */
+        text-align: right; /* Alinhar à direita */
+    }
+     .activity-date i {
+         margin-right: 0.2rem; /* Mantido específico */
+     }
+
+    /* Estilos para os Badges de Status (Exemplo) */
+    .badge.badge-approved { background-color: var(--bs-success-bg-subtle); color: var(--bs-success-text-emphasis); border: 1px solid var(--bs-success-border-subtle); }
+    .badge.badge-rejected { background-color: var(--bs-danger-bg-subtle); color: var(--bs-danger-text-emphasis); border: 1px solid var(--bs-danger-border-subtle); }
+    .badge.badge-pending { background-color: var(--bs-warning-bg-subtle); color: var(--bs-warning-text-emphasis); border: 1px solid var(--bs-warning-border-subtle); }
+    /* Adicione outros status conforme necessário */
+
+
+    /* --- Fim dos Estilos do Histórico --- */
+
+    /* --- Estilos para Lista de Professores Ativos --- */
+    .professor-list {
+        padding: 0;
+        margin: 0;
+        list-style: none;
+        max-height: 180px; /* Altura máxima antes de scroll, ajuste conforme necessário */
+        overflow-y: auto;
+    }
+
+    .professor-list-item {
+        display: flex;
+        align-items: center;
+        padding: 0.6rem 0; /* Espaçamento vertical */
+        border-bottom: 1px solid var(--border-color-light); /* Linha separadora sutil */
+        font-size: 0.85rem;
+    }
+
+    .professor-list-item:last-child {
+        border-bottom: none;
+    }
+
+    .professor-list-item i.bi-person-circle { /* Ícone principal do professor */
+        color: var(--primary-color);
+        margin-right: 0.75rem; /* Mantido específico por enquanto */
+        font-size: 1.1rem;
+        width: 1.2em; /* Alinhamento */
+        text-align: center;
+    }
+
+    .professor-info {
+        flex-grow: 1;
+        line-height: 1.4;
+    }
+
+    .professor-name {
+        font-weight: 600;
+        color: var(--text-color);
+        display: block;
+    }
+
+    .professor-contact {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        display: block; /* Garante nova linha */
+        margin-top: 0.1rem; /* Mantido específico */
+    }
+     .professor-contact i { /* Ícones menores para contato (telefone, email) */
+        font-size: 0.9rem;
+        margin-right: 0.4rem; /* Mantido específico por enquanto */
+        color: var(--text-muted);
+        width: 1em; /* Alinhamento dos ícones de contato */
+        text-align: center;
+     }
+
+    .card-footer-link {
+        display: block;
+        text-align: center;
+        padding: 0.75rem 1.25rem; /* Mantido específico por enquanto */
+        background-color: rgba(0,0,0,0.02);
+        border-top: 1px solid var(--border-color);
+        font-weight: 500;
+        color: var(--primary-color);
+        text-decoration: none;
+        transition: background-color 0.2s ease;
+    }
+     [data-theme="dark"] .card-footer-link {
+         background-color: rgba(255,255,255,0.03);
+     }
+
+    .card-footer-link:hover {
+        background-color: rgba(0,0,0,0.05);
+        color: var(--primary-color-dark); /* Escurecer um pouco no hover */
+    }
+     [data-theme="dark"] .card-footer-link:hover {
+         background-color: rgba(255,255,255,0.06);
+     }
+    /* --- Fim dos Estilos Professores --- */
+
+    /* Removido o bloco duplicado que estava aqui */
 
 </style>
 {% endblock %}
@@ -355,7 +501,7 @@
                         <a href="{% url 'pending_approvals' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                             <div>
                                 <h6 class="mb-1">Aprovações de usuários</h6>
-                                <p class="mb-0 small text-muted">Novos usuários aguardando aprovação</p>
+                                <p class="mb-0 small">Novos usuários aguardando aprovação</p>
                             </div>
                             <span class="badge bg-warning rounded-pill">{{ pending_approvals }}</span>
                         </a>
@@ -376,10 +522,10 @@
                         <a href="{% url 'schedule_request_detail' appointment.pk %}" class="list-group-item list-group-item-action">
                             <div class="d-flex justify-content-between align-items-center">
                                 <h6 class="mb-1 small">{{ appointment.professor.get_full_name }}</h6>
-                                <small class="text-muted">{{ appointment.scheduled_date|date:"d/m" }}</small>
+                                <small>{{ appointment.scheduled_date|date:"d/m" }}</small>
                             </div>
                             <p class="mb-1 small">{{ appointment.laboratory.name }}</p>
-                            <p class="mb-0 text-muted small">
+                            <p class="mb-0 small">
                                 <i class="bi bi-clock"></i> {{ appointment.start_time|time:"H:i" }} - {{ appointment.end_time|time:"H:i" }}
                             </p>
                         </a>
@@ -388,7 +534,7 @@
                     {% if pending_approvals == 0 and pending_appointments == 0 %}
                         <div class="list-group-item text-center py-4">
                             <i class="bi bi-check-circle text-success" style="font-size: 1.5rem;"></i>
-                            <p class="mt-2 text-muted mb-0">Nenhuma solicitação pendente.</p>
+                            <p class="mt-2 mb-0">Nenhuma solicitação pendente.</p>
                         </div>
                     {% endif %}
                 </div>
@@ -398,27 +544,27 @@
 </div>
 
 <!-- Second Row -->
-<div class="row">
-    <!-- Lab Activity Chart -->
-    <div class="col-lg-8 mb-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Atividade de Laboratórios</h5>
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-sm btn-outline-secondary">Semana</button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary">Mês</button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary">Ano</button>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="chart-container">
-                    <canvas id="labActivityChart"></canvas>
+<!-- Lab Activity Chart -->
+<div class="col-lg-8 mb-4">
+    <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-transparent">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Atividade de Laboratórios</h5>
+                {# Adicionado ID ao btn-group e data-period aos botões #}
+                <div class="btn-group" id="labActivityPeriod">
+                    <button type="button" class="btn btn-sm btn-outline-secondary active" data-period="week">Semana</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-period="month">Mês</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-period="year">Ano</button>
                 </div>
             </div>
         </div>
+        <div class="card-body">
+            <div class="chart-container" style="position: relative; height:300px"> {# Adicionado height para melhor visualização inicial #}
+                <canvas id="labActivityChart"></canvas>
+            </div>
+        </div>
     </div>
+</div>
     
     <!-- Materials Alert -->
     <div class="col-lg-4 mb-4">
@@ -470,31 +616,37 @@
             <div class="card-header bg-transparent">
                 <h5 class="card-title mb-0">Histórico de Agendamentos</h5>
             </div>
+            {# Adicionado p-0 para controlar padding nos items #}
             <div class="card-body p-0">
                 <div class="recent-activity-list">
                     {% for appointment in recent_appointments %}
                         <div class="activity-item">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex justify-content-between align-items-start mb-2"> {# Alterado para align-items-start #}
                                 <h6 class="activity-title mb-0">{{ appointment.professor.get_full_name }}</h6>
-                                <span class="badge badge-{{ appointment.status }}">
+                                {# Usando as novas classes de badge baseadas no status #}
+                                <span class="badge rounded-pill badge-{{ appointment.status|lower }}">
                                     {{ appointment.get_status_display }}
                                 </span>
                             </div>
-                            <div class="activity-details">
+                            <div class="activity-details mb-2"> {# Adicionado mb-2 #}
                                 <p class="mb-1">
-                                    <i class="bi bi-building me-1"></i> {{ appointment.laboratory.name }} |
-                                    <i class="bi bi-calendar-date me-1"></i> {{ appointment.scheduled_date|date:"d/m/Y" }} |
-                                    <i class="bi bi-clock me-1"></i> {{ appointment.start_time|time:"H:i" }} - {{ appointment.end_time|time:"H:i" }}
+                                    <i class="bi bi-building"></i> {{ appointment.laboratory.name }}
+                                </p>
+                                <p class="mb-1">
+                                    <i class="bi bi-calendar-date"></i> {{ appointment.scheduled_date|date:"d/m/Y" }}
+                                </p>
+                                <p class="mb-0"> {# Removido mb-1 do último item #}
+                                    <i class="bi bi-clock"></i> {{ appointment.start_time|time:"H:i" }} - {{ appointment.end_time|time:"H:i" }}
                                 </p>
                             </div>
-                            <div class="activity-date mt-2">
-                                <i class="bi bi-clock-history me-1"></i> Atualizado {{ appointment.review_date|timesince }} atrás
+                            <div class="activity-date"> {# Removido mt-2, espaçamento controlado pelo item #}
+                                <i class="bi bi-clock-history"></i> Atualizado {{ appointment.review_date|timesince }} atrás
                             </div>
                         </div>
                     {% empty %}
-                        <div class="text-center py-5">
-                            <i class="bi bi-calendar-x" style="font-size: 2rem;"></i>
-                            <p class="mt-3">Nenhum histórico de agendamento disponível</p>
+                        <div class="text-center py-5"> {# Aumentado padding vertical #}
+                            <i class="bi bi-journal-bookmark d-block mb-2" style="font-size: 1.8rem;"></i>
+                            Nenhum agendamento recente.
                         </div>
                     {% endfor %}
                 </div>
@@ -505,111 +657,169 @@
     <!-- Active Professors -->
     <div class="col-lg-6 mb-4">
         <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent">
+            <div class="card-header bg-transparent pb-0 border-0"> {# Removido padding-bottom e borda #}
                 <h5 class="card-title mb-0">Professores Ativos</h5>
+                 <p class="small mb-2">Total: {{ active_professors.count }}</p> {# Mantém a contagem total #}
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table mb-0">
-                        <thead>
-                            <tr>
-                                <th>Professor</th>
-                                <th>Email</th>
-                                <th>Agendamentos</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for professor in active_professors %}
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar-sm me-2 bg-primary text-white rounded">
-                                                {{ professor.first_name|first }}{{ professor.last_name|first }}
-                                            </div>
-                                            {{ professor.get_full_name }}
-                                        </div>
-                                    </td>
-                                    <td>{{ professor.email }}</td>
-                                    <td>{{ professor.schedulerequest_set.count }}</td>
-                                </tr>
-                            {% empty %}
-                                <tr>
-                                    <td colspan="3" class="text-center py-4">
-                                        <i class="bi bi-people custom-icon"></i>
-                                        Nenhum professor ativo no momento
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+            {# Adicionado p-0 para controlar padding nos items da lista #}
+            <div class="card-body pt-0 pb-0"> {# Removido padding vertical do body #}
+                <ul class="professor-list">
+                    {% for professor in active_professors|slice:":5" %} {# Mostra os 5 primeiros #}
+                        <li class="professor-list-item">
+                            <i class="bi bi-person-circle"></i>
+                            <div class="professor-info">
+                                <span class="professor-name">{{ professor.get_full_name }}</span>
+                                {% if professor.phone_number %}
+                                <span class="professor-contact">
+                                    <i class="bi bi-telephone-fill"></i> {{ professor.phone_number }}
+                                </span>
+                                {% endif %}
+                                {% if professor.email %}
+                                <span class="professor-contact">
+                                     <i class="bi bi-envelope-fill"></i> {{ professor.email }}
+                                </span>
+                                {% endif %}
+                                {# Adicionar curso/departamento se disponível no modelo Professor #}
+                                {# Ex: <span class="professor-contact"><i class="bi bi-building"></i> {{ professor.department }}</span> #}
+                            </div>
+                        </li>
+                    {% empty %}
+                        <li class="text-center py-3 small">Nenhum professor ativo encontrado.</li>
+                    {% endfor %}
+                </ul>
             </div>
+            {% if active_professors.count > 5 %} {# Mostra o link apenas se houver mais professores #}
+            <div class="card-footer bg-transparent p-0"> {# Removido padding e fundo padrão #}
+                {# Substitua '#' por uma URL real se tiver uma página de listagem de professores #}
+                <a href="#" class="card-footer-link">Ver todos ({{ active_professors.count }})</a>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
 </div>
 {% endblock %}
+
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Lab Activity Chart
+        // --- Lab Activity Chart ---
         const labActivityCtx = document.getElementById('labActivityChart').getContext('2d');
-        const labActivityChart = new Chart(labActivityCtx, {
-            type: 'line',
-            data: {
-                labels: ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'],
-                datasets: [{
-                    label: 'Lab. Engenharia',
-                    data: [10, 8, 12, 15, 10, 2, 0],
-                    borderColor: '#4a6fa5',
-                    backgroundColor: 'rgba(74, 111, 165, 0.1)',
-                    tension: 0.3,
-                    fill: true
-                },
-                {
-                    label: 'Lab. Saúde',
-                    data: [5, 7, 9, 8, 6, 1, 0],
-                    borderColor: '#198754',
-                    backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                    tension: 0.3,
-                    fill: true
-                },
-                {
-                    label: 'Lab. Informática',
-                    data: [8, 10, 7, 9, 12, 3, 0],
-                    borderColor: '#dc3545',
-                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                    tension: 0.3,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Número de Agendamentos'
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Dia da Semana'
-                        }
-                    }
-                }
+        let labActivityChart; // Declarar a variável do gráfico aqui para ser acessível
+
+        // Função para criar ou atualizar o gráfico de atividade
+        function updateLabActivityChart(period = 'week') {
+            console.log(`Atualizando gráfico para o período: ${period}`); // Log para depuração
+
+            // Dados de exemplo - Substituir pela lógica de busca AJAX
+            let chartData;
+            if (period === 'week') {
+                chartData = {
+                    labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'], // Exemplo: Dias da semana
+                    datasets: [
+                        // Removido dataset de exemplo 'Lab. Engenharia (Semana)'
+                        // {
+                        //     label: 'Lab. Engenharia (Semana)',
+                        //     data: [10, 8, 12, 15, 10, 2, 0], // Dados semanais
+                        //     borderColor: '#4a6fa5',
+                        //     backgroundColor: 'rgba(74, 111, 165, 0.1)',
+                        //     tension: 0.3,
+                        //     fill: true
+                        // },
+                        // Adicione outros datasets conforme necessário (ou deixe vazio por enquanto)
+                    ]
+                };
+            } else if (period === 'month') {
+                chartData = {
+                    labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'], // Exemplo: Semanas do mês
+                    datasets: [
+                        // Removido dataset de exemplo 'Lab. Engenharia (Mês)'
+                        // {
+                        //     label: 'Lab. Engenharia (Mês)',
+                        //     data: [45, 50, 55, 48], // Dados mensais
+                        //     borderColor: '#198754',
+                        //     backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                        //     tension: 0.3,
+                        //     fill: true
+                        // },
+                         // Adicione outros datasets conforme necessário (ou deixe vazio por enquanto)
+                    ]
+                };
+            } else if (period === 'year') {
+                 chartData = {
+                    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'], // Exemplo: Meses do ano
+                    datasets: [
+                        // Removido dataset de exemplo 'Lab. Engenharia (Ano)'
+                        // {
+                        //     label: 'Lab. Engenharia (Ano)',
+                        //     data: [200, 210, 230, 220, 240, 250, 260, 270, 250, 240, 230, 220], // Dados anuais
+                        //     borderColor: '#dc3545',
+                        //     backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        //     tension: 0.3,
+                        //     fill: true
+                        // },
+                         // Adicione outros datasets conforme necessário (ou deixe vazio por enquanto)
+                    ]
+                };
             }
+
+            // Se o gráfico já existe, atualiza os dados. Senão, cria um novo.
+            if (labActivityChart) {
+                labActivityChart.data = chartData;
+                labActivityChart.update();
+            } else {
+                labActivityChart = new Chart(labActivityCtx, {
+                    type: 'line',
+                    data: chartData, // Usa os dados definidos acima (agora vazios ou com outros dados)
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                display: chartData.datasets.length > 0 // Oculta a legenda se não houver datasets
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Número de Agendamentos'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Período' // Texto genérico para o eixo X
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Inicializar o gráfico com dados da semana (agora vazio)
+        updateLabActivityChart('week');
+
+        // Adicionar Event Listeners aos botões de período do gráfico
+        const periodButtons = document.querySelectorAll('#labActivityPeriod button'); // Selecionar botões dentro do grupo
+        periodButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remover classe 'active' de todos os botões
+                periodButtons.forEach(btn => btn.classList.remove('active'));
+                // Adicionar classe 'active' ao botão clicado
+                this.classList.add('active');
+                // Obter o período (week, month, year) - pode ser do data-period ou do texto
+                const period = this.dataset.period; // Adicione data-period="week/month/year" aos botões no HTML
+                updateLabActivityChart(period);
+            });
         });
-        
+
+        // --- Fim do Lab Activity Chart ---
+
         // Update chart if theme changes
         const themeToggleBtn = document.getElementById('themeToggleBtn');
         if (themeToggleBtn) {
