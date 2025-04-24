@@ -51,7 +51,8 @@ INSTALLED_APPS = [
     'scheduling.apps.SchedulingConfig',
     'dashboard.apps.DashboardConfig',
     'reports.apps.ReportsConfig',
-    'api.apps.ApiConfig'
+    'api.apps.ApiConfig',
+    'whatsapp',
 
 ]
 
@@ -210,6 +211,6 @@ DOCLING_CACHE_DIR = os.path.join(BASE_DIR, 'docling_cache')
 
 ALLOW_SCHEDULING_ANY_DAY = True
 
-# Configuração do serviço WhatsApp
-WHATSAPP_UNOFFICIAL_API_URL = 'http://localhost:3000'
-USE_WHATSAPP_NOTIFICATIONS = True
+# Configurações WhatsApp
+WHATSAPP_ENABLED = True  # Ative ou desative o serviço
+WHATSAPP_SERVICE_URL = 'http://localhost:3000/api'  # URL do serviço Node.js

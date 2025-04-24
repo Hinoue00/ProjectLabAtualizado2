@@ -12,8 +12,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.urls import reverse
 from django.http import JsonResponse
-
-
+from whatsapp.services import WhatsAppNotificationService
 
 
 @login_required
@@ -158,6 +157,9 @@ def create_schedule_request(request):
                 subject = 'Nova Solicitação de Agendamento'
                 message = f'Um novo agendamento foi solicitado por {request.user.get_full_name()} para o laboratório {schedule_request.laboratory.name} em {schedule_request.scheduled_date}.'
                 send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, technician_emails)
+
+            # Adicionar: Enviar notificação WhatsApp
+            WhatsAppNotificationService.notify_schedule_request(schedule_request)
             
             messages.success(request, 'Solicitação de agendamento enviada com sucesso! Aguarde a aprovação.')
             return redirect('professor_dashboard')
@@ -386,6 +388,9 @@ def approve_schedule_request(request, pk):
         subject = 'Solicitação de Agendamento Aprovada'
         message = f'Sua solicitação de agendamento para o laboratório {schedule_request.laboratory.name} em {schedule_request.scheduled_date} foi aprovada.'
         send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [schedule_request.professor.email])
+
+        # Adicionar: Enviar notificação WhatsApp
+        WhatsAppNotificationService.notify_schedule_approval(schedule_request)
         
         messages.success(request, f'Solicitação de agendamento de {schedule_request.professor.get_full_name()} aprovada com sucesso.')
         return redirect('schedule_requests_list')
@@ -416,6 +421,9 @@ def reject_schedule_request(request, pk):
         subject = 'Solicitação de Agendamento Rejeitada'
         message = f'Sua solicitação de agendamento para o laboratório {schedule_request.laboratory.name} em {schedule_request.scheduled_date} foi rejeitada.\n\nMotivo: {rejection_reason}'
         send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [schedule_request.professor.email])
+
+        # Adicionar: Enviar notificação WhatsApp
+        WhatsAppNotificationService.notify_schedule_rejection(schedule_request)
         
         messages.success(request, f'Solicitação de agendamento de {schedule_request.professor.get_full_name()} rejeitada com sucesso.')
         return redirect('schedule_requests_list')

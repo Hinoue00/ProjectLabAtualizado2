@@ -124,3 +124,5 @@ class EmailService:
             [user_email],
             fail_silently=False,
         )
+
+  

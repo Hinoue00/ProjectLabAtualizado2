@@ -13,6 +13,7 @@ from .models import User
 from django.core.mail import send_mail
 from django.conf import settings
 from django.http import JsonResponse
+from whatsapp.services import WhatsAppNotificationService
 
 def login_register_view(request):
     """
@@ -52,6 +53,9 @@ def login_register_view(request):
                 message = f'Um novo usuário ({user.get_full_name()}) se registrou e está aguardando aprovação.'
                 send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, technician_emails)
             
+            # Enviar notificação por WhatsApp
+            WhatsAppNotificationService.notify_user_registration(user)
+
             # Fazer login automático, redirecionando para a página de aguardando aprovação
             login(request, user)
             return redirect('pending_user')
@@ -79,7 +83,7 @@ def dashboard_redirect(request):
     Redireciona usuários para o dashboard apropriado com base no tipo e status de aprovação
     """
     if not request.user.is_approved:
-        return redirect('pending_approval')
+        return redirect('pending_user')
     
     if request.user.user_type == 'technician':
         return redirect('technician_dashboard')
@@ -112,14 +116,20 @@ def pending_approvals(request):
                 subject = 'Sua Conta foi Aprovada'
                 message = f'Olá {user.get_full_name()}, sua conta foi aprovada. Você já pode fazer login e utilizar o sistema.'
                 send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
+
+                # Adicionar: Enviar notificação WhatsApp
+                WhatsAppNotificationService.notify_user_approval(user)
                 
                 messages.success(request, f'Usuário {user.get_full_name()} foi aprovado com sucesso.')
-            
+
             elif action == 'reject':
                 # Optional: Email notification for rejection
                 subject = 'Cadastro de Conta'
                 message = f'Olá {user.get_full_name()}, seu cadastro não foi aprovado. Por favor, entre em contato com o administrador para mais informações.'
                 send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
+
+                # Adicionar: Enviar notificação WhatsApp
+                WhatsAppNotificationService.notify_user_rejection(user)
                 
                 user.delete()  # Ou marcar como rejeitado ao invés de deletar
                 messages.warning(request, f'Usuário {user.get_full_name()} foi rejeitado.')
