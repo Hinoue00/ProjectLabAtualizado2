@@ -269,20 +269,3 @@ def check_approval_status(request):
             'is_approved': request.user.is_approved
         })
     return JsonResponse({'is_approved': False}, status=401)
-
-from django.http import HttpResponse
-from .whatsapp_unofficial_service import WhatsAppUnofficialService
-
-def test_whatsapp_message(request):
-    """View temporária apenas para testes"""
-    # Substitua este número pelo número que deseja testar
-    numero_teste = "554232209961"
-    
-    # Envia uma mensagem de teste
-    resultado = WhatsAppUnofficialService.send_message(
-        numero_teste, 
-        "Teste do LabConnect! Enviado em: " + timezone.now().strftime("%H:%M:%S")
-    )
-    
-    # Retorna o resultado
-    return HttpResponse(f"Teste de WhatsApp enviado. Resultado: {resultado}")
