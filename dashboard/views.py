@@ -144,53 +144,34 @@ def technician_dashboard(request):
 @login_required
 @user_passes_test(is_professor)
 def professor_dashboard(request):
+    # Define today first
+    today = timezone.now().date()
+
     # Get current user
     professor = request.user
-    
-    # Today's date
-    today = timezone.now().date()
-    
+
     # Upcoming approved lab reservations
     upcoming_reservations = ScheduleRequest.objects.filter(
         professor=professor,
         status='approved',
         scheduled_date__gte=today
     ).order_by('scheduled_date')
-    
+
     # Pending requests
     pending_requests = ScheduleRequest.objects.filter(
         professor=professor,
         status='pending'
     ).order_by('scheduled_date')
-    
+
     # Past reservations
     past_reservations = ScheduleRequest.objects.filter(
         professor=professor,
         scheduled_date__lt=today
     ).order_by('-scheduled_date')[:10]
-    
+
     # Check if today is Thursday or Friday (for showing scheduling button)
     is_scheduling_day = today.weekday() in [3, 4]  # 3=Thursday, 4=Friday
-    
-    # Calendar days for the current week
-    start_of_week = today - timedelta(days=today.weekday())
-    calendar_days = []
-    
-    for i in range(7):
-        day = start_of_week + timedelta(days=i)
-        # Check if there are events on this day
-        has_events = ScheduleRequest.objects.filter(
-            professor=professor,
-            scheduled_date=day,
-            status='approved'
-        ).exists()
-        
-        calendar_days.append({
-            'date': day,
-            'is_today': day == today,
-            'has_events': has_events
-        })
-    
+
     # Today's events
     today_events = ScheduleRequest.objects.filter(
         professor=professor,
@@ -202,16 +183,53 @@ def professor_dashboard(request):
     draft_requests = DraftScheduleRequest.objects.filter(
         professor=request.user
     ).order_by('scheduled_date')
-    
+
+    # Calculate the week's start and end dates
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=4)  # Up to Friday
+
+    # Fetch the professor's approved schedule requests for the week
+    week_appointments = ScheduleRequest.objects.filter(
+        professor=request.user,
+        scheduled_date__range=[start_of_week, end_of_week],
+        status='approved'
+    ).select_related('laboratory')
+
+    # Organize calendar data
+    calendar_data = []
+    for i in range(5):  # Monday to Friday
+        current_day = start_of_week + timedelta(days=i)
+
+        # Filter appointments for this specific day
+        day_appointments = week_appointments.filter(scheduled_date=current_day)
+
+        day_data = {
+            'date': current_day,
+            'is_today': current_day == today,
+            'appointments': list(day_appointments.values(
+                'id',
+                'professor__first_name',
+                'professor__last_name',
+                'laboratory__name',
+                'start_time',
+                'end_time',
+                'scheduled_date',
+                'status',
+            ))
+        }
+        calendar_data.append(day_data)
+
     context = {
         'upcoming_reservations': upcoming_reservations,
         'pending_requests': pending_requests,
         'past_reservations': past_reservations,
         'is_scheduling_day': is_scheduling_day,
-        'calendar_days': calendar_days,
         'today_events': today_events,
         'today': today,
         'draft_requests': draft_requests,
+        'calendar_data': calendar_data,
+        'start_of_week': start_of_week,
+        'end_of_week': end_of_week,
     }
-    
+
     return render(request, 'professor.html', context)
