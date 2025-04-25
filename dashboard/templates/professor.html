@@ -270,6 +270,7 @@
         display: flex;
         align-items: center;
         gap: 1rem;
+        padding: 1.5rem;
     }
 
     .stats-icon {
@@ -282,20 +283,27 @@
         border-radius: 12px;
         color: var(--primary-color);
         font-size: 1.5rem;
+        margin-bottom: 0.5rem;
     }
 
     .stats-content {
         flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
     }
 
     .stats-value {
-        font-size: 1.75rem;
+        font-size: 2rem;
         font-weight: 600;
         color: var(--text-color);
+        margin-bottom: 0.25rem;
     }
 
     .stats-label {
         color: var(--text-muted);
+        font-size: 0.9rem;
     }
 
     .day-name {
@@ -460,6 +468,52 @@
         text-align: center;
     }
 
+    .calendar-nav {
+        display: flex;
+        gap: var(--spacing-small, 0.5rem);
+    }
+
+    .calendar-nav a, .calendar-nav button {
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+        padding: 0.4rem 0.8rem;
+        border: 1px solid var(--border-color);
+        border-radius: 0.375rem;
+        color: var(--text-muted);
+        background-color: transparent;
+        transition: all 0.2s ease;
+        font-size: 0.85rem;
+    }
+    
+    .calendar-nav a:hover, .calendar-nav button:hover {
+        background-color: rgba(74, 111, 165, 0.1);
+        border-color: rgba(74, 111, 165, 0.1);
+        color: var(--primary-color);
+    }
+    
+    .calendar-nav i {
+        margin-right: 0.4rem;
+        font-size: 1rem;
+    }
+    
+    .calendar-nav a#today-link {
+        font-weight: 500;
+        color: var(--text-color);
+    }
+    
+    .calendar-nav a#today-link:hover {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+    
+    .calendar-body.loading {
+        opacity: 0.5;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
 
 
     /* Responsividade */
@@ -539,12 +593,12 @@
                                 </div>
                                 <div class="flex-grow-1">
                                     <h6 class="mb-1">{{ reservation.laboratory.name }}</h6>
-                                    <p class="text-muted mb-1">
+                                    <p class="mb-1">
                                         {{ reservation.subject }} 
                                         • {{ reservation.scheduled_date|date:"d/m/Y" }}
                                     </p>
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted">
+                                        <small>
                                             {{ reservation.start_time|time:"H:i" }} - 
                                             {{ reservation.end_time|time:"H:i" }}
                                         </small>
@@ -556,7 +610,7 @@
                     </div>
                 {% else %}
                     <div class="text-center py-4">
-                        <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
+                        <i class="bi bi-calendar-x" style="font-size: 3rem;"></i>
                         <h5 class="mt-3">Nenhuma aula agendada</h5>
                         <p>Você não possui agendamentos de laboratório para os próximos dias.</p>
                     </div>
@@ -569,10 +623,20 @@
             <div class="dashboard-card-header">
                 <h5 class="dashboard-card-title">
                     <i class="bi bi-calendar-week"></i>
-                    Calendário Semanal ({{ start_of_week|date:"d/m" }} - {{ end_of_week|date:"d/m/Y" }})
+                    Calendário Semanal (<span id="calendar-title">{{ start_of_week|date:"d/m" }} - {{ end_of_week|date:"d/m/Y" }}</span>)
                 </h5>
+                <!-- Adicionar os botões de navegação -->
+                <div class="calendar-nav">
+                    <a href="#" id="prev-week-link" data-offset="-1" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Anterior
+                    </a>
+                    <a href="#" id="today-link" data-offset="0" class="btn btn-sm btn-outline-secondary">Hoje</a>
+                    <a href="#" id="next-week-link" data-offset="1" class="btn btn-sm btn-outline-secondary">
+                        Próxima <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
             </div>
-            <div class="dashboard-card-content">
+            <div class="dashboard-card-content" id="calendar-body">
                 {% include 'partials/calendar_week.html' with calendar_data=calendar_data %}
             </div>
         </div>
@@ -596,12 +660,12 @@
                                 </div>
                                 <div class="flex-grow-1">
                                     <h6 class="mb-1">{{ draft.laboratory.name }}</h6>
-                                    <p class="text-muted mb-1">
+                                    <p class="mb-1">
                                         {{ draft.subject }} 
                                         • {{ draft.scheduled_date|date:"d/m/Y" }}
                                     </p>
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted">
+                                        <small>
                                             {{ draft.start_time|time:"H:i" }} - 
                                             {{ draft.end_time|time:"H:i" }}
                                         </small>
@@ -616,7 +680,7 @@
                     </div>
                 {% else %}
                     <div class="text-center py-3">
-                        <i class="bi bi-file-x text-muted" style="font-size: 2.5rem;"></i>
+                        <i class="bi bi-file-x" style="font-size: 2.5rem;"></i>
                         <p class="mt-2">Nenhum rascunho de agendamento</p>
                     </div>
                 {% endif %}
@@ -662,12 +726,12 @@
                                 </div>
                                 <div class="flex-grow-1">
                                     <h6 class="mb-1">{{ reservation.laboratory.name }}</h6>
-                                    <p class="text-muted mb-1">
+                                    <p class="mb-1">
                                         {{ reservation.subject }} 
                                         • {{ reservation.scheduled_date|date:"d/m/Y" }}
                                     </p>
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted">
+                                        <small>
                                             {{ reservation.start_time|time:"H:i" }} - 
                                             {{ reservation.end_time|time:"H:i" }}
                                         </small>
@@ -679,7 +743,7 @@
                     </div>
                 {% else %}
                     <div class="text-center py-3">
-                        <i class="bi bi-journal-x text-muted" style="font-size: 2.5rem;"></i>
+                        <i class="bi bi-journal-x" style="font-size: 2.5rem;"></i>
                         <p class="mt-2">Nenhum histórico de aulas</p>
                     </div>
                 {% endif %}
@@ -793,4 +857,102 @@
         // Opcional: Atualizar dados periodicamente
         // setInterval(updateDashboardData, 60000);  // A cada 1 minuto
     });
-</script>{% endblock %}
+
+    // Adicionar no bloco extra_js, junto com os outros scripts
+        // Navegação do calendário semanal
+        const calendarBody = document.getElementById('calendar-body');
+        const calendarTitle = document.getElementById('calendar-title');
+        const prevWeekLink = document.getElementById('prev-week-link');
+        const todayLink = document.getElementById('today-link');
+        const nextWeekLink = document.getElementById('next-week-link');
+
+        // Função para carregar dados da semana
+        async function loadWeekData(weekOffset) {
+            if (!calendarBody) return;
+            
+            calendarBody.classList.add('loading');
+            
+            const url = `{% url 'professor_dashboard' %}?week_offset=${weekOffset}`;
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Atualizar conteúdo do calendário
+                calendarBody.innerHTML = data.calendar_html;
+                
+                // Atualizar título com datas da semana
+                if (calendarTitle) {
+                    calendarTitle.textContent = `${formatDateShort(data.start_of_week)} - ${formatDate(data.end_of_week)}`;
+                }
+                
+                // Atualizar atributos dos botões de navegação
+                if (prevWeekLink) prevWeekLink.dataset.offset = parseInt(weekOffset) - 1;
+                if (nextWeekLink) nextWeekLink.dataset.offset = parseInt(weekOffset) + 1;
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados do calendário:', error);
+                calendarBody.innerHTML = '<div class="alert alert-danger">Erro ao carregar calendário.</div>';
+            } finally {
+                calendarBody.classList.remove('loading');
+            }
+        }
+
+        // Funções para formatar datas
+        function formatDate(isoDateString) {
+            if (!isoDateString) return '';
+            const date = new Date(isoDateString);
+            const userTimezoneOffset = date.getTimezoneOffset() * 60000;
+            const correctedDate = new Date(date.getTime() + userTimezoneOffset);
+            
+            const day = String(correctedDate.getDate()).padStart(2, '0');
+            const month = String(correctedDate.getMonth() + 1).padStart(2, '0');
+            const year = correctedDate.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        function formatDateShort(isoDateString) {
+            if (!isoDateString) return '';
+            const date = new Date(isoDateString);
+            const userTimezoneOffset = date.getTimezoneOffset() * 60000;
+            const correctedDate = new Date(date.getTime() + userTimezoneOffset);
+            
+            const day = String(correctedDate.getDate()).padStart(2, '0');
+            const month = String(correctedDate.getMonth() + 1).padStart(2, '0');
+            return `${day}/${month}`;
+        }
+
+        // Adicionar event listeners aos botões de navegação
+        if (prevWeekLink) {
+            prevWeekLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                loadWeekData(this.dataset.offset);
+            });
+        }
+
+        if (todayLink) {
+            todayLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                loadWeekData(0); // 0 = semana atual
+            });
+        }
+
+        if (nextWeekLink) {
+            nextWeekLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                loadWeekData(this.dataset.offset);
+            });
+        }
+</script>
+{% endblock %}

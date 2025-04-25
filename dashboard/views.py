@@ -10,13 +10,15 @@ from laboratories.models import Laboratory # Importar Laboratory
 from django.db.models import Count, Q, F # Importar F aqui
 from django.http import JsonResponse # Importar JsonResponse
 from django.template.loader import render_to_string # Para renderizar partes do template
+from django.db.models import Count
+from django.db.models.functions import TruncDay, TruncWeek, TruncMonth
 
 @login_required
 @user_passes_test(is_technician)
 def technician_dashboard(request):
     # Obter parâmetros GET para filtro e navegação
     week_offset = int(request.GET.get('week_offset', 0))
-    department_filter = request.GET.get('department', None)
+    department_filter = request.GET.get('department', 'all')
 
     # Calcular datas da semana com base no offset
     today = timezone.now().date()
@@ -84,6 +86,8 @@ def technician_dashboard(request):
     # --- Lógica original para carregamento completo da página ---
     # Obter departamentos distintos dos laboratórios para o filtro
     departments = Laboratory.objects.values_list('department', flat=True).distinct()
+    # Ou, se você quiser manter a capitalização original mas ainda eliminar duplicatas:
+    departments = list(dict.fromkeys(Laboratory.objects.values_list('department', flat=True)))
 
     # Calcular dados para os cards de estatísticas
     actual_start_of_week = today - timedelta(days=today.weekday())
@@ -144,11 +148,18 @@ def technician_dashboard(request):
 @login_required
 @user_passes_test(is_professor)
 def professor_dashboard(request):
+    # Obter parâmetros GET para navegação
+    week_offset = int(request.GET.get('week_offset', 0))
+    
     # Define today first
     today = timezone.now().date()
 
     # Get current user
     professor = request.user
+
+    # Calcular datas da semana com base no offset
+    start_of_week = today - timedelta(days=today.weekday()) + timedelta(weeks=week_offset)
+    end_of_week = start_of_week + timedelta(days=4)  # Até sexta-feira
 
     # Upcoming approved lab reservations
     upcoming_reservations = ScheduleRequest.objects.filter(
@@ -183,10 +194,6 @@ def professor_dashboard(request):
     draft_requests = DraftScheduleRequest.objects.filter(
         professor=request.user
     ).order_by('scheduled_date')
-
-    # Calculate the week's start and end dates
-    start_of_week = today - timedelta(days=today.weekday())
-    end_of_week = start_of_week + timedelta(days=4)  # Up to Friday
 
     # Fetch the professor's approved schedule requests for the week
     week_appointments = ScheduleRequest.objects.filter(
@@ -231,5 +238,166 @@ def professor_dashboard(request):
         'start_of_week': start_of_week,
         'end_of_week': end_of_week,
     }
+    
+    # Verificar se é uma requisição AJAX
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    
+    if is_ajax:
+        # Renderizar apenas o HTML do calendário
+        calendar_html = render_to_string(
+            'partials/calendar_week.html',
+            {
+                'calendar_data': calendar_data,
+                'today': today,
+            },
+            request=request
+        )
+        
+        # Retornar dados como JSON
+        return JsonResponse({
+            'calendar_html': calendar_html,
+            'start_of_week': start_of_week.isoformat(),
+            'end_of_week': end_of_week.isoformat(),
+            'week_offset': week_offset,
+        })
 
     return render(request, 'professor.html', context)
+
+@login_required
+@user_passes_test(is_technician)
+def chart_data(request):
+    # Obter parâmetros da requisição
+    period = request.GET.get('period', 'week')
+    department = request.GET.get('department', 'all')
+    
+    # Definir datas com base no período
+    today = timezone.now().date()
+    
+    if period == 'week':
+        start_date = today - timedelta(days=today.weekday() + 7)  # 2 semanas atrás, começando segunda
+        end_date = today + timedelta(days=6 - today.weekday())  # até domingo da semana atual
+        date_trunc = TruncDay  # Agrupar por dia
+        labels = [(start_date + timedelta(days=i)).strftime('%d/%m') for i in range((end_date - start_date).days + 1)]
+        x_axis_title = 'Dias da Semana'
+    elif period == 'month':
+        start_date = today.replace(day=1) - timedelta(days=30)  # Aproximadamente 1 mês atrás
+        end_date = today.replace(day=1) + timedelta(days=31)  # Aproximadamente 1 mês à frente
+        date_trunc = TruncWeek  # Agrupar por semana
+        # Gerar rótulos para semanas (ex: "Sem 1", "Sem 2", etc.)
+        num_weeks = (end_date - start_date).days // 7 + 1
+        labels = [f"Sem {i+1}" for i in range(num_weeks)]
+        x_axis_title = 'Semanas do Mês'
+    elif period == 'year':
+        start_date = today.replace(month=1, day=1)  # Início do ano atual
+        end_date = today.replace(month=12, day=31)  # Fim do ano atual
+        date_trunc = TruncMonth  # Agrupar por mês
+        # Nomes dos meses abreviados
+        month_names = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+        labels = month_names
+        x_axis_title = 'Meses do Ano'
+    else:
+        # Período padrão (semana)
+        start_date = today - timedelta(days=today.weekday())  # Início da semana atual
+        end_date = start_date + timedelta(days=6)  # Fim da semana atual
+        date_trunc = TruncDay  # Agrupar por dia
+        labels = [(start_date + timedelta(days=i)).strftime('%a') for i in range(7)]  # Dias da semana abreviados
+        x_axis_title = 'Dias da Semana'
+    
+    # Base query para agendamentos
+    query = ScheduleRequest.objects.filter(
+        scheduled_date__range=[start_date, end_date],
+        status='approved'
+    )
+    
+    # Aplicar filtro de departamento, se especificado
+    if department != 'all':
+        query = query.filter(laboratory__department=department)
+    
+    # Obter dados agrupados por laboratório e data
+    if period == 'year':
+        # Para ano, agregar por mês
+        data_by_lab = {}
+        labs = Laboratory.objects.filter(is_active=True)
+        
+        # Se filtro de departamento estiver ativo, filtrar labs
+        if department != 'all':
+            labs = labs.filter(department=department)
+            
+        for lab in labs:
+            lab_data = [0] * 12  # 12 meses
+            
+            # Obter agendamentos para este laboratório
+            lab_requests = query.filter(laboratory=lab)
+            
+            # Agrupar por mês
+            grouped = lab_requests.annotate(
+                month=TruncMonth('scheduled_date')
+            ).values('month').annotate(count=Count('id')).order_by('month')
+            
+            # Preencher os dados agrupados
+            for group in grouped:
+                month_idx = group['month'].month - 1  # Índice do mês (0-11)
+                lab_data[month_idx] = group['count']
+            
+            data_by_lab[lab.name] = lab_data
+    else:
+        # Para semana e mês, agrupar conforme date_trunc
+        data_by_lab = {}
+        labs = Laboratory.objects.filter(is_active=True)
+        
+        # Se filtro de departamento estiver ativo, filtrar labs
+        if department != 'all':
+            labs = labs.filter(department=department)
+            
+        for lab in labs:
+            # Inicializar com zeros
+            if period == 'week':
+                lab_data = [0] * ((end_date - start_date).days + 1)  # Dias no intervalo
+            else:  # month
+                lab_data = [0] * len(labels)  # Número de semanas
+            
+            # Obter agendamentos para este laboratório
+            lab_requests = query.filter(laboratory=lab)
+            
+            # Agrupar por período
+            grouped = lab_requests.annotate(
+                period=date_trunc('scheduled_date')
+            ).values('period').annotate(count=Count('id')).order_by('period')
+            
+            # Preencher os dados agrupados
+            for group in grouped:
+                if period == 'week':
+                    # Calcular o índice com base no número de dias desde a data inicial
+                    day_idx = (group['period'].date() - start_date).days
+                    if 0 <= day_idx < len(lab_data):
+                        lab_data[day_idx] = group['count']
+                else:  # month
+                    # Calcular o índice da semana (mais complexo)
+                    week_idx = (group['period'].date() - start_date).days // 7
+                    if 0 <= week_idx < len(lab_data):
+                        lab_data[week_idx] = group['count']
+            
+            data_by_lab[lab.name] = lab_data
+    
+    # Construir datasets para o gráfico
+    datasets = []
+    colors = ['#4a6fa5', '#198754', '#dc3545', '#6610f2', '#fd7e14', '#6c757d']  # Cores para diferentes laboratórios
+    
+    # Converter data_by_lab para o formato do Chart.js
+    for idx, (lab_name, lab_data) in enumerate(data_by_lab.items()):
+        color_idx = idx % len(colors)
+        datasets.append({
+            'label': lab_name,
+            'data': lab_data,
+            'borderColor': colors[color_idx],
+            'backgroundColor': f"{colors[color_idx]}20",  # Versão transparente da cor
+            'tension': 0.3,
+            'fill': True
+        })
+    
+    # Retornar dados formatados para o Chart.js
+    return JsonResponse({
+        'labels': labels,
+        'datasets': datasets,
+        'xAxisTitle': x_axis_title
+    })

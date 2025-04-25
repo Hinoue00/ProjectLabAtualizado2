@@ -6,7 +6,7 @@ from accounts.models import User
 class LaboratoryForm(forms.ModelForm):
     class Meta:
         model = Laboratory
-        fields = ['name', 'location', 'capacity', 'description', 'responsible_technician']
+        fields = ['name', 'location', 'capacity', 'description', 'responsible_technician', 'department']
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

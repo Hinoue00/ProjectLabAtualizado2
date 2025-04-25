@@ -192,7 +192,56 @@
         margin-right: 0.2rem; /* Mantido específico */
     }
 
+    /* Estilos para o container de solicitações pendentes */
+    .pending-requests-container {
+        max-height: 300px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(74, 111, 165, 0.3) transparent;
+    }
+    
+    .pending-requests-container::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .pending-requests-container::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .pending-requests-container::-webkit-scrollbar-thumb {
+        background-color: rgba(74, 111, 165, 0.3);
+        border-radius: 3px;
+    }
+    
+    .pending-requests-container::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(74, 111, 165, 0.5);
+    }
 
+    /* Estilos para o carregamento do gráfico */
+.chart-container.loading {
+    opacity: 0.5;
+    pointer-events: none;
+    position: relative;
+}
+
+.chart-container.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(74, 111, 165, 0.3);
+    border-top: 3px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
 
     /* Estilo para dias vazios */
     .day-content .no-appointments {
@@ -441,9 +490,10 @@
 </div>
 
 <!-- Main Content Row -->
+<!-- Calendário ocupando toda a largura da tela -->
 <div class="row">
-    <!-- Calendar Column -->
-    <div class="col-lg-8 mb-4">
+    <!-- Calendar Column - alterado para col-lg-12 -->
+    <div class="col-lg-12 mb-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-transparent calendar-header">
                 <h5 class="card-title mb-0 calendar-title" id="calendar-title">
@@ -454,7 +504,7 @@
                 <form method="get" action="{% url 'technician_dashboard' %}" class="department-filter-form" id="department-filter-form">
                     <input type="hidden" name="week_offset" id="week_offset_input" value="{{ week_offset }}">
                     <label for="department-select">Departamento:</label>
-                    <select name="department" id="department-select" class="form-select form-select-sm"> {# Removido onchange daqui, será tratado no JS #}
+                    <select name="department" id="department-select" class="form-select form-select-sm">
                         <option value="all" {% if not current_department or current_department == 'all' %}selected{% endif %}>Todos</option>
                         {% for dept in departments %}
                             <option value="{{ dept }}" {% if current_department == dept %}selected{% endif %}>{{ dept|capfirst }}</option>
@@ -473,26 +523,59 @@
                     </a>
                 </div>
             </div>
-            {# === CORREÇÃO: Adicionado id="calendar-body" aqui === #}
             <div class="card-body calendar-body" id="calendar-body">
-                {# Incluir o conteúdo inicial do calendário parcial #}
                 {% include 'partials/calendar_week.html' with calendar_data=calendar_data today=today %}
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Pending Requests Column -->
-    <div class="col-lg-4 mb-4">
+<!-- Segunda linha remodelada - Atividade de Laboratórios e Solicitações Pendentes lado a lado -->
+<div class="row">
+    <!-- Lab Activity Chart -->
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <h5 class="card-title mb-0">Atividade de Laboratórios</h5>
+                    <!-- Filtros do gráfico -->
+                    <div class="d-flex align-items-center gap-2 flex-wrap mt-2 mt-sm-0">
+                        <!-- Filtro de departamento para o gráfico -->
+                        <select id="chartDepartmentFilter" class="form-select form-select-sm me-2">
+                            <option value="all">Todos departamentos</option>
+                            {% for dept in departments %}
+                                <option value="{{ dept }}">{{ dept|capfirst }}</option>
+                            {% endfor %}
+                        </select>
+                        <!-- Botões de período -->
+                        <div class="btn-group" id="labActivityPeriod">
+                            <button type="button" class="btn btn-sm btn-outline-secondary active" data-period="week">Semana</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-period="month">Mês</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-period="year">Ano</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="position: relative; height:300px">
+                    <canvas id="labActivityChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pending Requests Column - movido para esta linha -->
+    <div class="col-lg-6 mb-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-transparent">
                 <div class="d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Solicitações Pendentes</h5>
-                    {% if pending_appointments > 0 or pending_approvals > 0 %} {# Ajustado para checar ambos #}
+                    {% if pending_appointments > 0 or pending_approvals > 0 %}
                         <a href="{% url 'schedule_requests_list' %}" class="btn btn-sm btn-primary">Ver todos</a>
                     {% endif %}
                 </div>
             </div>
-            <div class="card-body p-0"> {# Removido padding para list-group ficar correto #}
+            <div class="card-body p-0 pending-requests-container">
                 <div class="list-group list-group-flush">
                     {% if pending_approvals > 0 %}
                         <a href="{% url 'pending_approvals' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
@@ -508,13 +591,12 @@
                         <a href="{% url 'schedule_requests_list' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                             <div>
                                 <h6 class="mb-1">Agendamentos pendentes</h6>
-                                <p class="mb-0 text-muted small">Solicitações de laboratório aguardando análise</p>
+                                <p class="mb-0 small">Solicitações de laboratório aguardando análise</p>
                             </div>
                             <span class="badge bg-warning rounded-pill">{{ pending_appointments }}</span>
                         </a>
                     {% endif %}
 
-                    {# Exibindo os 5 objetos de agendamento pendentes mais próximos #}
                     {% for appointment in pending_appointment_objects %}
                         <a href="{% url 'schedule_request_detail' appointment.pk %}" class="list-group-item list-group-item-action">
                             <div class="d-flex justify-content-between align-items-center">
@@ -535,29 +617,6 @@
                         </div>
                     {% endif %}
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Second Row -->
-<!-- Lab Activity Chart -->
-<div class="col-lg-8 mb-4">
-    <div class="card border-0 shadow-sm h-100">
-        <div class="card-header bg-transparent">
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">Atividade de Laboratórios</h5>
-                {# Adicionado ID ao btn-group e data-period aos botões #}
-                <div class="btn-group" id="labActivityPeriod">
-                    <button type="button" class="btn btn-sm btn-outline-secondary active" data-period="week">Semana</button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" data-period="month">Mês</button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" data-period="year">Ano</button>
-                </div>
-            </div>
-        </div>
-        <div class="card-body">
-            <div class="chart-container" style="position: relative; height:300px"> {# Adicionado height para melhor visualização inicial #}
-                <canvas id="labActivityChart"></canvas>
             </div>
         </div>
     </div>
@@ -704,6 +763,125 @@
         // --- Lab Activity Chart ---
         const labActivityCtx = document.getElementById('labActivityChart').getContext('2d');
         let labActivityChart; // Declarar a variável do gráfico aqui para ser acessível
+        const chartDepartmentFilter = document.getElementById('chartDepartmentFilter');
+
+        // Função para carregar dados do gráfico
+        async function loadChartData(period = 'week', department = 'all') {
+            // Mostrar indicador de carregamento
+            const chartContainer = document.querySelector('.chart-container');
+            if (chartContainer) {
+                chartContainer.classList.add('loading');
+            }
+            
+            try {
+                // Fazer requisição AJAX para buscar dados do gráfico
+                const response = await fetch(`/dashboard/chart-data/?period=${period}&department=${department}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Atualizar ou criar o gráfico
+                updateLabActivityChart(data, period);
+            } catch (error) {
+                console.error('Erro ao carregar dados do gráfico:', error);
+                // Mostrar mensagem de erro (opcional)
+            } finally {
+                // Remover indicador de carregamento
+                if (chartContainer) {
+                    chartContainer.classList.remove('loading');
+                }
+            }
+        }
+    
+        // Função para criar ou atualizar o gráfico de atividade
+        function updateLabActivityChart(data, period = 'week') {
+            console.log(`Atualizando gráfico para o período: ${period}`);
+            
+            const chartData = {
+                labels: data.labels,
+                datasets: data.datasets
+            };
+            
+            // Configurações do gráfico
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        display: chartData.datasets.length > 0
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Número de Agendamentos'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: data.xAxisTitle || 'Período'
+                        }
+                    }
+                }
+            };
+    
+            // Se o gráfico já existe, atualiza os dados. Senão, cria um novo.
+            if (labActivityChart) {
+                labActivityChart.data = chartData;
+                labActivityChart.options = chartOptions;
+                labActivityChart.update();
+            } else {
+                labActivityChart = new Chart(labActivityCtx, {
+                    type: 'line',
+                    data: chartData,
+                    options: chartOptions
+                });
+            }
+        }
+    
+        // Carregar dados iniciais do gráfico
+        if (labActivityCtx) {
+            // Carregar dados iniciais do gráfico (semana atual, todos departamentos)
+            loadChartData('week', 'all');
+            
+            // Event listeners para o filtro de período
+            const periodButtons = document.querySelectorAll('#labActivityPeriod button');
+            periodButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remover classe 'active' de todos os botões
+                    periodButtons.forEach(btn => btn.classList.remove('active'));
+                    // Adicionar classe 'active' ao botão clicado
+                    this.classList.add('active');
+                    // Obter o período selecionado
+                    const period = this.dataset.period;
+                    // Obter o departamento selecionado
+                    const department = chartDepartmentFilter.value;
+                    // Carregar dados do gráfico com os filtros aplicados
+                    loadChartData(period, department);
+                });
+            });
+            
+            // Event listener para o filtro de departamento
+            if (chartDepartmentFilter) {
+                chartDepartmentFilter.addEventListener('change', function() {
+                    // Obter o período atual
+                    const activePeriodBtn = document.querySelector('#labActivityPeriod button.active');
+                    const period = activePeriodBtn ? activePeriodBtn.dataset.period : 'week';
+                    // Carregar dados do gráfico com o novo departamento selecionado
+                    loadChartData(period, this.value);
+                });
+            }
+        }
 
         // Função para criar ou atualizar o gráfico de atividade
         function updateLabActivityChart(period = 'week') {
@@ -834,21 +1012,21 @@
             });
         }
     });
+    
 // --- JavaScript para calendário dinâmico ---
 const calendarBody = document.getElementById('calendar-body');
 const calendarTitle = document.getElementById('calendar-title');
-const weekOffsetInput = document.getElementById('week_offset_input'); // Certifique-se que este ID existe no seu form
+const weekOffsetInput = document.getElementById('week_offset_input');
 const departmentSelect = document.getElementById('department-select');
 const prevWeekLink = document.getElementById('prev-week-link');
 const todayLink = document.getElementById('today-link');
 const nextWeekLink = document.getElementById('next-week-link');
-const calendarFilterForm = document.getElementById('calendar-filter-form'); // Adicione este ID ao seu <form>
 
-// Função para formatar data (dd/mm/yyyy) - ajuste o locale se necessário
+// Função para formatar data (dd/mm/yyyy)
 function formatDate(isoDateString) {
     if (!isoDateString) return '';
     const date = new Date(isoDateString);
-     // Adiciona o offset do fuso horário local para evitar problemas de dia
+    // Adiciona o offset do fuso horário local para evitar problemas de dia
     const userTimezoneOffset = date.getTimezoneOffset() * 60000;
     const correctedDate = new Date(date.getTime() + userTimezoneOffset);
 
@@ -857,7 +1035,8 @@ function formatDate(isoDateString) {
     const year = correctedDate.getFullYear();
     return `${day}/${month}/${year}`;
 }
- function formatDateShort(isoDateString) {
+
+function formatDateShort(isoDateString) {
     if (!isoDateString) return '';
     const date = new Date(isoDateString);
     const userTimezoneOffset = date.getTimezoneOffset() * 60000;
@@ -866,7 +1045,6 @@ function formatDate(isoDateString) {
     const month = String(correctedDate.getMonth() + 1).padStart(2, '0');
     return `${day}/${month}`;
 }
-
 
 async function loadWeekData(weekOffset, department) {
     calendarBody.classList.add('loading'); // Adiciona feedback visual
@@ -906,7 +1084,6 @@ async function loadWeekData(weekOffset, department) {
         // Atualizar o estado visual do select de departamento (caso a navegação o altere)
         departmentSelect.value = department || 'all';
 
-
     } catch (error) {
         console.error('Erro ao carregar dados do calendário:', error);
         // Adicionar feedback de erro para o usuário, se desejar
@@ -916,59 +1093,22 @@ async function loadWeekData(weekOffset, department) {
     }
 }
 
-// Adicionar listeners aos links de navegação
-prevWeekLink.addEventListener('click', (event) => {
-    event.preventDefault(); // Impedir navegação padrão
-    const currentDepartment = departmentSelect.value;
-    loadWeekData(event.currentTarget.dataset.offset, currentDepartment);
-});
-
-todayLink.addEventListener('click', (event) => {
-    event.preventDefault();
-    const currentDepartment = departmentSelect.value;
-    loadWeekData(event.currentTarget.dataset.offset, currentDepartment); // Offset 0 para hoje
-});
-
-nextWeekLink.addEventListener('click', (event) => {
-    event.preventDefault();
-    const currentDepartment = departmentSelect.value;
-    loadWeekData(event.currentTarget.dataset.offset, currentDepartment);
-});
-
-// O onchange do select já chama loadWeekData diretamente no HTML
-// document.getElementById('department-select').addEventListener('change', (event) => {
-//     const currentOffset = weekOffsetInput.value;
-//     loadWeekData(currentOffset, event.target.value);
-// });
-// Função para atualizar a visualização do calendário (Exemplo - Adapte à sua lógica AJAX ou de recarga)
-function updateCalendarView(offset, department) {
-    console.log(`Atualizando calendário: offset=${offset}, department=${department}`);
-    // Aqui você implementaria a lógica para buscar e renderizar os dados do calendário
-    // Seja via AJAX ou submetendo o formulário para recarregar a página.
-    // O código abaixo assume a submissão do formulário.
-    if (calendarFilterForm) {
-        weekOffsetInput.value = offset;
-        // O valor do department já deve estar selecionado no <select>
-        calendarFilterForm.submit();
-    } else {
-        console.error("Formulário #calendar-filter-form não encontrado!");
-    }
-}
-
-// --- Adicionar Event Listeners ---
+// Event Listeners para navegação do calendário
 if (prevWeekLink) {
     prevWeekLink.addEventListener('click', function(event) {
-        event.preventDefault(); // Impede a navegação padrão do link
+        event.preventDefault();
         const offset = this.dataset.offset;
-        updateCalendarView(offset, departmentSelect ? departmentSelect.value : '');
+        const department = departmentSelect ? departmentSelect.value : 'all';
+        loadWeekData(offset, department);
     });
 }
 
 if (todayLink) {
     todayLink.addEventListener('click', function(event) {
         event.preventDefault();
-        const offset = this.dataset.offset; // Deve ser "0"
-        updateCalendarView(offset, departmentSelect ? departmentSelect.value : '');
+        const offset = this.dataset.offset;
+        const department = departmentSelect ? departmentSelect.value : 'all';
+        loadWeekData(offset, department);
     });
 }
 
@@ -976,16 +1116,16 @@ if (nextWeekLink) {
     nextWeekLink.addEventListener('click', function(event) {
         event.preventDefault();
         const offset = this.dataset.offset;
-        updateCalendarView(offset, departmentSelect ? departmentSelect.value : '');
+        const department = departmentSelect ? departmentSelect.value : 'all';
+        loadWeekData(offset, department);
     });
 }
 
+// Event listener para o dropdown de departamento
 if (departmentSelect) {
     departmentSelect.addEventListener('change', function(event) {
-        // Ao mudar o departamento, geralmente queremos voltar para a semana atual (offset 0)
-        // ou manter o offset atual. Decidi manter o offset atual.
         const currentOffset = weekOffsetInput ? weekOffsetInput.value : '0';
-        updateCalendarView(currentOffset, this.value);
+        loadWeekData(currentOffset, this.value);
     });
 }
 

@@ -47,6 +47,22 @@
                         <div class="invalid-feedback">{{ form.capacity.errors.0 }}</div>
                         {% endif %}
                     </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.department.id_for_label }}" class="form-label">Departamento</label>
+                        <select name="{{ form.department.name }}" id="{{ form.department.id_for_label }}" 
+                                class="form-select {% if form.department.errors %}is-invalid{% endif %}" required>
+                            <option value="" {% if not form.department.value %}selected{% endif %}>Selecione...</option>
+                            {% for value, text in form.department.field.choices %}
+                            <option value="{{ value }}" {% if form.department.value == value %}selected{% endif %}>
+                                {{ text }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.department.errors %}
+                        <div class="invalid-feedback">{{ form.department.errors.0 }}</div>
+                        {% endif %}
+                    </div>
                     
                     <div class="mb-3">
                         <label for="{{ form.responsible_technician.id_for_label }}" class="form-label">Responsável</label>
