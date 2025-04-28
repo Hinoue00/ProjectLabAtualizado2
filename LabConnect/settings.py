@@ -181,14 +181,14 @@ MESSAGE_TAGS = {
 # Para desenvolvimento, usa o console (mostra os emails no terminal)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# Configurações para produção com Outlook/Office 365
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.office365.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'labconnect@unopar.com.br'  # Substitua pelo email real
-# EMAIL_HOST_PASSWORD = 'sua-senha-segura'      # Substitua pela senha real
-# DEFAULT_FROM_EMAIL = 'LabConnect <labconnect@unopar.com.br>'
+# Email settings - Office 365/Outlook
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.office365.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'jason.inoue@kroton.com.br'
+EMAIL_HOST_PASSWORD = 'Tecnico1204@'
+DEFAULT_FROM_EMAIL = 'LabConnect <jason.inoue@kroton.com.br>'
 
 # URL base do sistema (usado nos emails)
 BASE_URL = 'http://localhost:8000'
