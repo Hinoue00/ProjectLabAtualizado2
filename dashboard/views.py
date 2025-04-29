@@ -368,7 +368,7 @@ def chart_data(request):
             for group in grouped:
                 if period == 'week':
                     # Calcular o índice com base no número de dias desde a data inicial
-                    day_idx = (group['period'].date() - start_date).days
+                    day_idx = (group['period'] - start_date).days
                     if 0 <= day_idx < len(lab_data):
                         lab_data[day_idx] = group['count']
                 else:  # month
