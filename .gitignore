@@ -1,0 +1,43 @@
+# Arquivos de ambiente
+.env
+.env.local
+.env.*.local
+
+# Arquivos Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Arquivos de banco de dados
+*.sqlite3
+*.db
+
+# Arquivos de mídia e estáticos
+media/
+static/collected/
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# Ambientes virtuais
+venv/
+.venv/
+ENV/

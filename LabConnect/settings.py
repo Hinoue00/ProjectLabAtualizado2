@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from django.contrib.messages import constants as messages
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
 
     # Third-party apps
     'crispy_forms',
@@ -97,9 +101,23 @@ DATABASES = {
 
 # Configurações de autenticação para allauth
 AUTHENTICATION_BACKENDS = [
-    # Needed to login by username in Django admin
+    # Backends padrão do Django
     'django.contrib.auth.backends.ModelBackend',
+    # Opcional: se quiser usar o Microsoft Auth para login também
+    'microsoft_auth.backends.MicrosoftAuthenticationBackend',
 ]
+
+# Configura para usar apenas email, não login de usuários
+MICROSOFT_AUTH = {
+    'TENANT_ID': 'common',
+    'CLIENT_ID': 'ba2e5c7c-f3d1-4aa7-b3a7-65bcbbab7ed6',
+    'CLIENT_SECRET': '83b1545f-9e88-4499-aae0-57ff5786409a',
+    'REDIRECT_URI': 'http://localhost:8000/oauth/callback',
+    'SCOPE': ['Mail.Send'],
+    'LOGIN_ENABLED': False,  # Desabilita login Microsoft, mantém apenas email
+}
+
+
 
 
 # Configurações adicionais para allauth
@@ -177,18 +195,20 @@ MESSAGE_TAGS = {
     messages.ERROR: 'alert-danger',
 }
 
-# Email settings
-# Para desenvolvimento, usa o console (mostra os emails no terminal)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Configuração do Sites Framework
+SITE_ID = 1
 
-# Email settings - Office 365/Outlook
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.office365.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'jason.inoue@kroton.com.br'
-EMAIL_HOST_PASSWORD = 'Tecnico1204@'
-DEFAULT_FROM_EMAIL = 'LabConnect <jason.inoue@kroton.com.br>'
+# Email settings
+MS_CLIENT_ID = 'ba2e5c7c-f3d1-4aa7-b3a7-65bcbbab7ed6'  # Mesmo do MICROSOFT_AUTH
+MS_CLIENT_SECRET = '83b1545f-9e88-4499-aae0-57ff5786409a'  # Mesmo do MICROSOFT_AUTH
+MS_TENANT_ID = 'common'  # Usando o mesmo valor de MICROSOFT_AUTH TENANT_ID
+MS_SENDER_EMAIL = 'labconnectua@outlook.com'  # Email que enviará as mensagens
+
+EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
+SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY', '')
+DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER', 'labconnectua@outlook.com')
+SENDGRID_SANDBOX_MODE_IN_DEBUG = False  # Define como False quando estiver pronto para enviar emails reais
+SENDGRID_ECHO_TO_STDOUT = True  # Para depuração - mostra os emails no console também
 
 # URL base do sistema (usado nos emails)
 BASE_URL = 'http://localhost:8000'

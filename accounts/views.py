@@ -279,3 +279,5 @@ def check_approval_status(request):
             'is_approved': request.user.is_approved
         })
     return JsonResponse({'is_approved': False}, status=401)
+
+
