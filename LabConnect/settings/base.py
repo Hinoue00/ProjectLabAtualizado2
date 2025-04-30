@@ -70,6 +70,24 @@ AUTHENTICATION_BACKENDS = [
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
+        {
+        'NAME': 'accounts.validators.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,
+        }
+    },
+    {
+        'NAME': 'accounts.validators.NumericCharacterValidator',
+    },
+    {
+        'NAME': 'accounts.validators.UppercaseCharacterValidator',
+    },
+    {
+        'NAME': 'accounts.validators.CommonSequenceValidator',
+    },
+    {
+        'NAME': 'accounts.validators.UserAttributeSimilarityValidator',
+    },
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
@@ -142,3 +160,4 @@ DOCLING_CACHE_DIR = os.path.join(BASE_DIR, 'docling_cache')
 
 # Scheduling configuration
 ALLOW_SCHEDULING_ANY_DAY = os.environ.get('ALLOW_SCHEDULING_ANY_DAY', 'True') == 'True'
+

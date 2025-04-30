@@ -1,128 +1,152 @@
+
 # accounts/services.py
-from django.core.mail import send_mail
+from django.contrib.auth import authenticate, login
 from django.conf import settings
+from .models import User
+from whatsapp.services import WhatsAppNotificationService
+import logging
 
-class EmailService:
-    """Classe para gerenciar serviços de email do sistema"""
+logger = logging.getLogger(__name__)
+
+class UserService:
+    """Classe de serviço para operações relacionadas a usuários"""
     
     @staticmethod
-    def send_registration_notification(user):
-        """
-        Envia email de notificação quando um novo usuário se registra
-        """
-        subject = 'Registro no Sistema LabConnect'
-        message = f"""
-        Olá {user.get_full_name()},
+    def authenticate_user(request, email, password):
+        """Autentica um usuário e faz o login"""
+        user = authenticate(request, email=email, password=password)
+        if user is not None:
+            login(request, user)
+            return True
+        return False
+    
+    @staticmethod
+    def register_user(form_data):
+        """Registra um novo usuário e envia notificação por WhatsApp"""
+        user = form_data.save(commit=False)
+        user.is_active = True
+        user.save()
         
-        Seu cadastro no sistema LabConnect foi recebido com sucesso e está sendo analisado.
-        
-        Você receberá uma notificação quando sua conta for aprovada. Este processo geralmente leva de 24 a 48 horas úteis.
-        
-        Atenciosamente,
-        Equipe LabConnect
-        """
-        
-        send_mail(
-            subject,
-            message,
-            settings.DEFAULT_FROM_EMAIL,
-            [user.email],
-            fail_silently=False,
+        # Envia notificação por WhatsApp
+        try:
+            WhatsAppNotificationService.notify_user_registration(user)
+        except Exception as e:
+            logger.error(f"Erro ao enviar notificação WhatsApp de registro: {str(e)}")
+            
+        return user
+    
+    @staticmethod
+    def approve_user(user_id):
+        """Aprova a conta de um usuário e notifica por WhatsApp"""
+        try:
+            user = User.objects.get(id=user_id)
+            user.is_approved = True
+            user.save()
+            
+            # Notifica o usuário por WhatsApp
+            try:
+                WhatsAppNotificationService.notify_user_approval(user)
+            except Exception as e:
+                logger.error(f"Erro ao enviar notificação WhatsApp de aprovação: {str(e)}")
+                
+            return user
+        except User.DoesNotExist:
+            return None
+    
+    @staticmethod
+    def reject_user(user_id):
+        """Rejeita a conta de um usuário e notifica por WhatsApp"""
+        try:
+            user = User.objects.get(id=user_id)
+            user_name = user.get_full_name()
+            user_phone = user.phone_number
+            
+            # Notifica o usuário por WhatsApp antes de marcar como inativo
+            try:
+                WhatsAppNotificationService.notify_user_rejection(user)
+            except Exception as e:
+                logger.error(f"Erro ao enviar notificação WhatsApp de rejeição: {str(e)}")
+            
+            # Marca como inativo ao invés de excluir
+            user.is_active = False
+            user.save()
+            
+            return True
+        except User.DoesNotExist:
+            return False
+    
+    @staticmethod
+    def notify_technicians_new_user(user):
+        """Notifica técnicos sobre novo registro via WhatsApp"""
+        technicians = User.objects.filter(
+            user_type='technician', 
+            is_approved=True
         )
+        
+        for technician in technicians:
+            try:
+                WhatsAppNotificationService.notify_technician_new_user(technician, user)
+            except Exception as e:
+                logger.error(f"Erro ao notificar técnico {technician.id} sobre novo usuário: {str(e)}")
     
     @staticmethod
-    def notify_technicians_new_user(user, technician_emails):
+    def validate_corporate_email(email):
         """
-        Notifica os laboratoristas sobre um novo registro
+        Valida se o email é de um domínio corporativo permitido
+        Retorna (booleano, mensagem)
         """
-        subject = 'Novo Usuário Registrado - LabConnect'
-        message = f"""
-        Um novo usuário se registrou no sistema LabConnect e aguarda aprovação:
+        if not email:
+            return False, "Email não pode estar vazio"
+            
+        domain = email.split('@')[-1].lower()
+        allowed_domains = ['cogna.com.br', 'kroton.com.br']
         
-        Nome: {user.get_full_name()}
-        Email: {user.email}
-        Tipo: {user.get_user_type_display()}
-        Telefone: {user.phone_number}
+        if domain not in allowed_domains:
+            return False, "Apenas emails corporativos são permitidos (@cogna.com.br e @kroton.com.br)"
         
-        Acesse o sistema para aprovar ou rejeitar esta solicitação.
-        """
-        
-        send_mail(
-            subject,
-            message,
-            settings.DEFAULT_FROM_EMAIL,
-            technician_emails,
-            fail_silently=False,
-        )
+        return True, ""
     
     @staticmethod
-    def send_approval_notification(user):
+    def get_user_statistics(user):
         """
-        Notifica o usuário quando sua conta for aprovada
+        Obtém estatísticas para exibição no perfil do usuário
         """
-        # Conteúdo específico com base no tipo de usuário
-        role_specific = ""
+        from django.utils import timezone
+        from django.db.models import Count, Q
         
+        today = timezone.now().date()
+        stats = {}
+        
+        # Estatísticas específicas para cada tipo de usuário
         if user.user_type == 'professor':
-            role_specific = """
-            Como professor, você pode agendar laboratórios para suas aulas, visualizar disponibilidade,
-            e solicitar materiais necessários. Lembre-se que os agendamentos só podem ser feitos às 
-            quintas e sextas-feiras para a semana seguinte.
-            """
-        else:  # technician
-            role_specific = """
-            Como laboratorista, você pode gerenciar agendamentos, controlar o inventário de materiais,
-            e aprovar solicitações de professores. Você também terá acesso aos relatórios e estatísticas
-            do sistema.
-            """
+            from scheduling.models import ScheduleRequest
+            
+            # Usando agregação para obter todas as contagens em uma única consulta
+            request_stats = ScheduleRequest.objects.filter(professor=user).aggregate(
+                total_scheduled=Count('id', filter=Q(status='approved', scheduled_date__gte=today)),
+                total_pending=Count('id', filter=Q(status='pending')),
+                total_completed=Count('id', filter=Q(status='approved', scheduled_date__lt=today))
+            )
+            
+            stats.update(request_stats)
+            
+        elif user.user_type == 'technician':
+            from scheduling.models import ScheduleRequest, Laboratory
+            
+            # Estatísticas de aprovação
+            approval_stats = ScheduleRequest.objects.aggregate(
+                total_approved=Count('id', filter=Q(reviewed_by=user, status='approved')),
+                total_pending=Count('id', filter=Q(status='pending'))
+            )
+            
+            # Laboratórios gerenciados
+            if user.lab_department:
+                total_labs_managed = Laboratory.objects.filter(department=user.lab_department).count()
+            else:
+                total_labs_managed = Laboratory.objects.count()
+            
+            stats.update(approval_stats)
+            stats['total_labs_managed'] = total_labs_managed
         
-        subject = 'Sua conta foi aprovada - LabConnect'
-        message = f"""
-        Olá {user.get_full_name()},
-        
-        Sua conta no sistema LabConnect foi aprovada!
-        
-        Agora você tem acesso completo à plataforma de acordo com seu perfil de {user.get_user_type_display()}.
-        
-        {role_specific}
-        
-        Atenciosamente,
-        Equipe LabConnect
-        """
-        
-        send_mail(
-            subject,
-            message,
-            settings.DEFAULT_FROM_EMAIL,
-            [user.email],
-            fail_silently=False,
-        )
-    
-    @staticmethod
-    def send_rejection_notification(user_email, user_name):
-        """
-        Notifica o usuário quando sua conta for rejeitada
-        """
-        subject = 'Registro não aprovado - LabConnect'
-        message = f"""
-        Olá {user_name},
-        
-        Infelizmente, seu cadastro no sistema LabConnect não foi aprovado.
-        
-        Isso pode ocorrer por diversas razões, como informações incompletas ou incorretas.
-        
-        Para mais informações, entre em contato com um dos laboratoristas responsáveis.
-        
-        Atenciosamente,
-        Equipe LabConnect
-        """
-        
-        send_mail(
-            subject,
-            message,
-            settings.DEFAULT_FROM_EMAIL,
-            [user_email],
-            fail_silently=False,
-        )
-
+        return stats
   

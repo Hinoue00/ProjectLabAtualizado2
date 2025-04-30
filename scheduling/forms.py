@@ -5,6 +5,9 @@ from django.utils import timezone
 from django.contrib.auth.forms import PasswordChangeForm as DjangoPasswordChangeForm
 from datetime import datetime, timedelta, time
 from django.core.validators import FileExtensionValidator
+from accounts.services import UserService
+from django.core.exceptions import ValidationError
+from django.contrib.auth.password_validation import validate_password
 
 class TimeInput(forms.TimeInput):
     input_type = 'time'
@@ -163,39 +166,157 @@ class ScheduleRequestForm(forms.ModelForm):
         return cleaned_data
     
 class ProfileUpdateForm(forms.ModelForm):
-    """Formulário para atualização de perfil do usuário"""
+    """Formulário aprimorado para atualização de perfil"""
+    
+    first_name = forms.CharField(
+        max_length=30, 
+        required=True,
+        error_messages={
+            'required': 'Por favor, informe seu nome.',
+            'max_length': 'O nome deve ter no máximo 30 caracteres.'
+        }
+    )
+    
+    last_name = forms.CharField(
+        max_length=30, 
+        required=True,
+        error_messages={
+            'required': 'Por favor, informe seu sobrenome.',
+            'max_length': 'O sobrenome deve ter no máximo 30 caracteres.'
+        }
+    )
+    
+    email = forms.EmailField(
+        required=True,
+        error_messages={
+            'required': 'Por favor, informe seu email corporativo.',
+            'invalid': 'Por favor, informe um email válido.'
+        }
+    )
+    
+    phone_number = forms.CharField(
+        max_length=20, 
+        required=True,
+        error_messages={
+            'required': 'Por favor, informe seu número de telefone.',
+            'max_length': 'O telefone deve ter no máximo 20 caracteres.'
+        }
+    )
     
     class Meta:
         model = User
         fields = ('first_name', 'last_name', 'email', 'phone_number', 'lab_department')
-        
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # Torna o campo lab_department opcional (só para técnicos)
-        self.fields['lab_department'].required = False
+        # Tornar lab_department opcional
+        if 'lab_department' in self.fields:
+            self.fields['lab_department'].required = False
         
-        # Adiciona classes Bootstrap aos campos
-        for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
+        # Adicionar textos de ajuda
+        self.fields['email'].help_text = "Use seu email corporativo (@cogna.com.br ou @kroton.com.br)."
+        self.fields['phone_number'].help_text = "Digite apenas números, incluindo DDD."
     
     def clean_email(self):
-        """Verifica se o email já está em uso por outro usuário"""
+        """Validação avançada de email"""
         email = self.cleaned_data.get('email')
         
-        # Se o email foi alterado, verifica se já existe
-        if email and email != self.instance.email:
-            if User.objects.filter(email=email).exists():
+        if email:
+            # Usar o serviço para validar o domínio do email
+            is_valid, message = UserService.validate_corporate_email(email)
+            if not is_valid:
+                raise forms.ValidationError(message)
+                
+            # Verificar se o email já existe (excluindo o usuário atual)
+            if User.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
                 raise forms.ValidationError('Este email já está em uso.')
         
         return email
+    
+    def clean_phone_number(self):
+        """Validação de número de telefone"""
+        phone = self.cleaned_data.get('phone_number')
+        
+        if phone:
+            # Remover caracteres não numéricos
+            phone = ''.join(filter(str.isdigit, phone))
+            
+            # Validar formato do telefone
+            if len(phone) < 10 or len(phone) > 11:
+                raise forms.ValidationError('O telefone deve ter 10 ou 11 dígitos, incluindo o DDD.')
+        
+        return phone
+    
+    def clean(self):
+        """Validação global do formulário"""
+        cleaned_data = super().clean()
+        
+        # Verificar se o usuário é técnico e tem departamento preenchido
+        user_type = self.instance.user_type
+        lab_department = cleaned_data.get('lab_department')
+        
+        if user_type == 'technician' and not lab_department:
+            self.add_error('lab_department', 'Técnicos devem selecionar um departamento.')
+        
+        return cleaned_data
 
 class PasswordChangeForm(DjangoPasswordChangeForm):
-    """Formulário para alteração de senha"""
+    """Formulário aprimorado para alteração de senha"""
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # Adiciona classes Bootstrap aos campos
+        # Melhorar rótulos e textos de ajuda
+        self.fields['old_password'].label = 'Senha Atual'
+        self.fields['old_password'].help_text = 'Digite sua senha atual para verificação.'
+        
+        self.fields['new_password1'].label = 'Nova Senha'
+        self.fields['new_password1'].help_text = 'Sua senha deve ter pelo menos 8 caracteres, incluindo letras e números.'
+        
+        self.fields['new_password2'].label = 'Confirmação da Nova Senha'
+        self.fields['new_password2'].help_text = 'Digite a nova senha novamente para verificação.'
+        
+        # Adicionar classes CSS
         for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
+            field.widget.attrs.update({'class': 'auth-input'})
+    
+    def clean_new_password1(self):
+        """Validação avançada da nova senha"""
+        password = self.cleaned_data.get('new_password1')
+        
+        if password:
+            # Verificar complexidade
+            if len(password) < 8:
+                raise forms.ValidationError('A senha deve ter pelo menos 8 caracteres.')
+            
+            if not any(char.isdigit() for char in password):
+                raise forms.ValidationError('A senha deve conter pelo menos um número.')
+                
+            if not any(char.isalpha() for char in password):
+                raise forms.ValidationError('A senha deve conter pelo menos uma letra.')
+            
+            # Verificar se a nova senha é diferente da senha atual
+            if self.user.check_password(password):
+                raise forms.ValidationError('A nova senha deve ser diferente da senha atual.')
+            
+            # Usar validador padrão do Django
+            try:
+                validate_password(password, self.user)
+            except ValidationError as error:
+                self.add_error('new_password1', error)
+        
+        return password
+    
+    def clean(self):
+        """Validação global do formulário"""
+        cleaned_data = super().clean()
+        
+        # Verificar se as senhas coincidem
+        password1 = cleaned_data.get('new_password1')
+        password2 = cleaned_data.get('new_password2')
+        
+        if password1 and password2 and password1 != password2:
+            self.add_error('new_password2', 'As senhas não coincidem.')
+        
+        return cleaned_data
