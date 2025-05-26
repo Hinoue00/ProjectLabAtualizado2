@@ -270,6 +270,12 @@
         
         .sidebar-dropdown-toggle {
             position: relative;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sidebar-dropdown-toggle.active {
+            background-color: rgba(255, 255, 255, 0.05);
         }
         
         .sidebar-dropdown-toggle::after {
@@ -294,11 +300,11 @@
             padding-left: 2.5rem;
             max-height: 0;
             overflow: hidden;
-            transition: max-height var(--transition-speed);
+            transition: max-height 0.3s ease;
         }
         
         .sidebar-dropdown-menu.show {
-            max-height: 1000px;
+            max-height: 500px; /* Ajuste se necessário */
         }
         
         .sidebar-dropdown-link {
@@ -914,12 +920,15 @@
                 </div>
                 
                 {% if user.user_type == 'technician' %}
+                    <!-- Laboratórios Dropdown -->
                     <div class="sidebar-item">
-                        <a href="#laboratoriesSubmenu" class="sidebar-link sidebar-dropdown-toggle {% if '/laboratories/' in request.path %}active{% endif %}" data-bs-toggle="collapse" aria-expanded="false">
+                        <a href="#" class="sidebar-link sidebar-dropdown-toggle {% if '/laboratories/' in request.path %}active{% endif %}" 
+                        data-dropdown-target="laboratoriesSubmenu" 
+                        aria-expanded="false">
                             <span class="sidebar-icon"><i class="bi bi-building"></i></span>
                             <span>Laboratórios</span>
                         </a>
-                        <div class="sidebar-dropdown-menu collapse {% if '/laboratories/' in request.path %}show{% endif %}" id="laboratoriesSubmenu">
+                        <div class="sidebar-dropdown-menu {% if '/laboratories/' in request.path %}show{% endif %}" id="laboratoriesSubmenu">
                             <a href="{% url 'laboratory_list' %}" class="sidebar-dropdown-link {% if request.path == '/laboratories/' %}active{% endif %}">
                                 Lista de Laboratórios
                             </a>
@@ -929,12 +938,16 @@
                         </div>
                     </div>
                     
+                    <!-- Estoque de Materiais Dropdown -->
                     <div class="sidebar-item">
-                        <a href="#inventorySubmenu" class="sidebar-link sidebar-dropdown-toggle {% if '/inventory/' in request.path %}active{% endif %}" data-bs-toggle="collapse" aria-expanded="false">
+                        <a href="#" class="sidebar-link sidebar-dropdown-toggle {% if '/inventory/' in request.path %}active{% endif %}" 
+                        data-dropdown-target="inventorySubmenu" 
+                        aria-expanded="false">
                             <span class="sidebar-icon"><i class="bi bi-box-seam"></i></span>
                             <span>Estoque de Materiais</span>
                         </a>
-                        <div class="sidebar-dropdown-menu collapse {% if '/inventory/' in request.path %}show{% endif %}" id="inventorySubmenu">
+                        <div class="sidebar-dropdown-menu {% if '/inventory/' in request.path %}show{% endif %}" 
+                            id="inventorySubmenu">
                             <a href="{% url 'material_list' %}" class="sidebar-dropdown-link {% if '/inventory/materials/' in request.path %}active{% endif %}">
                                 Materiais
                             </a>
@@ -971,31 +984,35 @@
                     </div>
                 {% endif %}
                 
-                <div class="sidebar-heading">Agendamentos</div>
-                
-                <div class="sidebar-item">
-                    <a href="#schedulingSubmenu" class="sidebar-link sidebar-dropdown-toggle {% if '/scheduling/' in request.path %}active{% endif %}" data-bs-toggle="collapse" aria-expanded="false">
-                        <span class="sidebar-icon"><i class="bi bi-calendar-check"></i></span>
-                        <span>Agendamentos</span>
-                    </a>
-                    <div class="sidebar-dropdown-menu collapse {% if '/scheduling/' in request.path %}show{% endif %}" id="schedulingSubmenu">
-                        <a href="{% url 'schedule_calendar' %}" class="sidebar-dropdown-link {% if '/scheduling/calendar/' in request.path %}active{% endif %}">
-                            Calendário
+                    <div class="sidebar-heading">Agendamentos</div>
+        
+                    <!-- Agendamentos Dropdown -->
+                    <div class="sidebar-item">
+                        <a href="#" class="sidebar-link sidebar-dropdown-toggle {% if '/scheduling/' in request.path %}active{% endif %}" 
+                        data-dropdown-target="schedulingSubmenu" 
+                        aria-expanded="{% if '/scheduling/' in request.path %}true{% else %}false{% endif %}">
+                            <span class="sidebar-icon"><i class="bi bi-calendar-check"></i></span>
+                            <span>Agendamentos</span>
                         </a>
-                        {% if user.user_type == 'professor' %}
-                            <a href="{% url 'create_schedule_request' %}" class="sidebar-dropdown-link {% if '/scheduling/request/' in request.path %}active{% endif %}">
-                                Solicitar Agendamento
+                        <div class="sidebar-dropdown-menu {% if '/scheduling/' in request.path %}show{% endif %}" 
+                            id="schedulingSubmenu">
+                            <a href="{% url 'schedule_calendar' %}" class="sidebar-dropdown-link {% if '/scheduling/calendar/' in request.path %}active{% endif %}">
+                                Calendário
                             </a>
-                        {% else %}
-                            <a href="{% url 'schedule_requests_list' %}" class="sidebar-dropdown-link {% if '/scheduling/requests/' in request.path %}active{% endif %}">
-                                Solicitações
-                                {% if pending_requests_count > 0 %}
-                                    <span class="badge rounded-pill bg-danger ms-1">{{ pending_requests_count }}</span>
-                                {% endif %}
-                            </a>
-                        {% endif %}
+                            {% if user.user_type == 'professor' %}
+                                <a href="{% url 'create_schedule_request' %}" class="sidebar-dropdown-link {% if '/scheduling/request/' in request.path %}active{% endif %}">
+                                    Solicitar Agendamento
+                                </a>
+                            {% else %}
+                                <a href="{% url 'schedule_requests_list' %}" class="sidebar-dropdown-link {% if '/scheduling/requests/' in request.path %}active{% endif %}">
+                                    Solicitações
+                                    {% if pending_requests_count > 0 %}
+                                        <span class="badge rounded-pill bg-danger ms-1">{{ pending_requests_count }}</span>
+                                    {% endif %}
+                                </a>
+                            {% endif %}
+                        </div>
                     </div>
-                </div>
                 
                 <div class="sidebar-divider"></div>
                 
@@ -1243,22 +1260,38 @@
                 });
               }
             
-            // Dropdown Menus
-            const dropdownToggles = document.querySelectorAll('.sidebar-dropdown-toggle');
-            
-            dropdownToggles.forEach(toggle => {
-                toggle.addEventListener('click', function() {
-                    const dropdownMenu = this.nextElementSibling;
+        // Dropdown Menus
+        const dropdownToggles = document.querySelectorAll('.sidebar-dropdown-toggle');
+        
+        dropdownToggles.forEach(toggle => {
+            toggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('data-dropdown-target');
+                const dropdownMenu = document.getElementById(targetId);
+                
+                if (!dropdownMenu) return;
+                
+                // Toggle do menu atual
+                if (dropdownMenu.classList.contains('show')) {
+                    // Fechar
+                    dropdownMenu.classList.remove('show');
+                    this.setAttribute('aria-expanded', 'false');
+                } else {
+                    // Fechar todos os outros primeiro
+                    document.querySelectorAll('.sidebar-dropdown-menu.show').forEach(menu => {
+                        menu.classList.remove('show');
+                    });
+                    document.querySelectorAll('.sidebar-dropdown-toggle[aria-expanded="true"]').forEach(t => {
+                        t.setAttribute('aria-expanded', 'false');
+                    });
                     
-                    if (dropdownMenu.classList.contains('show')) {
-                        dropdownMenu.classList.remove('show');
-                        this.setAttribute('aria-expanded', 'false');
-                    } else {
-                        dropdownMenu.classList.add('show');
-                        this.setAttribute('aria-expanded', 'true');
-                    }
-                });
-            });    
-         })
+                    // Abrir este
+                    dropdownMenu.classList.add('show');
+                    this.setAttribute('aria-expanded', 'true');
+                }
+            });
+        });
+    });
     </script>
 
