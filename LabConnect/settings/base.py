@@ -70,29 +70,14 @@ AUTHENTICATION_BACKENDS = [
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
-        {
-        'NAME': 'accounts.validators.MinimumLengthValidator',
-        'OPTIONS': {
-            'min_length': 8,
-        }
-    },
-    {
-        'NAME': 'accounts.validators.NumericCharacterValidator',
-    },
-    {
-        'NAME': 'accounts.validators.UppercaseCharacterValidator',
-    },
-    {
-        'NAME': 'accounts.validators.CommonSequenceValidator',
-    },
-    {
-        'NAME': 'accounts.validators.UserAttributeSimilarityValidator',
-    },
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',

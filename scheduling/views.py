@@ -8,7 +8,6 @@ from accounts.models import User
 from accounts.views import is_technician, is_professor
 from .models import Laboratory, ScheduleRequest, DraftScheduleRequest, FileAttachment
 from .forms import ScheduleRequestForm
-from django.core.mail import send_mail
 from django.conf import settings
 from django.urls import reverse
 from django.http import JsonResponse
@@ -148,15 +147,6 @@ def create_schedule_request(request):
                     file_name=file.name,
                     file_type=file.content_type
                 )
-            
-            # Notifica os laboratoristas sobre a nova solicitação
-            technicians = User.objects.filter(user_type='technician', is_approved=True)
-            technician_emails = [tech.email for tech in technicians]
-            
-            if technician_emails:
-                subject = 'Nova Solicitação de Agendamento'
-                message = f'Um novo agendamento foi solicitado por {request.user.get_full_name()} para o laboratório {schedule_request.laboratory.name} em {schedule_request.scheduled_date}.'
-                send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, technician_emails)
 
             # Adicionar: Enviar notificação WhatsApp
             WhatsAppNotificationService.notify_schedule_request(schedule_request)
@@ -235,14 +225,6 @@ def confirm_draft_schedule_request(request, draft_id):
         messages.error(request, 'Já existe um agendamento aprovado para este laboratório neste horário.')
         return redirect('list_draft_schedule_requests')
     
-    # Notifica os laboratoristas
-    technicians = User.objects.filter(user_type='technician', is_approved=True)
-    technician_emails = [tech.email for tech in technicians]
-    
-    if technician_emails:
-        subject = 'Nova Solicitação de Agendamento'
-        message = f'Um novo agendamento foi solicitado por {request.user.get_full_name()} para o laboratório {schedule_request.laboratory.name} em {schedule_request.scheduled_date}.'
-        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, technician_emails)
     
     # Deleta o rascunho após confirmação
     draft_request.delete()
@@ -383,11 +365,6 @@ def approve_schedule_request(request, pk):
         
         # Aprova a solicitação
         schedule_request.approve(request.user)
-        
-        # Notifica o professor
-        subject = 'Solicitação de Agendamento Aprovada'
-        message = f'Sua solicitação de agendamento para o laboratório {schedule_request.laboratory.name} em {schedule_request.scheduled_date} foi aprovada.'
-        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [schedule_request.professor.email])
 
         # Adicionar: Enviar notificação WhatsApp
         WhatsAppNotificationService.notify_schedule_approval(schedule_request)
@@ -416,11 +393,6 @@ def reject_schedule_request(request, pk):
         
         # Rejeita a solicitação
         schedule_request.reject(request.user, rejection_reason)
-        
-        # Notifica o professor
-        subject = 'Solicitação de Agendamento Rejeitada'
-        message = f'Sua solicitação de agendamento para o laboratório {schedule_request.laboratory.name} em {schedule_request.scheduled_date} foi rejeitada.\n\nMotivo: {rejection_reason}'
-        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [schedule_request.professor.email])
 
         # Adicionar: Enviar notificação WhatsApp
         WhatsAppNotificationService.notify_schedule_rejection(schedule_request)
