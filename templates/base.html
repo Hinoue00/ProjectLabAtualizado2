@@ -3,7 +3,7 @@
 <html lang="pt-BR" data-theme="ligth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="LabConnect - Sistema de Gestão de Laboratórios para Faculdade Unopar-Anhanguera">
     <meta name="author" content="LabConnectTeam">
     
@@ -885,7 +885,231 @@
             color:var(--text-color)
         }
 
+/* Adicione após as variáveis root */
 
+/* Mobile First Approach */
+@media (max-width: 767.98px) {
+    :root {
+        --sidebar-width: 280px; /* Largura total em mobile */
+        --header-height: 56px; /* Header menor em mobile */
+    }
+    
+    /* Reset do layout principal em mobile */
+    .main-content {
+        padding-left: 0 !important;
+        width: 100%;
+    }
+    
+    body.sidebar-collapsed .main-content {
+        padding-left: 0 !important;
+    }
+
+    /* Sidebar em mobile - overlay */
+    .sidebar {
+        transform: translateX(-100%);
+        z-index: 1050;
+    }
+    
+    .sidebar.show {
+        transform: translateX(0);
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Header mobile */
+    .header {
+        padding: 0 1rem;
+    }
+    
+    .header-search {
+        display: none; /* Ocultar busca em mobile */
+    }
+    
+    /* Ajustar containers */
+    .main-container {
+        padding: 1rem;
+    }
+    
+    .content-container {
+        padding: 0;
+    }
+    
+    /* Cards e grids responsivos */
+    .row > [class*='col-'] {
+        margin-bottom: 1rem;
+    }
+    
+    .card {
+        margin-bottom: 1rem;
+        padding: 1rem;
+    }
+    
+    /* Tabelas responsivas */
+    .table-responsive {
+        margin: 0 -1rem;
+        padding: 0 1rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Botões e forms */
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .btn-group .btn {
+        width: auto;
+    }
+    
+    /* Footer responsivo */
+    .footer {
+        padding-left: 0 !important;
+        text-align: center;
+    }
+    
+    .footer .row > div {
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Calendário mobile */
+    .calendar-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .calendar-nav {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    /* Dashboard cards */
+    .stats-card {
+        padding: 1rem !important;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr !important;
+        grid-template-areas: none !important;
+    }
+}
+
+/* Backdrop para mobile */
+.sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1045;
+    display: none;
+}
+
+.sidebar.show ~ .sidebar-backdrop {
+    display: block;
+}
+
+/* Ajustes para telas muito pequenas */
+@media (max-width: 375px) {
+    .header-user-info {
+        display: none !important;
+    }
+    
+    .page-title {
+        font-size: 1.25rem;
+    }
+    
+    .card {
+        padding: 0.75rem;
+    }
+}
+
+/* Melhorar touch targets */
+@media (pointer: coarse) {
+    .btn, .sidebar-link, .header-toggle {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+}
+
+/* Adicione isto no final do bloco <style> */
+
+/* Melhorias para touch e mobile */
+@media (max-width: 991.98px) {
+    /* Aumentar área de toque */
+    .header-toggle, .header-theme-toggle, .header-notifications-icon {
+        width: 44px;
+        height: 44px;
+    }
+    
+    /* Dropdown mobile friendly */
+    .dropdown-menu {
+        width: calc(100vw - 2rem);
+        max-width: 300px;
+    }
+    
+    /* Badges mais visíveis */
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.35em 0.65em;
+    }
+    
+    /* Espaçamento entre elementos */
+    .mb-4 {
+        margin-bottom: 1rem !important;
+    }
+    
+    /* Page header mobile */
+    .page-header {
+        margin-bottom: 1rem;
+    }
+    
+    .page-header .row {
+        gap: 1rem;
+    }
+    
+    /* Botões side by side em mobile quando necessário */
+    .btn-group-mobile {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .btn-group-mobile .btn {
+        flex: 1;
+    }
+    
+    /* Melhorar legibilidade */
+    body {
+        font-size: 16px; /* Previne zoom no iOS */
+    }
+    
+    input, select, textarea {
+        font-size: 16px; /* Previne zoom no iOS */
+    }
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Safe area para iPhones com notch */
+@supports (padding: max(0px)) {
+    .header {
+        padding-left: max(1rem, env(safe-area-inset-left));
+        padding-right: max(1rem, env(safe-area-inset-right));
+    }
+    
+    .sidebar {
+        padding-left: env(safe-area-inset-left);
+    }
+    
+    .main-container {
+        padding-left: max(1rem, env(safe-area-inset-left));
+        padding-right: max(1rem, env(safe-area-inset-right));
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+}
         
     </style>
     
@@ -1211,54 +1435,97 @@
                 });
             }
             
-            // Sidebar Toggle (Mobile)
-            const sidebar = document.getElementById('sidebar');
-            const sidebarBackdrop = document.getElementById('sidebarBackdrop');
-            const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
-            const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
-            
-            if (sidebar && sidebarToggleBtn) {
-                sidebarToggleBtn.addEventListener('click', function() {
-                    sidebar.classList.toggle('show');
-                });
+// Sidebar Toggle Melhorado
+const sidebar = document.getElementById('sidebar');
+const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
+const body = document.body;
+
+// Função para abrir sidebar
+function openSidebar() {
+    sidebar.classList.add('show');
+    body.style.overflow = 'hidden'; // Previne scroll do body
+}
+
+// Função para fechar sidebar
+function closeSidebar() {
+    sidebar.classList.remove('show');
+    body.style.overflow = ''; // Restaura scroll
+}
+
+// Toggle button (header)
+if (sidebarToggleBtn) {
+    sidebarToggleBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        
+        // Em mobile
+        if (window.innerWidth < 992) {
+            if (sidebar.classList.contains('show')) {
+                closeSidebar();
+            } else {
+                openSidebar();
             }
-            
-            if (sidebar && sidebarCollapseBtn) {
-                sidebarCollapseBtn.addEventListener('click', function() {
-                    sidebar.classList.remove('show');
-                });
-            }
-            
-            if (sidebar && sidebarBackdrop) {
-                sidebarBackdrop.addEventListener('click', function() {
-                    sidebar.classList.remove('show');
-                });
-            }
-            
-            // Sidebar Toggle (Desktop)
-            const body = document.body;
-            const lgMediaQuery = window.matchMedia('(min-width: 992px)');
-            
-            // Check for saved sidebar state
-            const savedSidebarState = localStorage.getItem('sidebarCollapsed') === 'true';
-            
-            // Initialize sidebar state
-            if (lgMediaQuery.matches && savedSidebarState) {
-                body.classList.add('sidebar-collapsed');
-            }
-            
-            if (sidebarToggleBtn) {
-                sidebarToggleBtn.addEventListener('click', function() {
-                  if (lgMediaQuery.matches) {
-                    // DESKTOP: colapsa a sidebar no body
-                    body.classList.toggle('sidebar-collapsed');
-                    localStorage.setItem('sidebarCollapsed', body.classList.contains('sidebar-collapsed'));
-                  } else {
-                    // MOBILE: mostra/oculta a sidebar com a classe 'show'
-                    sidebar.classList.toggle('show');
-                  }
-                });
-              }
+        } else {
+            // Em desktop
+            body.classList.toggle('sidebar-collapsed');
+            localStorage.setItem('sidebarCollapsed', body.classList.contains('sidebar-collapsed'));
+        }
+    });
+}
+
+// Close button (X dentro do sidebar)
+if (sidebarCollapseBtn) {
+    sidebarCollapseBtn.addEventListener('click', function() {
+        closeSidebar();
+    });
+}
+
+// Backdrop click
+if (sidebarBackdrop) {
+    sidebarBackdrop.addEventListener('click', function() {
+        closeSidebar();
+    });
+}
+
+// Fechar sidebar ao clicar em links (mobile)
+document.querySelectorAll('.sidebar-link').forEach(link => {
+    link.addEventListener('click', function() {
+        if (window.innerWidth < 992 && !this.classList.contains('sidebar-dropdown-toggle')) {
+            setTimeout(() => closeSidebar(), 300);
+        }
+    });
+});
+
+// Ajustar ao mudar orientação
+window.addEventListener('orientationchange', function() {
+    if (window.innerWidth < 992) {
+        closeSidebar();
+    }
+});
+
+// Prevenir scroll do body quando sidebar estiver aberta
+let touchStartY = 0;
+if (sidebar) {
+    sidebar.addEventListener('touchstart', function(e) {
+        touchStartY = e.touches[0].clientY;
+    });
+    
+    sidebar.addEventListener('touchmove', function(e) {
+        const touchY = e.touches[0].clientY;
+        const scrollTop = sidebar.scrollTop;
+        const scrollHeight = sidebar.scrollHeight;
+        const height = sidebar.clientHeight;
+        
+        const isScrollingDown = touchY < touchStartY;
+        const isScrollingUp = touchY > touchStartY;
+        
+        if ((isScrollingDown && scrollTop + height >= scrollHeight) ||
+            (isScrollingUp && scrollTop <= 0)) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+}
             
         // Dropdown Menus
         const dropdownToggles = document.querySelectorAll('.sidebar-dropdown-toggle');
