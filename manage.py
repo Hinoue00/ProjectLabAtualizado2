@@ -2,10 +2,11 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
-
+from dotenv import load_dotenv
 
 def main():
     """Run administrative tasks."""
+    load_dotenv(override=True)
     # Alteração aqui:
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'LabConnect.settings.development')
     try:

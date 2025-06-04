@@ -15,11 +15,23 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
+# # ADICIONE ESTAS LINHAS PARA DEBUG:
+# print(f"DEBUG: DB_NAME='{os.environ.get('DB_NAME', '')}'")
+# print(f"DEBUG: DB_USER='{os.environ.get('DB_USER', '')}'")
+# print(f"DEBUG: DB_PASSWORD='{os.environ.get('DB_PASSWORD', '')}'")
+# print(f"DEBUG: DB_HOST='{os.environ.get('DB_HOST', '')}'")
+# print(f"DEBUG: DB_PORT='{os.environ.get('DB_PORT', '5432')}'")
+# # FIM DAS LINHAS DE DEBUG
+
 # Database para desenvolvimento
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', ''),  # Ex: labconnect_dev
+        'USER': os.environ.get('DB_USER', ''),   # Ex: postgres ou um usuário específico
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', ''),  # Ou o host onde seu PostgreSQL está rodando
+        'PORT': os.environ.get('DB_PORT', '5432'),       # Porta padrão do PostgreSQL
     }
 }
 
