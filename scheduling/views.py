@@ -148,8 +148,81 @@ def create_schedule_request(request):
                     file_type=file.content_type
                 )
 
+            # Enviar notificação por email com tratamento de erro
+            try:
+                from django.core.mail import send_mail
+                from django.conf import settings
+                
+                # Monta o assunto e mensagem
+                subject = f'Nova Solicitação de Agendamento - {schedule_request.laboratory.name}'
+                
+                # Determina o turno para exibição
+                shift_display = {
+                    'morning': 'Manhã',
+                    'afternoon': 'Tarde', 
+                    'evening': 'Noite'
+                }.get(schedule_request.shift, schedule_request.shift)
+                
+                message = f"""
+Nova solicitação de agendamento recebida:
+
+Professor: {request.user.get_full_name()}
+Email: {request.user.email}
+Laboratório: {schedule_request.laboratory.name}
+Disciplina: {schedule_request.subject}
+Data: {schedule_request.scheduled_date.strftime('%d/%m/%Y')}
+Turno: {shift_display}
+Horário: {schedule_request.start_time.strftime('%H:%M')} às {schedule_request.end_time.strftime('%H:%M')}
+Número de Alunos: {schedule_request.number_of_students}
+
+Descrição:
+{schedule_request.description}
+
+Materiais Necessários:
+{schedule_request.materials if schedule_request.materials else 'Nenhum material especificado'}
+
+Para aprovar ou rejeitar esta solicitação, acesse o sistema LabConnect.
+                """
+                
+                # Buscar técnicos para notificar
+                from accounts.models import User
+                technicians = User.objects.filter(
+                    user_type='technician',
+                    is_approved=True,
+                    is_active=True
+                )
+                
+                # Filtrar por departamento se aplicável
+                if schedule_request.laboratory.department:
+                    technicians = technicians.filter(lab_department=schedule_request.laboratory.department)
+                
+                technician_emails = list(technicians.values_list('email', flat=True))
+                
+                if technician_emails:
+                    send_mail(
+                        subject,
+                        message,
+                        settings.DEFAULT_FROM_EMAIL,
+                        technician_emails,
+                        fail_silently=False
+                    )
+                    
+            except Exception as e:
+                # Log do erro sem interromper o processo
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Erro ao enviar email de notificação: {str(e)}")
+                # Não mostra mensagem de erro para o usuário sobre o email
+                # pois o agendamento foi criado com sucesso
+
             # Adicionar: Enviar notificação WhatsApp
-            WhatsAppNotificationService.notify_schedule_request(schedule_request)
+            try:
+                WhatsAppNotificationService.notify_schedule_request(schedule_request)
+            except Exception as e:
+                # Log do erro do WhatsApp também
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Erro ao enviar notificação WhatsApp: {str(e)}")
             
             messages.success(request, 'Solicitação de agendamento enviada com sucesso! Aguarde a aprovação.')
             return redirect('professor_dashboard')

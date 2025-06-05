@@ -43,7 +43,6 @@ def login_register_view(request):
             user.is_active = True  # Pode fazer login mas com acesso limitado até aprovação
             user.save()
 
-            
             # Enviar notificação por WhatsApp
             WhatsAppNotificationService.notify_user_registration(user)
 

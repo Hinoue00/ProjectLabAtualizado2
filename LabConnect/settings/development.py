@@ -43,5 +43,5 @@ CACHES = {
     }
 }
 
-# Configuração para impressão de emails no console (sem envio real)
-#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Configuração para desativar envio de email
+EMAIL_BACKEND = 'django.core.mail.backends.dummy.EmailBackend'
