@@ -42,9 +42,6 @@ def login_register_view(request):
             user = form.save(commit=False)
             user.is_active = True  # Pode fazer login mas com acesso limitado até aprovação
             user.save()
-            
-            # Enviar notificação por email para os laboratoristas sobre novo registro
-            technicians = User.objects.filter(user_type='technician', is_approved=True)
 
             
             # Enviar notificação por WhatsApp

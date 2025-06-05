@@ -160,7 +160,7 @@ def create_schedule_request(request):
         'form': form,
         'next_week_start': next_week_start,
         'next_week_end': next_week_end,
-        'is_confirmation_day': is_confirmation_day,
+        'is_confirmation_day': is_confirmation_day
     }
     
     return render(request, 'create_request.html', context)
