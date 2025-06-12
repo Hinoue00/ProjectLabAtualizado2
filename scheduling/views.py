@@ -15,6 +15,9 @@ from django.conf import settings
 from django.urls import reverse
 from django.http import JsonResponse
 from whatsapp.services import WhatsAppNotificationService
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.serializers.json import DjangoJSONEncoder
+from django.views.generic import TemplateView
 
 
 

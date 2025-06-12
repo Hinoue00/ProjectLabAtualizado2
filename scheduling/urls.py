@@ -18,5 +18,5 @@ urlpatterns = [
     path('api/calendar-data/', views.calendar_data_api, name='calendar_data_api'),
     path('api/calendar-data/', views.calendar_data_api, name='calendar_data_api'),
     path('api/schedule-detail/<int:schedule_id>/', views.schedule_detail_api, name='schedule_detail_api'),
-    path('api/calendar/events/', CalendarEventsAPI.as_view(), name='calendar_events_api'),
+    path('api/calendar/events/', views.CalendarEventsAPI.as_view(), name='calendar_events_api'),
 ]
