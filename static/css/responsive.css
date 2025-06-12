@@ -1,0 +1,77 @@
+/* static/css/responsive.css */
+
+/* Para telas com largura máxima de 768px (tablets e celulares) */
+@media (max-width: 768px) {
+
+    /* --- Ajustes para o Formulário de Agendamento (create_request.html) --- */
+    .form-container {
+        padding: 15px;
+    }
+
+    /* Faz com que os campos do formulário ocupem a largura total */
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100% !important;
+        margin-bottom: 10px;
+    }
+
+    /* Ajusta o layout dos botões para empilhá-los */
+    .form-actions button {
+        width: 100%;
+        margin-top: 5px;
+    }
+
+    /* --- Ajustes para a Tela do Calendário (calendar.html) --- */
+    #calendar-filters .form-row {
+        flex-direction: column;
+    }
+
+    #calendar-filters .form-group {
+        width: 100%;
+    }
+
+    /* Ajusta o tamanho da fonte do calendário para telas menores */
+    .fc-toolbar-title {
+        font-size: 1.2em !important;
+    }
+
+    /* --- Ajustes para o Calendário em Tabela (calendar_week.html) --- */
+    .calendar-week-container table, 
+    .calendar-week-container thead, 
+    .calendar-week-container tbody, 
+    .calendar-week-container th, 
+    .calendar-week-container td, 
+    .calendar-week-container tr {
+        display: block;
+    }
+
+    .calendar-week-container thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    .calendar-week-container tr {
+        border: 1px solid #ccc;
+        margin-bottom: 5px;
+    }
+
+    .calendar-week-container td {
+        border: none;
+        border-bottom: 1px solid #eee;
+        position: relative;
+        padding-left: 50%;
+    }
+
+    .calendar-week-container td:before {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        content: attr(data-label); /* Usa o atributo data-label como cabeçalho */
+        font-weight: bold;
+    }
+}

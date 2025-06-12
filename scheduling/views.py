@@ -1,9 +1,12 @@
 # scheduling/views.py
+import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.utils import timezone
 from datetime import datetime, timedelta
+
+from django.views import View
 from accounts.models import User
 from accounts.views import is_technician, is_professor
 from .models import Laboratory, ScheduleRequest, DraftScheduleRequest, FileAttachment
@@ -12,6 +15,7 @@ from django.conf import settings
 from django.urls import reverse
 from django.http import JsonResponse
 from whatsapp.services import WhatsAppNotificationService
+
 
 
 @login_required
@@ -635,3 +639,64 @@ def schedule_detail_api(request, schedule_id):
     except ScheduleRequest.DoesNotExist:
         return JsonResponse({'error': 'Agendamento não encontrado'}, status=404)
 
+class CalendarView(LoginRequiredMixin, TemplateView):
+    template_name = 'calendar.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Dados existentes
+        context['laboratories'] = Laboratory.objects.all()
+        context['current_month_year'] = datetime.now().strftime('%B %Y')
+        
+        # Adicionar eventos como JSON
+        events = self.get_events()
+        context['events'] = json.dumps(list(events), cls=DjangoJSONEncoder)
+        
+        return context
+    
+    def get_events(self):
+        # Lógica para buscar eventos
+        month = self.request.GET.get('month', datetime.now().month)
+        year = self.request.GET.get('year', datetime.now().year)
+        
+        schedules = schedules.objects.filter(
+            date__year=year,
+            date__month=month
+        ).select_related('laboratory', 'professor')
+        
+        return [{
+            'id': s.id,
+            'date': s.date.isoformat(),
+            'start_time': s.start_time.isoformat(),
+            'end_time': s.end_time.isoformat(),
+            'laboratory_id': s.laboratory.id,
+            'laboratory_name': s.laboratory.name,
+            'professor_name': s.professor.get_full_name(),
+            'subject': s.subject,
+            'status': s.status
+        } for s in schedules]
+    
+class CalendarEventsAPI(LoginRequiredMixin, View):
+    def get(self, request):
+        month = request.GET.get('month', datetime.now().month)
+        year = request.GET.get('year', datetime.now().year)
+        
+        schedules = schedules.objects.filter(
+            date__year=year,
+            date__month=month
+        ).select_related('laboratory', 'professor')
+        
+        events = [{
+            'id': s.id,
+            'date': s.date.isoformat(),
+            'start_time': s.start_time.strftime('%H:%M'),
+            'end_time': s.end_time.strftime('%H:%M'),
+            'laboratory_id': s.laboratory.id,
+            'laboratory_name': s.laboratory.name,
+            'professor_name': s.professor.get_full_name(),
+            'subject': s.subject,
+            'status': s.status
+        } for s in schedules]
+        
+        return JsonResponse({'events': events})
