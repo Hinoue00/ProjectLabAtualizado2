@@ -1,0 +1,559 @@
+
+/* Estilos Mobile-First para Dashboard Professor e Técnico */
+
+/* Variáveis globais mobile */
+:root {
+    --mobile-spacing: 0.75rem;
+    --mobile-card-radius: 12px;
+    --touch-target: 44px;
+    --mobile-font-size: 0.875rem;
+}
+
+/* Reset e base mobile */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Container principal mobile */
+@media (max-width: 767px) {
+    .content-container {
+        padding: var(--mobile-spacing);
+        margin: 0;
+    }
+    
+    .page-header {
+        margin-bottom: 1rem;
+    }
+    
+    .page-title {
+        font-size: 1.25rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .page-subtitle {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+}
+
+/* Cards responsivos */
+.dashboard-card {
+    border-radius: var(--mobile-card-radius);
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease;
+}
+
+@media (max-width: 767px) {
+    .dashboard-card {
+        padding: 1rem;
+    }
+    
+    .dashboard-card-header {
+        padding-bottom: 0.75rem;
+        margin-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .dashboard-card-title {
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+}
+
+/* Stats cards mobile */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 400px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.stats-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--mobile-card-radius);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.stats-card:active {
+    transform: scale(0.98);
+}
+
+.stats-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(74, 111, 165, 0.1);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.stats-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.stats-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-color);
+    line-height: 1;
+}
+
+.stats-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+/* Calendário semanal mobile */
+.weekly-calendar-mobile {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -1rem;
+    padding: 0 1rem;
+}
+
+.calendar-scroll-container {
+    display: flex;
+    gap: 0.75rem;
+    padding-bottom: 0.5rem;
+}
+
+.calendar-day-card {
+    flex: 0 0 160px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--mobile-card-radius);
+    padding: 0.75rem;
+    scroll-snap-align: start;
+}
+
+.calendar-day-card.today {
+    border-color: var(--primary-color);
+    background-color: rgba(74, 111, 165, 0.05);
+}
+
+.calendar-day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.calendar-day-name {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-color);
+}
+
+.calendar-day-date {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.calendar-day-events {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.calendar-event-item {
+    background: rgba(74, 111, 165, 0.05);
+    border-radius: 6px;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.calendar-event-item:active {
+    transform: scale(0.98);
+    background: rgba(74, 111, 165, 0.1);
+}
+
+.calendar-event-time {
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: 0.7rem;
+}
+
+.calendar-event-title {
+    color: var(--text-color);
+    margin-top: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.calendar-empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    padding: 1rem 0;
+}
+
+/* Lista de agendamentos mobile */
+.schedule-list-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.schedule-item-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--mobile-card-radius);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.schedule-item-card:active {
+    transform: scale(0.98);
+    background: var(--calendar-header-bg);
+}
+
+.schedule-item-icon {
+    width: 36px;
+    height: 36px;
+    background: rgba(74, 111, 165, 0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+    flex-shrink: 0;
+}
+
+.schedule-item-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.schedule-item-title {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.schedule-item-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.125rem;
+}
+
+.schedule-item-badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+/* Tabelas responsivas */
+@media (max-width: 767px) {
+    .table-responsive {
+        border: 0;
+        margin: 0 -1rem;
+    }
+    
+    .table {
+        font-size: 0.875rem;
+    }
+    
+    .table td,
+    .table th {
+        padding: 0.5rem;
+        white-space: nowrap;
+    }
+    
+    /* Ocultar colunas menos importantes em mobile */
+    .hide-mobile {
+        display: none;
+    }
+}
+
+/* Botões mobile */
+@media (max-width: 767px) {
+    .btn {
+        min-height: var(--touch-target);
+        padding: 0.625rem 1rem;
+        font-size: 0.875rem;
+        border-radius: 8px;
+        font-weight: 500;
+        touch-action: manipulation;
+    }
+    
+    .btn-sm {
+        min-height: 36px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+    }
+    
+    .btn-mobile-full {
+        width: 100%;
+        display: block;
+    }
+    
+    .btn-group {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn-group .btn {
+        flex: 1;
+        min-width: 0;
+    }
+}
+
+/* Filtros mobile */
+.mobile-filters {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.5rem;
+}
+
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem 1rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.filter-chip.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.filter-chip:active {
+    transform: scale(0.95);
+}
+
+/* Loading states */
+.skeleton-loader {
+    background: linear-gradient(90deg, 
+        var(--border-color) 25%, 
+        rgba(0, 0, 0, 0.05) 50%, 
+        var(--border-color) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+    border-radius: 6px;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Empty states */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state-text {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+/* Modals mobile */
+@media (max-width: 767px) {
+    .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+    
+    .modal-content {
+        border-radius: var(--mobile-card-radius);
+    }
+    
+    .modal-header {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .modal-title {
+        font-size: 1.125rem;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+    }
+    
+    .modal-footer {
+        padding: 1rem;
+        gap: 0.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .modal-footer .btn {
+        flex: 1;
+    }
+}
+
+/* Formulários mobile */
+@media (max-width: 767px) {
+    .form-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-control,
+    .form-select {
+        min-height: var(--touch-target);
+        padding: 0.625rem 0.875rem;
+        font-size: 0.875rem;
+        border-radius: 8px;
+    }
+    
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(74, 111, 165, 0.25);
+    }
+    
+    .form-text {
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+    
+    .invalid-feedback {
+        font-size: 0.75rem;
+    }
+}
+
+/* Notificações mobile */
+.notification-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #dc3545;
+    color: white;
+    font-size: 0.625rem;
+    font-weight: 700;
+    padding: 0.125rem 0.375rem;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+}
+
+/* Acessibilidade mobile */
+.sr-only-mobile {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Focus visible */
+@media (hover: none) {
+    *:focus {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
+    }
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] {
+    --card-bg: #1a1d21;
+    --border-color: #2d3238;
+    --text-muted: #8b92a0;
+}
+
+[data-theme="dark"] .stats-icon {
+    background: rgba(100, 130, 180, 0.2);
+}
+
+[data-theme="dark"] .calendar-event-item {
+    background: rgba(100, 130, 180, 0.1);
+}
+
+[data-theme="dark"] .schedule-item-card:active {
+    background: rgba(100, 130, 180, 0.05);
+}
+
+/* Landscape mobile adjustments */
+@media (max-width: 767px) and (orientation: landscape) {
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .modal-dialog {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+}
+
+/* Performance optimizations */
+@media (max-width: 767px) {
+    /* Desabilitar animações complexas em mobile */
+    * {
+        animation-duration: 0.2s !important;
+    }
+    
+    /* GPU acceleration para scroll */
+    .calendar-scroll-container,
+    .table-responsive,
+    .mobile-filters {
+        will-change: transform;
+    }
+}
