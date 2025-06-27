@@ -1,4 +1,4 @@
-<!-- SUBSTITUIR o conteúdo do template calendar.html para formato de grade -->
+<!-- CALENDÁRIO RESPONSIVO COMPLETO - substitui calendar.html -->
 
 {% extends 'base.html' %}
 {% load static %}
@@ -7,16 +7,30 @@
 
 {% block extra_css %}
 <style>
-    /* Calendário em formato de grade mensal */
+    :root {
+        --primary-blue: #4a6fa5;
+        --primary-dark: #166ba2;
+        --success-green: #28a745;
+        --warning-orange: #ffc107;
+        --danger-red: #dc3545;
+        --light-gray: #f8f9fa;
+        --border-color: #dee2e6;
+        --text-dark: #495057;
+        --text-muted: #6c757d;
+    }
+
+    /* Container principal */
     .calendar-container {
         background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         overflow: hidden;
+        margin-bottom: 2rem;
     }
     
+    /* Header do calendário */
     .calendar-header {
-        background: linear-gradient(135deg, #4a6fa5 0%, #166ba2 100%);
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
         color: white;
         padding: 1.5rem;
         display: flex;
@@ -28,6 +42,9 @@
         margin: 0;
         font-size: 1.5rem;
         font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
     
     .calendar-navigation {
@@ -40,26 +57,34 @@
         background: rgba(255,255,255,0.2);
         border: none;
         color: white;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        font-weight: 500;
     }
     
     .calendar-nav-btn:hover {
         background: rgba(255,255,255,0.3);
-        transform: scale(1.05);
+        transform: translateY(-2px);
+    }
+    
+    .calendar-nav-btn.today-btn {
+        padding: 0 1rem;
+        width: auto;
+        border-radius: 22px;
     }
     
     /* Filtros */
     .calendar-filters {
-        padding: 1rem 1.5rem;
-        background: #f8f9fa;
-        border-bottom: 1px solid #dee2e6;
+        padding: 1.25rem 1.5rem;
+        background: var(--light-gray);
+        border-bottom: 1px solid var(--border-color);
         display: flex;
         gap: 1rem;
         align-items: center;
@@ -69,58 +94,67 @@
     .filter-group {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.75rem;
     }
     
     .filter-label {
-        font-weight: 500;
-        color: #495057;
+        font-weight: 600;
+        color: var(--text-dark);
         margin: 0;
+        font-size: 0.9rem;
     }
     
     .filter-select {
-        border: 1px solid #ced4da;
-        border-radius: 6px;
-        padding: 0.375rem 0.75rem;
-        font-size: 0.875rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+        background: white;
+        transition: border-color 0.2s ease;
+        min-width: 140px;
     }
     
-    /* Grade do calendário */
+    .filter-select:focus {
+        border-color: var(--primary-blue);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.1);
+    }
+    
+    /* === VISUALIZAÇÃO DESKTOP === */
+    .calendar-desktop {
+        display: none;
+    }
+    
     .calendar-grid {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
         gap: 0;
     }
     
-    /* Cabeçalho dos dias da semana */
     .calendar-weekday {
         background: #e9ecef;
         padding: 1rem;
         text-align: center;
         font-weight: 600;
-        color: #495057;
-        border-right: 1px solid #dee2e6;
-        border-bottom: 1px solid #dee2e6;
+        color: var(--text-dark);
+        border-right: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.9rem;
     }
     
     .calendar-weekday:last-child {
         border-right: none;
     }
     
-    /* Células dos dias */
     .calendar-day {
-        min-height: 120px;
-        border-right: 1px solid #dee2e6;
-        border-bottom: 1px solid #dee2e6;
-        padding: 0.5rem;
+        min-height: 130px;
+        border-right: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+        padding: 0.75rem;
         position: relative;
         background: white;
         cursor: pointer;
-        transition: background-color 0.2s ease;
-    }
-    
-    .calendar-day:last-child {
-        border-right: none;
+        transition: all 0.2s ease;
     }
     
     .calendar-day:hover {
@@ -139,9 +173,9 @@
     
     .calendar-day-number {
         font-weight: 600;
-        font-size: 1rem;
+        font-size: 1.1rem;
         margin-bottom: 0.5rem;
-        color: #495057;
+        color: var(--text-dark);
     }
     
     .today .calendar-day-number {
@@ -149,122 +183,325 @@
         font-weight: 700;
     }
     
-    /* Eventos no calendário */
     .calendar-event {
         background: #e3f2fd;
-        border-left: 3px solid #2196f3;
-        padding: 0.25rem 0.5rem;
-        margin-bottom: 0.25rem;
-        border-radius: 0 4px 4px 0;
-        font-size: 0.75rem;
+        border-left: 4px solid #2196f3;
+        padding: 0.4rem 0.6rem;
+        margin-bottom: 0.4rem;
+        border-radius: 0 6px 6px 0;
+        font-size: 0.8rem;
         cursor: pointer;
         transition: all 0.2s ease;
         overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
     }
     
     .calendar-event:hover {
-        background: #bbdefb;
-        transform: translateX(2px);
+        transform: translateX(3px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     
-    /* Status dos eventos */
     .calendar-event.status-approved {
         background: #e8f5e8;
-        border-left-color: #4caf50;
+        border-left-color: var(--success-green);
     }
     
     .calendar-event.status-pending {
         background: #fff3e0;
-        border-left-color: #ff9800;
+        border-left-color: var(--warning-orange);
     }
     
     .calendar-event.status-rejected {
         background: #ffebee;
-        border-left-color: #f44336;
+        border-left-color: var(--danger-red);
     }
     
-    .event-time {
-        font-weight: 600;
-        color: #333;
-    }
-    
-    .event-title {
+    /* === VISUALIZAÇÃO MOBILE === */
+    .calendar-mobile {
         display: block;
-        font-size: 0.7rem;
-        margin-top: 0.1rem;
-        opacity: 0.8;
+        padding: 0;
     }
     
-    /* Indicador de mais eventos */
-    .calendar-more {
-        font-size: 0.7rem;
-        color: #666;
+    /* Mini calendário do mês */
+    .mobile-month-overview {
+        padding: 1rem 1.5rem;
+        background: white;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .mini-calendar {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+        margin-top: 1rem;
+    }
+    
+    .mini-weekday {
         text-align: center;
-        padding: 0.1rem;
-        background: #f0f0f0;
-        border-radius: 3px;
-        cursor: pointer;
-    }
-    
-    .calendar-more:hover {
-        background: #e0e0e0;
-    }
-    
-    /* Modal de detalhes */
-    .event-detail {
-        margin-bottom: 1rem;
-    }
-    
-    .event-detail h6 {
-        color: #495057;
+        font-size: 0.7rem;
         font-weight: 600;
-        margin-bottom: 0.25rem;
+        color: var(--text-muted);
+        padding: 0.5rem 0;
+    }
+    
+    .mini-day {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        border-radius: 6px;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .mini-day.today {
+        background: var(--primary-blue);
+        color: white;
+        font-weight: 600;
+    }
+    
+    .mini-day.has-events {
+        background: #e3f2fd;
+        color: var(--primary-blue);
+        font-weight: 500;
+    }
+    
+    .mini-day.selected {
+        background: var(--primary-dark);
+        color: white;
+        transform: scale(1.1);
+    }
+    
+    .mini-day.other-month {
+        color: #ccc;
+    }
+    
+    .mini-day .event-dot {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--warning-orange);
+    }
+    
+    /* Lista de eventos para o dia selecionado */
+    .mobile-day-events {
+        padding: 1.5rem;
+        min-height: 200px;
+    }
+    
+    .selected-date-header {
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+    
+    .selected-date-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin: 0;
+    }
+    
+    .selected-date-subtitle {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-top: 0.25rem;
+    }
+    
+    .mobile-event-card {
+        background: white;
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .mobile-event-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--primary-blue);
+    }
+    
+    .mobile-event-card.status-approved::before {
+        background: var(--success-green);
+    }
+    
+    .mobile-event-card.status-pending::before {
+        background: var(--warning-orange);
+    }
+    
+    .mobile-event-card.status-rejected::before {
+        background: var(--danger-red);
+    }
+    
+    .mobile-event-card:hover {
+        border-color: var(--primary-blue);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    
+    .mobile-event-time {
+        font-weight: 600;
+        color: var(--primary-blue);
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
         display: flex;
         align-items: center;
         gap: 0.5rem;
     }
     
-    .event-detail p {
-        margin: 0;
-        color: #6c757d;
+    .mobile-event-title {
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
+        font-size: 1rem;
     }
     
-    /* Responsivo */
-    @media (max-width: 768px) {
-        .calendar-grid {
-            font-size: 0.875rem;
+    .mobile-event-details {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .mobile-event-detail {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .mobile-event-status {
+        margin-top: 0.75rem;
+    }
+    
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-badge.approved {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-badge.pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-badge.rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .no-events {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--text-muted);
+    }
+    
+    .no-events-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    
+    /* Responsividade */
+    @media (min-width: 768px) {
+        .calendar-mobile {
+            display: none;
         }
         
-        .calendar-day {
-            min-height: 80px;
-            padding: 0.25rem;
-        }
-        
-        .calendar-event {
-            font-size: 0.7rem;
-            padding: 0.1rem 0.25rem;
-        }
-        
-        .calendar-filters {
-            flex-direction: column;
-            align-items: flex-start;
+        .calendar-desktop {
+            display: block;
         }
     }
     
     @media (max-width: 576px) {
-        .calendar-day {
-            min-height: 60px;
+        .calendar-header {
+            padding: 1rem;
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
         }
         
-        .calendar-day-number {
-            font-size: 0.875rem;
+        .calendar-filters {
+            padding: 1rem;
+            flex-direction: column;
+            align-items: stretch;
         }
         
-        .calendar-event {
-            font-size: 0.65rem;
+        .filter-group {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.5rem;
         }
+        
+        .filter-select {
+            min-width: unset;
+        }
+        
+        .mobile-day-events {
+            padding: 1rem;
+        }
+    }
+    
+    /* Animações */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .mobile-event-card {
+        animation: slideIn 0.3s ease-out;
+    }
+    
+    /* Loading state */
+    .loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+    
+    .loading::after {
+        content: '';
+        width: 20px;
+        height: 20px;
+        border: 2px solid #e9ecef;
+        border-top: 2px solid var(--primary-blue);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-left: 0.5rem;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
 </style>
 {% endblock %}
@@ -292,7 +529,7 @@
         <!-- Header do calendário -->
         <div class="calendar-header">
             <h5 class="calendar-title">
-                <i class="bi bi-calendar3 me-2"></i>
+                <i class="bi bi-calendar3"></i>
                 <span id="calendar-month-year">{{ current_month_year }}</span>
             </h5>
             
@@ -300,7 +537,7 @@
                 <button class="calendar-nav-btn" id="prev-month" aria-label="Mês anterior">
                     <i class="bi bi-chevron-left"></i>
                 </button>
-                <button class="calendar-nav-btn" id="today-btn">
+                <button class="calendar-nav-btn today-btn" id="today-btn">
                     Hoje
                 </button>
                 <button class="calendar-nav-btn" id="next-month" aria-label="Próximo mês">
@@ -332,18 +569,37 @@
             </div>
         </div>
 
-        <!-- Grade do calendário -->
-        <div class="calendar-grid" id="calendar-grid">
-            <!-- Cabeçalho dos dias da semana -->
-            <div class="calendar-weekday">Dom</div>
-            <div class="calendar-weekday">Seg</div>
-            <div class="calendar-weekday">Ter</div>
-            <div class="calendar-weekday">Qua</div>
-            <div class="calendar-weekday">Qui</div>
-            <div class="calendar-weekday">Sex</div>
-            <div class="calendar-weekday">Sáb</div>
+        <!-- VISUALIZAÇÃO DESKTOP -->
+        <div class="calendar-desktop">
+            <div class="calendar-grid" id="calendar-grid">
+                <!-- Cabeçalho dos dias da semana -->
+                <div class="calendar-weekday">Dom</div>
+                <div class="calendar-weekday">Seg</div>
+                <div class="calendar-weekday">Ter</div>
+                <div class="calendar-weekday">Qua</div>
+                <div class="calendar-weekday">Qui</div>
+                <div class="calendar-weekday">Sex</div>
+                <div class="calendar-weekday">Sáb</div>
+                <!-- Os dias serão inseridos via JavaScript aqui -->
+            </div>
+        </div>
+
+        <!-- VISUALIZAÇÃO MOBILE -->
+        <div class="calendar-mobile">
+            <!-- Mini calendário overview -->
+            <div class="mobile-month-overview">
+                <div class="mini-calendar" id="mini-calendar">
+                    <!-- Será preenchido via JavaScript -->
+                </div>
+            </div>
             
-            <!-- Os dias serão inseridos via JavaScript aqui -->
+            <!-- Eventos do dia selecionado -->
+            <div class="mobile-day-events" id="mobile-day-events">
+                <div class="selected-date-header">
+                    <h3 class="selected-date-title" id="selected-date-title">Selecione um dia</h3>
+                    <p class="selected-date-subtitle" id="selected-date-subtitle">Toque em um dia do calendário para ver os agendamentos</p>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -372,6 +628,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Variáveis globais
     let currentDate = new Date();
+    let selectedDate = new Date();
     let events = {{ events|safe|default:"[]" }};
     let selectedLab = 'all';
     let selectedStatus = 'all';
@@ -381,6 +638,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Elementos DOM
     const monthYearElement = document.getElementById('calendar-month-year');
     const calendarGrid = document.getElementById('calendar-grid');
+    const miniCalendar = document.getElementById('mini-calendar');
+    const mobileDayEvents = document.getElementById('mobile-day-events');
+    const selectedDateTitle = document.getElementById('selected-date-title');
+    const selectedDateSubtitle = document.getElementById('selected-date-subtitle');
     const prevButton = document.getElementById('prev-month');
     const nextButton = document.getElementById('next-month');
     const todayButton = document.getElementById('today-btn');
@@ -405,6 +666,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (todayButton) {
         todayButton.addEventListener('click', function() {
             currentDate = new Date();
+            selectedDate = new Date();
             updateCalendar();
         });
     }
@@ -412,20 +674,25 @@ document.addEventListener('DOMContentLoaded', function() {
     if (labFilter) {
         labFilter.addEventListener('change', function() {
             selectedLab = this.value;
-            renderCalendar();
+            updateCalendar();
         });
     }
     
     if (statusFilter) {
         statusFilter.addEventListener('change', function() {
             selectedStatus = this.value;
-            renderCalendar();
+            updateCalendar();
         });
     }
     
     // Funções de utilidade
     function formatDate(date) {
         const options = { year: 'numeric', month: 'long' };
+        return date.toLocaleDateString('pt-BR', options);
+    }
+    
+    function formatDateLong(date) {
+        const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
         return date.toLocaleDateString('pt-BR', options);
     }
     
@@ -440,6 +707,12 @@ document.addEventListener('DOMContentLoaded', function() {
                date.getFullYear() === today.getFullYear();
     }
     
+    function isSameDate(date1, date2) {
+        return date1.getDate() === date2.getDate() &&
+               date1.getMonth() === date2.getMonth() &&
+               date1.getFullYear() === date2.getFullYear();
+    }
+    
     function getDaysInMonth(date) {
         return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
     }
@@ -448,7 +721,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
     }
     
-    // Filtrar eventos
     function filterEvents(events) {
         return events.filter(event => {
             const labMatch = selectedLab === 'all' || event.laboratory_id == selectedLab;
@@ -457,10 +729,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    function getEventsForDate(date) {
+        const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        return filterEvents(events).filter(event => event.date === dateStr);
+    }
+    
     // Atualizar calendário
     function updateCalendar() {
         updateMonthYear();
-        renderCalendar();
+        renderDesktopCalendar();
+        renderMobileCalendar();
+        renderSelectedDayEvents();
     }
     
     function updateMonthYear() {
@@ -469,8 +748,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Renderizar calendário em grade
-    function renderCalendar() {
+    // Renderizar calendário desktop
+    function renderDesktopCalendar() {
         if (!calendarGrid) return;
         
         const year = currentDate.getFullYear();
@@ -479,16 +758,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const daysInMonth = getDaysInMonth(currentDate);
         const filteredEvents = filterEvents(events);
         
-        // Limpar grade (manter cabeçalho dos dias da semana)
+        // Limpar grade (manter cabeçalho)
         const weekdayHeaders = calendarGrid.querySelectorAll('.calendar-weekday');
         calendarGrid.innerHTML = '';
-        
-        // Readicionar cabeçalhos
         weekdayHeaders.forEach(header => {
             calendarGrid.appendChild(header);
         });
         
-        // Dias vazios do início do mês
+        // Dias vazios
         for (let i = 0; i < firstDay; i++) {
             const emptyDay = document.createElement('div');
             emptyDay.className = 'calendar-day other-month';
@@ -498,47 +775,36 @@ document.addEventListener('DOMContentLoaded', function() {
         // Dias do mês
         for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(year, month, day);
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const dayEvents = filteredEvents.filter(e => e.date === dateStr);
+            const dayEvents = getEventsForDate(date);
             const isCurrentDay = isToday(date);
             
             const dayElement = document.createElement('div');
             dayElement.className = `calendar-day ${isCurrentDay ? 'today' : ''}`;
-            dayElement.setAttribute('data-date', dateStr);
             
-            // Número do dia
             const dayNumber = document.createElement('div');
             dayNumber.className = 'calendar-day-number';
             dayNumber.textContent = day;
             dayElement.appendChild(dayNumber);
             
-            // Eventos do dia (máximo 3 visíveis)
+            // Eventos (máximo 3)
             dayEvents.slice(0, 3).forEach(event => {
                 const eventElement = document.createElement('div');
                 eventElement.className = `calendar-event status-${event.status}`;
-                eventElement.setAttribute('data-event-id', event.id);
                 eventElement.innerHTML = `
                     <span class="event-time">${formatTime(event.start_time)}</span>
                     <span class="event-title">${event.laboratory_name}</span>
                 `;
-                
                 eventElement.addEventListener('click', function(e) {
                     e.stopPropagation();
                     showEventDetails(event.id);
                 });
-                
                 dayElement.appendChild(eventElement);
             });
             
-            // Indicador de mais eventos
             if (dayEvents.length > 3) {
                 const moreElement = document.createElement('div');
                 moreElement.className = 'calendar-more';
                 moreElement.textContent = `+${dayEvents.length - 3} mais`;
-                moreElement.addEventListener('click', function() {
-                    // Aqui você pode implementar um modal com todos os eventos do dia
-                    console.log('Mais eventos para', dateStr, dayEvents);
-                });
                 dayElement.appendChild(moreElement);
             }
             
@@ -546,6 +812,130 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Renderizar mini calendário mobile
+    function renderMobileCalendar() {
+        if (!miniCalendar) return;
+        
+        miniCalendar.innerHTML = '';
+        
+        // Cabeçalhos dos dias
+        const weekdays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+        weekdays.forEach(day => {
+            const dayHeader = document.createElement('div');
+            dayHeader.className = 'mini-weekday';
+            dayHeader.textContent = day;
+            miniCalendar.appendChild(dayHeader);
+        });
+        
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const firstDay = getFirstDayOfMonth(currentDate);
+        const daysInMonth = getDaysInMonth(currentDate);
+        
+        // Dias vazios
+        for (let i = 0; i < firstDay; i++) {
+            const emptyDay = document.createElement('div');
+            emptyDay.className = 'mini-day other-month';
+            miniCalendar.appendChild(emptyDay);
+        }
+        
+        // Dias do mês
+        for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(year, month, day);
+            const dayEvents = getEventsForDate(date);
+            const isCurrentDay = isToday(date);
+            const isSelectedDay = isSameDate(date, selectedDate);
+            
+            const dayElement = document.createElement('div');
+            let className = 'mini-day';
+            if (isCurrentDay) className += ' today';
+            if (dayEvents.length > 0) className += ' has-events';
+            if (isSelectedDay) className += ' selected';
+            
+            dayElement.className = className;
+            dayElement.textContent = day;
+            
+            if (dayEvents.length > 0) {
+                const dot = document.createElement('div');
+                dot.className = 'event-dot';
+                dayElement.appendChild(dot);
+            }
+            
+            dayElement.addEventListener('click', function() {
+                selectedDate = new Date(date);
+                renderMobileCalendar();
+                renderSelectedDayEvents();
+            });
+            
+            miniCalendar.appendChild(dayElement);
+        }
+    }
+    
+// Renderizar eventos do dia selecionado - FUNÇÃO COMPLETA
+function renderSelectedDayEvents() {
+    if (!mobileDayEvents) return;
+    
+    const dayEvents = getEventsForDate(selectedDate);
+    
+    // Atualizar título
+    if (selectedDateTitle) {
+        selectedDateTitle.textContent = formatDateLong(selectedDate);
+    }
+    
+    if (selectedDateSubtitle) {
+        selectedDateSubtitle.textContent = `${dayEvents.length} agendamento${dayEvents.length !== 1 ? 's' : ''}`;
+    }
+    
+    // Limpar eventos existentes
+    const existingEvents = mobileDayEvents.querySelectorAll('.mobile-event-card, .no-events');
+    existingEvents.forEach(el => el.remove());
+    
+    if (dayEvents.length === 0) {
+        const noEvents = document.createElement('div');
+        noEvents.className = 'no-events';
+        noEvents.innerHTML = `
+            <div class="no-events-icon">📅</div>
+            <p>Nenhum agendamento para este dia</p>
+        `;
+        mobileDayEvents.appendChild(noEvents);
+        return;
+    }
+    
+    // Renderizar eventos
+    dayEvents.forEach(event => {
+        const eventCard = document.createElement('div');
+        eventCard.className = `mobile-event-card status-${event.status}`;
+        eventCard.innerHTML = `
+            <div class="mobile-event-time">
+                <i class="bi bi-clock"></i>
+                ${formatTime(event.start_time)} - ${formatTime(event.end_time)}
+            </div>
+            <div class="mobile-event-title">${event.laboratory_name}</div>
+            <div class="mobile-event-details">
+                <div class="mobile-event-detail">
+                    <i class="bi bi-person"></i>
+                    ${event.professor_name}
+                </div>
+                <div class="mobile-event-detail">
+                    <i class="bi bi-book"></i>
+                    ${event.subject}
+                </div>
+            </div>
+            <div class="mobile-event-status">
+                <span class="status-badge ${event.status}">
+                    ${event.status === 'approved' ? 'Aprovado' : event.status === 'pending' ? 'Pendente' : 'Recusado'}
+                </span>
+            </div>
+        `;
+        
+        eventCard.addEventListener('click', function() {
+            showEventDetails(event.id);
+        });
+        
+        mobileDayEvents.appendChild(eventCard);
+    });
+}
+
     // Mostrar detalhes do evento
     function showEventDetails(eventId) {
         const event = events.find(e => e.id == eventId);
@@ -589,14 +979,16 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
-        // Mostrar o modal
         const modal = new bootstrap.Modal(document.getElementById('eventModal'));
         modal.show();
     }
-    
+
     // Inicialização
     updateMonthYear();
-    renderCalendar();
-});
+    renderDesktopCalendar();
+    renderMobileCalendar();
+    renderSelectedDayEvents();
+
+}); // Fecha o DOMContentLoaded
 </script>
 {% endblock %}
