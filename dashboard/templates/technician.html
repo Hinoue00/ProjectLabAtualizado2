@@ -13,6 +13,99 @@
     .stats-card:hover {
         transform: translateY(-5px);
     }
+
+    /* CORREÇÃO - Stats Cards do Dashboard Técnico */
+    .stats-card .card-body {
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        justify-content: center;
+        min-height: 140px;
+        position: relative;
+    }
+
+    /* Header com ícone - centralizado */
+    .stats-card .d-flex.justify-content-between {
+        width: 100%;
+        margin-bottom: 1rem;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        flex-direction: column !important;
+        gap: 0.75rem;
+    }
+
+    /* Ícone centralizado */
+    .stats-card .stats-icon {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-color-light));
+        color: white;
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin: 0 auto;
+    }
+
+    /* Badge - reposicionado para o canto superior direito */
+    .stats-card .badge {
+        position: absolute !important;
+        top: 1rem !important;
+        right: 1rem !important;
+        font-size: 0.7rem !important;
+        padding: 0.25rem 0.5rem !important;
+        margin: 0 !important;
+    }
+
+    /* Número centralizado */
+    .stats-card .stats-value {
+        font-size: 2.5rem !important;
+        font-weight: 700 !important;
+        color: var(--text-color) !important;
+        margin: 0.5rem 0 !important;
+        text-align: center !important;
+        line-height: 1 !important;
+    }
+
+    /* Label centralizado */
+    .stats-card .stats-label {
+        color: var(--text-muted) !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+        margin: 0 !important;
+        text-align: center !important;
+    }
+
+    /* Responsividade para mobile */
+    @media (max-width: 768px) {
+        .stats-card .card-body {
+            padding: 1.25rem;
+            min-height: 120px;
+        }
+
+        .stats-card .stats-icon {
+            width: 50px;
+            height: 50px;
+            font-size: 1.25rem;
+        }
+
+        .stats-card .stats-value {
+            font-size: 2rem !important;
+        }
+
+        .stats-card .stats-label {
+            font-size: 0.8rem !important;
+        }
+    }
+
+    /* Garantir posição relativa para o badge absoluto */
+    .stats-card {
+        position: relative;
+    }
     
     /* --- Estilos Modernizados do Calendário --- */
     
