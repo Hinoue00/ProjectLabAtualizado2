@@ -32,8 +32,7 @@ def technician_dashboard(request):
 
     # Filtrar agendamentos para a semana selecionada
     appointments_query = ScheduleRequest.objects.filter(
-        scheduled_date__range=[start_of_week, end_of_week],
-        status='approved'
+        scheduled_date__range=[start_of_week, end_of_week]
     )
 
     # Aplicar filtro de departamento se selecionado
@@ -57,7 +56,9 @@ def technician_dashboard(request):
                 'professor__last_name',
                 'laboratory__name',
                 'start_time',
-                'end_time'
+                'end_time',
+                'status',
+                'scheduled_date',
             ))
         })
 
@@ -94,6 +95,12 @@ def technician_dashboard(request):
     actual_end_of_week = actual_start_of_week + timedelta(days=6)
     prev_actual_start_of_week = actual_start_of_week - timedelta(days=7)
     prev_actual_end_of_week = actual_end_of_week - timedelta(days=7)
+
+    # Para estatísticas de uso real (mantém o filtro approved):
+    actual_week_stats = ScheduleRequest.objects.filter(
+        scheduled_date__range=[actual_start_of_week, actual_end_of_week],
+        status='approved'  # Mantém aqui pois são estatísticas de uso real
+    )
 
     current_actual_week_appointments = ScheduleRequest.objects.filter(
         scheduled_date__range=[actual_start_of_week, actual_end_of_week],
@@ -199,7 +206,6 @@ def professor_dashboard(request):
     week_appointments = ScheduleRequest.objects.filter(
         professor=request.user,
         scheduled_date__range=[start_of_week, end_of_week],
-        status='approved'
     ).select_related('laboratory')
 
     # Organize calendar data

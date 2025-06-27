@@ -20,40 +20,52 @@ def schedule_calendar(request):
     user = request.user
     today = timezone.now().date()
     
-    # Define o período para visualização (4 semanas)
-    start_date = today - timedelta(days=today.weekday())  # Início da semana atual
-    end_date = start_date + timedelta(days=28)  # 4 semanas a partir do início
+    # Define o período para visualização (mês atual + próximos meses)
+    start_date = today.replace(day=1) - timedelta(days=31)  # Mês anterior
+    end_date = today.replace(day=1) + timedelta(days=62)    # Próximos 2 meses
     
-    # Filtra agendamentos conforme o tipo de usuário
+    # Buscar TODOS os status de agendamentos
     if user.user_type == 'professor':
         # Para professores, mostrar apenas seus próprios agendamentos
         schedule_requests = ScheduleRequest.objects.filter(
             professor=user,
-            scheduled_date__range=[start_date, end_date],
-            status='approved'
-        )
+            scheduled_date__range=[start_date, end_date]
+        ).select_related('professor', 'laboratory')
     else:
         # Para laboratoristas, mostrar todos os agendamentos
         schedule_requests = ScheduleRequest.objects.filter(
-            scheduled_date__range=[start_date, end_date],
-            status='approved'
-        )
+            scheduled_date__range=[start_date, end_date]
+        ).select_related('professor', 'laboratory')
     
-    # Obtém todos os laboratórios disponíveis
+    # Obtém todos os laboratórios disponíveis para os filtros
     laboratories = Laboratory.objects.filter(is_active=True)
     
-    # Organiza as datas para o calendário
-    calendar_weeks = []
-    date_cursor = start_date
+    # Converter agendamentos para formato JSON - CAMPOS CORRETOS
+    events = []
+    for schedule in schedule_requests:
+        events.append({
+            'id': schedule.id,
+            'date': schedule.scheduled_date.strftime('%Y-%m-%d'),
+            'start_time': schedule.start_time.strftime('%H:%M'),
+            'end_time': schedule.end_time.strftime('%H:%M'),
+            'laboratory_id': schedule.laboratory.id,
+            'laboratory_name': schedule.laboratory.name,
+            'professor_name': schedule.professor.get_full_name(),
+            'subject': schedule.subject or 'Não informado',
+            'status': schedule.status,  # pending, approved, rejected
+            'description': schedule.description or '',
+            'number_of_students': schedule.number_of_students or 0,  # CAMPO CORRETO
+        })
     
-    # Gera 4 semanas
+    # Organiza as datas para o calendário (manter compatibilidade)
+    calendar_weeks = []
+    week_start = start_date
     for week in range(4):
         week_days = []
-        
-        # Gera 7 dias para cada semana
         for day in range(7):
-            current_date = date_cursor
-            date_cursor = date_cursor + timedelta(days=1)
+            current_date = week_start + timedelta(days=(week * 7) + day)
+            if current_date > end_date:
+                break
             
             # Filtra agendamentos para este dia
             day_schedules = schedule_requests.filter(scheduled_date=current_date)
@@ -66,12 +78,23 @@ def schedule_calendar(request):
                 'schedules': day_schedules
             })
         
-        calendar_weeks.append(week_days)
+        if week_days:
+            calendar_weeks.append(week_days)
+    
+    # Verificar se hoje é quinta ou sexta para mostrar botão de agendamento
+    is_scheduling_day = today.weekday() in [3, 4]  # 3=Thursday, 4=Friday
+    
+    # Obter mês e ano atual para o cabeçalho
+    current_month_year = today.strftime('%B %Y').title()
     
     context = {
         'calendar_weeks': calendar_weeks,
         'laboratories': laboratories,
+        'events': events,  # CRÍTICO: Esta era a variável que estava faltando!
+        'is_scheduling_day': is_scheduling_day,
         'today': today,
+        'current_month_year': current_month_year,
+        'user': user,
     }
     
     return render(request, 'calendar.html', context)
@@ -434,62 +457,90 @@ def edit_draft_schedule_request(request, draft_id):
 
 
 def calendar_data_api(request):
+    """API para dados do calendário via AJAX"""
     # Obter parâmetros da requisição
     week_offset = int(request.GET.get('week_offset', 0))
+    month_offset = int(request.GET.get('month_offset', 0))
     filter_labs = request.GET.getlist('labs[]', [])
+    filter_status = request.GET.get('status', 'all')
     
     # Determinar período de datas
     today = timezone.now().date()
-    start_date = today - timedelta(days=today.weekday())  # Início da semana atual
     
-    # Aplicar deslocamento de semanas
-    start_date = start_date + timedelta(weeks=week_offset)
-    end_date = start_date + timedelta(days=27)  # 4 semanas (28 dias)
+    # Se for navegação mensal
+    if month_offset != 0:
+        target_date = today.replace(day=1) + timedelta(days=32 * month_offset)
+        start_date = target_date.replace(day=1) - timedelta(days=31)
+        end_date = target_date.replace(day=1) + timedelta(days=62)
+    else:
+        start_date = today - timedelta(days=today.weekday())
+        start_date = start_date + timedelta(weeks=week_offset)
+        end_date = start_date + timedelta(days=27)
     
     # Construir filtro para laboratórios
     lab_filter = {}
     if filter_labs and 'all' not in filter_labs:
         lab_filter['laboratory__id__in'] = filter_labs
     
-    # Buscar agendamentos
+    # Buscar todos os agendamentos
     schedule_requests = ScheduleRequest.objects.filter(
         scheduled_date__range=[start_date, end_date],
         **lab_filter
     ).select_related('professor', 'laboratory')
     
+    # Se o usuário for professor, mostrar apenas seus agendamentos
+    if request.user.user_type == 'professor':
+        schedule_requests = schedule_requests.filter(professor=request.user)
+    
+    # Converter para formato JSON - CAMPOS CORRETOS
+    events = []
+    for schedule in schedule_requests:
+        # Aplicar filtro de status no frontend se necessário
+        if filter_status != 'all' and schedule.status != filter_status:
+            continue
+            
+        events.append({
+            'id': schedule.id,
+            'date': schedule.scheduled_date.strftime('%Y-%m-%d'),
+            'start_time': schedule.start_time.strftime('%H:%M'),
+            'end_time': schedule.end_time.strftime('%H:%M'),
+            'laboratory_id': schedule.laboratory.id,
+            'laboratory_name': schedule.laboratory.name,
+            'professor_name': schedule.professor.get_full_name(),
+            'subject': schedule.subject or 'Não informado',
+            'status': schedule.status,
+            'description': schedule.description or '',
+            'number_of_students': schedule.number_of_students or 0,  # CAMPO CORRETO
+        })
+    
     # Organizar dados por semanas e dias
     calendar_data = []
     
-    # Gerar 4 semanas
     current_date = start_date
     for week in range(4):
         week_data = []
         
-        # Gerar 7 dias para cada semana
         for day in range(7):
             day_schedules = []
             
             # Filtrar agendamentos para este dia
-            day_requests = schedule_requests.filter(scheduled_date=current_date)
+            day_requests = [e for e in events if e['date'] == current_date.strftime('%Y-%m-%d')]
             
             for request in day_requests:
                 day_schedules.append({
-                    'id': request.id,
-                    'professor_name': request.professor.get_full_name(),
-                    'laboratory_name': request.laboratory.name,
-                    'laboratory_id': request.laboratory.id,
-                    'start_time': request.start_time.strftime('%H:%M'),
-                    'end_time': request.end_time.strftime('%H:%M'),
-                    'subject': request.subject,
-                    'status': request.status
+                    'id': request['id'],
+                    'start_time': request['start_time'],
+                    'end_time': request['end_time'],
+                    'laboratory_name': request['laboratory_name'],
+                    'professor_name': request['professor_name'],
+                    'subject': request['subject'],
+                    'status': request['status'],
                 })
             
             week_data.append({
                 'date': current_date.strftime('%Y-%m-%d'),
-                'day': current_date.day,
+                'day_name': current_date.strftime('%a'),
                 'is_today': current_date == today,
-                'is_past': current_date < today,
-                'weekday': current_date.weekday(),
                 'schedules': day_schedules
             })
             
@@ -497,16 +548,12 @@ def calendar_data_api(request):
         
         calendar_data.append(week_data)
     
-    # Obter lista de laboratórios para o filtro
-    laboratories = Laboratory.objects.filter(is_active=True).values('id', 'name')
-    
     return JsonResponse({
-        'calendar_weeks': calendar_data,
-        'laboratories': list(laboratories),
-        'period': {
-            'start_date': start_date.strftime('%Y-%m-%d'),
-            'end_date': end_date.strftime('%Y-%m-%d')
-        }
+        'success': True,
+        'events': events,
+        'calendar_data': calendar_data,
+        'start_date': start_date.strftime('%Y-%m-%d'),
+        'end_date': end_date.strftime('%Y-%m-%d'),
     })
 
 
