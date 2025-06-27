@@ -185,49 +185,109 @@
     }
 
     .calendar-grid {
-        display: flex;
-        gap: 0.75rem;
-        min-width: fit-content;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr); /* 5 colunas iguais para os dias da semana */
+        gap: 1rem;
+    }
+
+    /* Responsividade */
+    @media (max-width: 1199px) {
+        .calendar-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
     }
 
     @media (max-width: 767px) {
+
         .calendar-grid {
-            display: flex !important;
-            gap: 0.75rem;
-            min-width: fit-content;
-            padding: 0 1rem;
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
         }
 
         .calendar-day {
-            flex: 0 0 280px;
-            scroll-snap-align: start;
-            min-height: 200px;
+            min-height: 120px;
         }
 
-        .calendar-nav {
-            display: grid !important;
-            grid-template-columns: 1fr auto 1fr;
-            gap: 0.5rem;
-            width: 100%;
-            position: static !important; /* Remove posicionamento absoluto */
-            bottom: auto !important;
-            right: auto !important;
-            z-index: auto !important;
+        .calendar-day .day-header {
+            padding: 0.5rem;
+        }
+        
+        .calendar-day .day-content {
+            padding: 0.5rem;
+        }
+        
+        .appointment-item {
+            padding: 0.5rem;
+            font-size: 0.8rem;
         }
     }
 
     .calendar-day {
+        background-color: var(--card-bg, white);
+        border: 1px solid var(--border-color, #dee2e6);
+        border-radius: 0.5rem;
         display: flex;
         flex-direction: column;
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        overflow: hidden;
-        background-color: var(--card-bg);
+        min-height: 150px;
+        transition: box-shadow 0.2s ease;
+    }
+
+    .calendar-day:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    [data-theme="dark"] .calendar-day:hover {
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.08);
     }
 
     .calendar-day.today {
         border-color: var(--primary-color);
         background-color: rgba(74, 111, 165, 0.05);
+    }
+
+    .calendar-day .day-header {
+        font-weight: 600;
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border-color, #dee2e6);
+        text-align: center;
+        background-color: rgba(0,0,0,0.02);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    [data-theme="dark"] .calendar-day .day-header {
+        background-color: rgba(255,255,255,0.03);
+    }
+
+    .calendar-day .day-name {
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+
+    .calendar-day .day-date {
+        font-size: 0.8rem;
+        color: var(--text-muted, #6c757d);
+    }
+
+    .calendar-day.today .day-header {
+        background-color: rgba(74, 111, 165, 0.1);
+        color: #4a6fa5;
+        border-bottom-color: #4a6fa5;
+    }
+
+    .calendar-day.today {
+        border-color: #4a6fa5;
+    }
+
+    .calendar-day .day-content {
+        padding: 0.75rem;
+        flex-grow: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
     }
 
     .day-header {
@@ -263,6 +323,77 @@
         cursor: pointer;
         transition: all 0.2s ease;
     }
+
+    /* Estilo dos Agendamentos */
+    .appointment-item {
+        padding: 0.6rem;
+        border-radius: 0.3rem;
+        background-color: rgba(74, 111, 165, 0.05);
+        border-left: 3px solid #4a6fa5;
+        font-size: 0.875rem;
+        transition: background-color 0.2s ease;
+    }
+
+    .appointment-item:hover {
+        background-color: rgba(74, 111, 165, 0.1);
+    }
+
+    .appointment-lab-name {
+        font-weight: 600;
+        color: var(--text-dark, #495057);
+        margin-bottom: 0.25rem;
+    }
+
+    .appointment-time {
+        font-size: 0.8rem;
+        color: var(--text-muted, #6c757d);
+        margin-bottom: 0.25rem;
+    }
+
+    .appointment-status .badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    /* Estado vazio */
+    .no-appointments {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100px;
+        color: var(--text-muted, #6c757d);
+        font-size: 0.875rem;
+    }
+
+    .no-appointments i {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        opacity: 0.5;
+    }
+
+    /* Status dos agendamentos */
+    .appointment-item.status-pending {
+        border-left-color: #ffc107;
+        background-color: rgba(255, 193, 7, 0.05);
+    }
+
+    .appointment-item.status-approved {
+        border-left-color: #28a745;
+        background-color: rgba(40, 167, 69, 0.05);
+    }
+
+    .appointment-item.status-completed {
+        border-left-color: #6c757d;
+        background-color: rgba(108, 117, 125, 0.05);
+    }
+
+    /* Loading state */
+    .loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
 
     @media (max-width: 767px) {
         .appointment-item {
@@ -612,13 +743,11 @@
 
     <!-- Dashboard Grid -->
     <div class="dashboard-grid">
-        <!-- Weekly Calendar with Mobile Scroll -->
         <div class="dashboard-card weekly-calendar-row">
             <div class="dashboard-card-header">
-                <h5 class="dashboard-card-title">
+                <h5 class="dashboard-card-title" id="calendar-title">
                     <i class="bi bi-calendar-week"></i>
-                    <span class="d-none d-sm-inline">Calendário Semanal</span>
-                    <span class="d-sm-none">Calendário Semanal</span>
+                    Calendário Semanal ({{ start_of_week|date:"d/m" }} - {{ end_of_week|date:"d/m/Y" }})
                 </h5>
                 <div class="calendar-nav">
                     <a href="#" id="prev-week-link" data-offset="-1" class="btn btn-sm btn-outline-secondary">
@@ -633,15 +762,12 @@
                 </div>
             </div>
             <div class="calendar-container">
-                <div class="calendar-scroll-wrapper" id="calendar-scroll">
-                    <div class="dashboard-card-content" id="calendar-body">
-                        {% include 'partials/calendar_week.html' with calendar_data=calendar_data %}
-                    </div>
-                </div>
-                <div class="mobile-nav-hint">
-                    <i class="bi bi-arrow-left-right"></i> Deslize para navegar
+                <div class="dashboard-card-content" id="calendar-body">
+                    {% include 'partials/calendar_week.html' with calendar_data=calendar_data %}
                 </div>
             </div>
+            <!-- Input hidden para controlar o offset da semana -->
+            <input type="hidden" id="week_offset_input" value="0">
         </div>
 
         <!-- Upcoming Classes -->
@@ -803,18 +929,42 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Calendar navigation with AJAX
     const calendarBody = document.getElementById('calendar-body');
+    const calendarTitle = document.getElementById('calendar-title');
+    const weekOffsetInput = document.getElementById('week_offset_input');
     const prevWeekLink = document.getElementById('prev-week-link');
     const todayLink = document.getElementById('today-link');
     const nextWeekLink = document.getElementById('next-week-link');
+
+    // Função para formatar data (dd/mm/yyyy)
+    function formatDate(isoDateString) {
+        if (!isoDateString) return '';
+        const date = new Date(isoDateString);
+        const userTimezoneOffset = date.getTimezoneOffset() * 60000;
+        const correctedDate = new Date(date.getTime() + userTimezoneOffset);
+
+        const day = String(correctedDate.getDate()).padStart(2, '0');
+        const month = String(correctedDate.getMonth() + 1).padStart(2, '0');
+        const year = correctedDate.getFullYear();
+        return `${day}/${month}/${year}`;
+    }
+
+    function formatDateShort(isoDateString) {
+        if (!isoDateString) return '';
+        const date = new Date(isoDateString);
+        const userTimezoneOffset = date.getTimezoneOffset() * 60000;
+        const correctedDate = new Date(date.getTime() + userTimezoneOffset);
+        const day = String(correctedDate.getDate()).padStart(2, '0');
+        const month = String(correctedDate.getMonth() + 1).padStart(2, '0');
+        return `${day}/${month}`;
+    }
     
     async function loadWeekData(weekOffset) {
         if (!calendarBody) return;
         
-        // Add loading state
-        calendarBody.classList.add('loading-skeleton');
-        
+        calendarBody.classList.add('loading'); // Adiciona feedback visual
+
         const url = `{% url 'professor_dashboard' %}?week_offset=${weekOffset}`;
-        
+
         try {
             const response = await fetch(url, {
                 method: 'GET',
@@ -823,42 +973,62 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Accept': 'application/json',
                 }
             });
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             const data = await response.json();
+
+            // Atualizar o conteúdo do calendário
             calendarBody.innerHTML = data.calendar_html;
-            
-            // Update navigation data attributes
-            if (prevWeekLink) prevWeekLink.dataset.offset = parseInt(weekOffset) - 1;
-            if (nextWeekLink) nextWeekLink.dataset.offset = parseInt(weekOffset) + 1;
-            
-            // Reset scroll position on mobile
-            if (calendarScroll && isMobile) {
-                calendarScroll.scrollLeft = 0;
-                calendarScroll.removeAttribute('data-scrolled');
+
+            // Atualizar o título do calendário
+            const startFormatted = formatDateShort(data.start_of_week);
+            const endFormatted = formatDate(data.end_of_week);
+            calendarTitle.innerHTML = `
+                <i class="bi bi-calendar-week"></i>
+                Calendário Semanal (${startFormatted} - ${endFormatted})
+            `;
+
+            // Atualizar o input hidden com o novo offset
+            if (weekOffsetInput) {
+                weekOffsetInput.value = weekOffset;
             }
-            
+
         } catch (error) {
-            console.error('Erro ao carregar calendário:', error);
-            calendarBody.innerHTML = '<div class="alert alert-danger">Erro ao carregar calendário.</div>';
+            console.error('Erro ao carregar dados do calendário:', error);
+            calendarBody.innerHTML = '<p class="text-danger text-center">Erro ao carregar calendário. Tente novamente.</p>';
         } finally {
-            calendarBody.classList.remove('loading-skeleton');
+            calendarBody.classList.remove('loading');
         }
     }
     
-    // Navigation event listeners
-    [prevWeekLink, todayLink, nextWeekLink].forEach(link => {
-        if (link) {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const offset = this.dataset.offset || 0;
-                loadWeekData(offset);
-            });
-        }
-    });
+    // Event Listeners para navegação do calendário
+    if (prevWeekLink) {
+        prevWeekLink.addEventListener('click', function(event) {
+            event.preventDefault();
+            const currentOffset = weekOffsetInput ? parseInt(weekOffsetInput.value) : 0;
+            const newOffset = currentOffset - 1;
+            loadWeekData(newOffset);
+        });
+    }
+
+    if (todayLink) {
+        todayLink.addEventListener('click', function(event) {
+            event.preventDefault();
+            loadWeekData(0);
+        });
+    }
+
+    if (nextWeekLink) {
+        nextWeekLink.addEventListener('click', function(event) {
+            event.preventDefault();
+            const currentOffset = weekOffsetInput ? parseInt(weekOffsetInput.value) : 0;
+            const newOffset = currentOffset + 1;
+            loadWeekData(newOffset);
+        });
+    }
     
     // Touch feedback for mobile
     if (isMobile) {
