@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import HttpResponse
 from django.utils import timezone
+from django.core.cache import cache
 from django.db.models import Count, Sum, Avg, F, Q
 from django.template.loader import render_to_string
 from accounts.views import is_technician
@@ -25,29 +26,53 @@ from datetime import datetime
 @login_required
 @user_passes_test(is_technician)
 def reports_dashboard(request):
-    # Recently generated reports
-    recent_reports = Report.objects.filter(created_by=request.user).order_by('-created_at')[:5]
+    # ✅ OTIMIZAÇÃO: Cache de dados que mudam pouco
+    cache_key = f"reports_dashboard_stats_{request.user.id}"
+    cached_stats = cache.get(cache_key)
     
-    # Quick stats
-    today = timezone.now().date()
-    this_month = today.replace(day=1)
+    if not cached_stats:
+        # ✅ OTIMIZAÇÃO: Aggregations em uma query só
+        today = timezone.now().date()
+        this_month = today.replace(day=1)
+        
+        # Combined stats query
+        combined_stats = {
+            # Laboratory stats
+            'total_labs': Laboratory.objects.count(),
+            'active_labs': Laboratory.objects.filter(is_active=True).count(),
+            
+            # Material stats  
+            'total_materials': Material.objects.count(),
+            'materials_in_alert': Material.objects.filter(
+                quantity__lte=F('minimum_stock')
+            ).count(),
+            
+            # Appointment stats for this month
+            'appointments_this_month': ScheduleRequest.objects.filter(
+                scheduled_date__gte=this_month,
+                status='approved'
+            ).count(),
+            
+            'pending_requests': ScheduleRequest.objects.filter(
+                status='pending'
+            ).count(),
+        }
+        
+        # Cache por 15 minutos (dados não mudam constantemente)
+        cache.set(cache_key, combined_stats, 60 * 15)
+        cached_stats = combined_stats
     
-    total_labs = Laboratory.objects.count()
-    total_materials = Material.objects.count()
-    materials_in_alert = Material.objects.filter(quantity__lte=F('minimum_stock')).count()
-    
-    appointments_this_month = ScheduleRequest.objects.filter(
-        scheduled_date__gte=this_month,
-        status='approved'
-    ).count()
+    # ✅ OTIMIZAÇÃO: Recent reports com limit
+    recent_reports = Report.objects.select_related(
+        'created_by'
+    ).filter(
+        created_by=request.user
+    ).order_by('-created_at')[:5]
     
     context = {
         'recent_reports': recent_reports,
-        'total_labs': total_labs,
-        'total_materials': total_materials,
-        'materials_in_alert': materials_in_alert,
-        'appointments_this_month': appointments_this_month,
-        'form': ReportFilterForm()
+        'form': ReportFilterForm(),
+        **cached_stats
     }
     
     return render(request, 'reports/dashboard.html', context)
