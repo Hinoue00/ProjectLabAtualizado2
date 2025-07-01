@@ -1408,124 +1408,263 @@
         }
     });
     
-// --- JavaScript para calendário dinâmico ---
-const calendarBody = document.getElementById('calendar-body');
-const calendarTitle = document.getElementById('calendar-title');
-const weekOffsetInput = document.getElementById('week_offset_input');
-const departmentSelect = document.getElementById('department-select');
-const prevWeekLink = document.getElementById('prev-week-link');
-const todayLink = document.getElementById('today-link');
-const nextWeekLink = document.getElementById('next-week-link');
+// ✅ AGUARDAR DOM READY
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Iniciando JavaScript do calendário...');
 
-// Função para formatar data (dd/mm/yyyy)
-function formatDate(isoDateString) {
-    if (!isoDateString) return '';
-    const date = new Date(isoDateString);
-    // Adiciona o offset do fuso horário local para evitar problemas de dia
-    const userTimezoneOffset = date.getTimezoneOffset() * 60000;
-    const correctedDate = new Date(date.getTime() + userTimezoneOffset);
+    // ✅ ELEMENTOS
+    const calendarBody = document.getElementById('calendar-body');
+    const calendarTitle = document.getElementById('calendar-title');
+    const weekOffsetInput = document.getElementById('week_offset_input');
+    const departmentSelect = document.getElementById('department-select');
 
-    const day = String(correctedDate.getDate()).padStart(2, '0');
-    const month = String(correctedDate.getMonth() + 1).padStart(2, '0'); // Meses são 0-indexed
-    const year = correctedDate.getFullYear();
-    return `${day}/${month}/${year}`;
-}
+    // ✅ DEBUG: Verificar se elementos existem
+    console.log('📋 Elementos encontrados:');
+    console.log('calendarBody:', !!calendarBody);
+    console.log('calendarTitle:', !!calendarTitle);
+    console.log('weekOffsetInput:', !!weekOffsetInput);
+    console.log('departmentSelect:', !!departmentSelect);
 
-function formatDateShort(isoDateString) {
-    if (!isoDateString) return '';
-    const date = new Date(isoDateString);
-    const userTimezoneOffset = date.getTimezoneOffset() * 60000;
-    const correctedDate = new Date(date.getTime() + userTimezoneOffset);
-    const day = String(correctedDate.getDate()).padStart(2, '0');
-    const month = String(correctedDate.getMonth() + 1).padStart(2, '0');
-    return `${day}/${month}`;
-}
+    // ✅ FUNÇÃO PARA FORMATAR DATAS
+    function formatDate(isoString) {
+        const date = new Date(isoString + 'T00:00:00');
+        return date.toLocaleDateString('pt-BR');
+    }
 
-async function loadWeekData(weekOffset, department) {
-    calendarBody.classList.add('loading'); // Adiciona feedback visual
+    function formatDateShort(isoString) {
+        const date = new Date(isoString + 'T00:00:00');
+        return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    }
 
-    const url = `{% url 'technician_dashboard' %}?week_offset=${weekOffset}&department=${department || 'all'}`;
-
-    try {
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest', // Sinaliza que é AJAX
-                'Accept': 'application/json',
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+    // ✅ FUNÇÃO PRINCIPAL DE CARREGAMENTO
+    async function loadWeekData(weekOffset, department = 'all') {
+        console.log(`📅 Carregando semana: offset=${weekOffset}, department=${department}`);
+        
+        if (!calendarBody) {
+            console.error('❌ calendarBody não encontrado!');
+            return;
         }
 
-        const data = await response.json();
+        // Loading state
+        calendarBody.innerHTML = `
+            <div class="d-flex justify-content-center align-items-center p-5">
+                <div class="spinner-border text-primary me-3" role="status"></div>
+                <span>Carregando calendário...</span>
+            </div>
+        `;
 
-        // Atualizar o conteúdo do calendário
-        calendarBody.innerHTML = data.calendar_html;
+        try {
+            const url = new URL(window.location.href);
+            url.searchParams.set('week_offset', weekOffset);
+            url.searchParams.set('department', department);
 
-        // Atualizar o título do calendário
-        const startFormatted = formatDateShort(data.start_of_week);
-        const endFormatted = formatDate(data.end_of_week);
-        calendarTitle.textContent = `Calendário Semanal (${startFormatted} - ${endFormatted})`;
+            console.log('📡 Fazendo requisição para:', url.toString());
 
-        // Atualizar o input hidden com o novo offset
-        weekOffsetInput.value = data.week_offset;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                },
+                credentials: 'same-origin'
+            });
 
-        // Atualizar os data-offset dos links de navegação
-        prevWeekLink.dataset.offset = data.prev_week_offset;
-        nextWeekLink.dataset.offset = data.next_week_offset;
+            console.log('📊 Status da resposta:', response.status);
 
-        // Atualizar o estado visual do select de departamento (caso a navegação o altere)
-        departmentSelect.value = department || 'all';
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
 
-    } catch (error) {
-        console.error('Erro ao carregar dados do calendário:', error);
-        // Adicionar feedback de erro para o usuário, se desejar
-        calendarBody.innerHTML = '<p class="text-danger text-center">Erro ao carregar calendário. Tente novamente.</p>';
-    } finally {
-        calendarBody.classList.remove('loading'); // Remove feedback visual
+            const data = await response.json();
+            console.log('✅ Dados recebidos:', data);
+
+            if (!data.success) {
+                throw new Error(data.message || 'Erro desconhecido');
+            }
+
+            // ✅ ATUALIZAR CALENDÁRIO
+            if (data.calendar_html) {
+                calendarBody.innerHTML = data.calendar_html;
+                console.log('✅ HTML do calendário atualizado');
+                
+                // Reativar event listeners dos modais
+                setupModalListeners();
+            }
+
+            // ✅ ATUALIZAR TÍTULO
+            if (calendarTitle && data.start_of_week && data.end_of_week) {
+                const startFormatted = formatDateShort(data.start_of_week);
+                const endFormatted = formatDate(data.end_of_week);
+                calendarTitle.textContent = `Calendário Semanal (${startFormatted} - ${endFormatted})`;
+                console.log('✅ Título atualizado');
+            }
+
+            // ✅ ATUALIZAR INPUT HIDDEN
+            if (weekOffsetInput) {
+                weekOffsetInput.value = weekOffset;
+                console.log('✅ Offset atualizado para:', weekOffset);
+            }
+
+            // ✅ ATUALIZAR SELECT
+            if (departmentSelect) {
+                departmentSelect.value = department;
+                console.log('✅ Departamento atualizado para:', department);
+            }
+
+        } catch (error) {
+            console.error('❌ Erro:', error);
+            
+            calendarBody.innerHTML = `
+                <div class="alert alert-danger text-center m-3">
+                    <h5><i class="bi bi-exclamation-triangle"></i> Erro ao carregar calendário</h5>
+                    <p class="mb-3">${error.message}</p>
+                    <button class="btn btn-outline-primary btn-sm" onclick="window.location.reload()">
+                        <i class="bi bi-arrow-clockwise"></i> Recarregar página
+                    </button>
+                </div>
+            `;
+        }
     }
-}
 
-// Event Listeners para navegação do calendário
-if (prevWeekLink) {
-    prevWeekLink.addEventListener('click', function(event) {
+    // ✅ CONFIGURAR EVENT LISTENERS DOS MODAIS
+    function setupModalListeners() {
+        const modalItems = document.querySelectorAll('.appointment-item[data-bs-toggle="modal"]');
+        console.log(`🔗 Configurando ${modalItems.length} event listeners de modal`);
+    }
+
+    // ✅ EVENT LISTENERS DE NAVEGAÇÃO (Event Delegation)
+    document.addEventListener('click', function(event) {
+        const target = event.target.closest('a[id$="-link"]');
+        if (!target) return;
+
         event.preventDefault();
-        const offset = this.dataset.offset;
+        
+        const currentOffset = weekOffsetInput ? parseInt(weekOffsetInput.value) || 0 : 0;
         const department = departmentSelect ? departmentSelect.value : 'all';
-        loadWeekData(offset, department);
+        let newOffset = currentOffset;
+
+        if (target.id === 'prev-week-link') {
+            newOffset = currentOffset - 1;
+            console.log('⬅️ Semana anterior clicada');
+        } else if (target.id === 'today-link') {
+            newOffset = 0;
+            console.log('🏠 Hoje clicado');
+        } else if (target.id === 'next-week-link') {
+            newOffset = currentOffset + 1;
+            console.log('➡️ Próxima semana clicada');
+        }
+
+        loadWeekData(newOffset, department);
     });
-}
 
-if (todayLink) {
-    todayLink.addEventListener('click', function(event) {
-        event.preventDefault();
-        const offset = this.dataset.offset;
-        const department = departmentSelect ? departmentSelect.value : 'all';
-        loadWeekData(offset, department);
+    // ✅ EVENT LISTENER DO FILTRO DE DEPARTAMENTO
+    if (departmentSelect) {
+        departmentSelect.addEventListener('change', function() {
+            const currentOffset = weekOffsetInput ? parseInt(weekOffsetInput.value) || 0 : 0;
+            console.log('🏢 Departamento alterado para:', this.value);
+            loadWeekData(currentOffset, this.value);
+        });
+    }
+
+    // ✅ EVENT LISTENER DO MODAL (Bootstrap)
+    document.addEventListener('show.bs.modal', function(event) {
+        if (event.target.id === 'appointmentModal') {
+            const button = event.relatedTarget;
+            if (!button) return;
+
+            console.log('📅 Abrindo modal de agendamento');
+
+            // Extrair dados
+            const data = {
+                professor: button.getAttribute('data-professor') || 'Não informado',
+                laboratory: button.getAttribute('data-laboratory') || 'Não informado',
+                subject: button.getAttribute('data-subject') || 'Não informado',
+                time: button.getAttribute('data-time') || 'Não informado',
+                date: button.getAttribute('data-date') || 'Não informado',
+                students: button.getAttribute('data-students') || 'Não informado',
+                materials: button.getAttribute('data-materials') || 'Não especificado',
+                description: button.getAttribute('data-description') || 'Sem descrição',
+                status: button.getAttribute('data-status') || 'Não informado'
+            };
+
+            // Preencher modal
+            const fields = [
+                'modal-professor', 'modal-laboratory', 'modal-subject',
+                'modal-time', 'modal-date', 'modal-students',
+                'modal-materials', 'modal-description'
+            ];
+
+            fields.forEach((fieldId, index) => {
+                const element = document.getElementById(fieldId);
+                const key = Object.keys(data)[index];
+                if (element && data[key]) {
+                    element.textContent = data[key];
+                }
+            });
+
+            // Status badge
+            const statusBadge = document.getElementById('modal-status-badge');
+            if (statusBadge) {
+                statusBadge.textContent = data.status;
+                statusBadge.className = 'badge';
+                
+                if (button.classList.contains('status-approved')) {
+                    statusBadge.classList.add('bg-success');
+                } else if (button.classList.contains('status-pending')) {
+                    statusBadge.classList.add('bg-warning');
+                } else {
+                    statusBadge.classList.add('bg-danger');
+                }
+            }
+        }
     });
-}
 
-if (nextWeekLink) {
-    nextWeekLink.addEventListener('click', function(event) {
-        event.preventDefault();
-        const offset = this.dataset.offset;
-        const department = departmentSelect ? departmentSelect.value : 'all';
-        loadWeekData(offset, department);
-    });
-}
-
-// Event listener para o dropdown de departamento
-if (departmentSelect) {
-    departmentSelect.addEventListener('change', function(event) {
-        const currentOffset = weekOffsetInput ? weekOffsetInput.value : '0';
-        loadWeekData(currentOffset, this.value);
-    });
-}
-
-// --- Fim dos Event Listeners ---
-
-// ... (Restante do seu código JavaScript, se houver) ...
+    // ✅ INICIALIZAÇÃO
+    console.log('✅ JavaScript do calendário carregado com sucesso!');
+    setupModalListeners();
+});
 </script>
+
+<!-- ✅ CSS DE APOIO -->
+<style>
+.calendar-body {
+    min-height: 200px;
+}
+
+.appointment-item {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.appointment-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.spinner-border {
+    width: 2rem;
+    height: 2rem;
+}
+
+/* Ensure navigation buttons are visible */
+.calendar-nav a {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.375rem;
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    transition: all 0.2s ease;
+}
+
+.calendar-nav a:hover {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: white;
+    text-decoration: none;
+}
+</style>
 {% endblock %}

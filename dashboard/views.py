@@ -12,6 +12,7 @@ from django.http import JsonResponse # Importar JsonResponse
 from django.template.loader import render_to_string # Para renderizar partes do template
 from django.db.models import Count
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth
+from django.core.cache import cache
 
 
 @login_required
@@ -26,7 +27,7 @@ def technician_dashboard(request):
     start_of_week = today - timedelta(days=today.weekday()) + timedelta(weeks=week_offset)
     end_of_week = start_of_week + timedelta(days=4)
     
-    # ✅ OTIMIZAÇÃO: Query única para appointments com todos os dados necessários
+    # Query appointments
     appointments_base = ScheduleRequest.objects.select_related(
         'professor', 
         'laboratory',
@@ -40,60 +41,13 @@ def technician_dashboard(request):
             laboratory__department=department_filter
         )
     
-    # Execute query uma vez e reutilizar os dados
     current_week_appointments = list(appointments_base)
     
-    # 1. Appointments pendentes (GLOBALMENTE, não só da semana)
-    pending_appointments_count = ScheduleRequest.objects.filter(status='pending').count()
-    
-    # 2. Aprovações pendentes (usuários aguardando aprovação)
-    from accounts.models import User
-    pending_approvals = User.objects.filter(is_approved=False, is_active=True).count()
-    
-    # 3. Materiais em alerta
-    from inventory.models import Material
-    materials_in_alert = Material.objects.filter(quantity__lte=F('minimum_stock'))
-    
-    # 4. Professores ativos
-    active_professors = User.objects.filter(user_type='professor', is_approved=True, is_active=True)
-    
-    # 5. Calcular mudança percentual (agendamentos semana atual vs anterior)
-    last_week_start = start_of_week - timedelta(weeks=1)
-    last_week_end = end_of_week - timedelta(weeks=1)
-    
-    last_week_count = ScheduleRequest.objects.filter(
-        scheduled_date__range=[last_week_start, last_week_end],
-        status='approved'
-    ).count()
-    
-    current_count = len([apt for apt in current_week_appointments if apt.status == 'approved'])
-    
-    if last_week_count > 0:
-        percentage_change = ((current_count - last_week_count) / last_week_count) * 100
-    else:
-        percentage_change = 100 if current_count > 0 else 0
-    
-    stats = {
-        # Count appointments by status para a semana atual
-        'pending_requests': sum(1 for apt in current_week_appointments if apt.status == 'pending'),
-        'approved_requests': sum(1 for apt in current_week_appointments if apt.status == 'approved'),
-        'total_requests': len(current_week_appointments),
-    }
-    
-    # ✅ OTIMIZAÇÃO: Material e lab stats em uma query
-    materials_stats = Material.objects.aggregate(
-        total_materials=Count('id'),
-        materials_in_alert_count=Count('id', filter=Q(quantity__lte=F('minimum_stock'))),
-        total_laboratories=Count('laboratory', distinct=True)
-    )
-    
-    stats.update(materials_stats)
-    
-    # Build calendar data efficiently
+    # Build calendar data
     calendar_data = []
     appointments_by_date = {}
     
-    # Group appointments by date for O(1) lookup
+    # Group appointments by date
     for apt in current_week_appointments:
         date_key = apt.scheduled_date
         if date_key not in appointments_by_date:
@@ -112,19 +66,93 @@ def technician_dashboard(request):
             'appointments_count': len(day_appointments)
         })
     
-    # ✅ OTIMIZAÇÃO: Recent activity com limit para não sobrecarregar
+    # ✅ CHECK FOR AJAX REQUEST
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    
+    if is_ajax:
+        try:
+            # Render calendar partial template
+            calendar_html = render_to_string(
+                'partials/calendar_week_technician.html',
+                {
+                    'calendar_data': calendar_data,
+                    'today': today,
+                },
+                request=request
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'calendar_html': calendar_html,
+                'start_of_week': start_of_week.isoformat(),
+                'end_of_week': end_of_week.isoformat(),
+                'week_offset': week_offset,
+                'prev_week_offset': week_offset - 1,
+                'next_week_offset': week_offset + 1,
+            })
+            
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"AJAX Calendar Error: {str(e)}")
+            
+            return JsonResponse({
+                'success': False,
+                'error': 'Erro ao carregar calendário',
+                'message': str(e)
+            }, status=500)
+    
+    # Non-AJAX request - full page load
+    pending_appointments_count = ScheduleRequest.objects.filter(status='pending').count()
+    pending_approvals = User.objects.filter(is_approved=False, is_active=True).count()
+    materials_in_alert = Material.objects.filter(quantity__lte=F('minimum_stock'))
+    materials_in_alert_count = materials_in_alert.count()
+    active_professors = User.objects.filter(user_type='professor', is_approved=True, is_active=True)
+    active_professors_count = active_professors.count()
+    
+    # Calculate percentage change
+    last_week_start = start_of_week - timedelta(weeks=1)
+    last_week_end = end_of_week - timedelta(weeks=1)
+    
+    last_week_count = ScheduleRequest.objects.filter(
+        scheduled_date__range=[last_week_start, last_week_end],
+        status='approved'
+    ).count()
+    
+    current_count = len([apt for apt in current_week_appointments if apt.status == 'approved'])
+    
+    if last_week_count > 0:
+        percentage_change = ((current_count - last_week_count) / last_week_count) * 100
+    else:
+        percentage_change = 100 if current_count > 0 else 0
+    
+    # Stats
+    stats = {
+        'pending_requests': sum(1 for apt in current_week_appointments if apt.status == 'pending'),
+        'approved_requests': sum(1 for apt in current_week_appointments if apt.status == 'approved'),
+        'total_requests': len(current_week_appointments),
+    }
+    
+    materials_stats = Material.objects.aggregate(
+        total_materials=Count('id'),
+        materials_in_alert_count=Count('id', filter=Q(quantity__lte=F('minimum_stock'))),
+        total_laboratories=Count('laboratory', distinct=True)
+    )
+    
+    stats.update(materials_stats)
+    
     recent_requests = ScheduleRequest.objects.select_related(
         'professor', 'laboratory'
-    ).order_by('-request_date')[:10]  # Limitar a 10 mais recentes
+    ).order_by('-request_date')[:10]
     
-    # ✅ OTIMIZAÇÃO: Departments list cached (dados raramente mudam)
+    # Get departments
     from django.core.cache import cache
     departments = cache.get('departments_list')
     if not departments:
         departments = Laboratory.objects.values_list(
             'department', flat=True
         ).distinct().order_by('department')
-        cache.set('departments_list', list(departments), 60 * 60)  # Cache por 1 hora
+        cache.set('departments_list', list(departments), 60 * 60)
     
     context = {
         'calendar_data': calendar_data,
@@ -139,15 +167,17 @@ def technician_dashboard(request):
         'stats': stats,
         'today': today,
         
-        # ✅ CORREÇÃO: TODAS as variáveis que o template espera
+        # Stats for template
         'pending_appointments': pending_appointments_count,
         'pending_approvals': pending_approvals,
         'materials_in_alert': materials_in_alert,
+        'materials_in_alert_count': materials_in_alert_count,
         'active_professors': active_professors,
+        'active_professors_count': active_professors_count,
         'current_count': current_count,
         'percentage_change': percentage_change,
         
-        # Para compatibilidade com template existente
+        # Compatibility
         'start_of_week': start_of_week,
         'end_of_week': end_of_week,
         'current_department': department_filter,
