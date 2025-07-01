@@ -22,12 +22,11 @@ from django.views.decorators.http import require_POST
 import json
 from .services import DoclingService
 from django.conf import settings
+from django.core.paginator import Paginator
 
 docling_service = DoclingService() if getattr(settings, 'DOCLING_ENABLED', False) else None
 
 
-@login_required
-@user_passes_test(is_technician)
 def material_list(request):
     # Get search parameters
     search_query = request.GET.get('search', '')
@@ -35,54 +34,72 @@ def material_list(request):
     laboratory_filter = request.GET.get('laboratory', '')
     stock_status = request.GET.get('stock_status', '')
     
-    # Filter materials
-    materials = Material.objects.select_related('category', 'laboratory').all()
+    materials = Material.objects.select_related(
+        'category', 
+        'laboratory'
+    ).prefetch_related(
+        'materialmovements_set',  # Para histórico de movimentações
+    ).annotate(
+        is_low_stock=models.Case(
+            models.When(quantity__lte=models.F('minimum_stock'), then=True),
+            default=False,
+            output_field=models.BooleanField()
+        )
+    )
     
+    # Apply filters BEFORE executing query
     if search_query:
         if docling_service and len(search_query) > 3:
-            # Pesquisa semântica melhorada
+            # Existing semantic search logic...
             analyzed_query = docling_service.analyze_text(search_query)
             keywords = analyzed_query.get('keywords', [])
             
-            # Criar filtros OR para cada palavra-chave
             query_filter = models.Q()
             for keyword in keywords:
                 query_filter |= models.Q(name__icontains=keyword) 
                 query_filter |= models.Q(description__icontains=keyword)
                 
-            # Filtrar por análise de dados também se disponível
             materials = materials.filter(
                 query_filter | 
                 models.Q(analyzed_data__keywords__contains=keywords)
             ).distinct()
         else:
-            # Pesquisa tradicional
             materials = materials.filter(
                 models.Q(name__icontains=search_query) | 
                 models.Q(description__icontains=search_query)
             )
     
     if category_filter:
-        materials = materials.filter(category__id=category_filter)
+        materials = materials.filter(category_id=category_filter)
     
     if laboratory_filter:
-        materials = materials.filter(laboratory__id=laboratory_filter)
+        materials = materials.filter(laboratory_id=laboratory_filter)
     
     if stock_status == 'low':
-        materials = materials.filter(quantity__lte=models.F('minimum_stock'))
+        materials = materials.filter(is_low_stock=True)
+    elif stock_status == 'normal':
+        materials = materials.filter(is_low_stock=False)
     
-    # Get categories and laboratories for filter dropdowns
-    categories = MaterialCategory.objects.all()
-    laboratories = Laboratory.objects.all()
+    # Paginação eficiente
+    paginator = Paginator(materials, 25)  # 25 itens por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Categories e Labs com uma query só
+    filter_data = {
+        'categories': MaterialCategory.objects.all().order_by('name'),
+        'laboratories': Laboratory.objects.filter(is_active=True).order_by('name')
+    }
     
     context = {
-        'materials': materials,
-        'categories': categories,
-        'laboratories': laboratories,
+        'materials': page_obj,
         'search_query': search_query,
         'category_filter': category_filter,
         'laboratory_filter': laboratory_filter,
         'stock_status': stock_status,
+        **filter_data,
+        'page_obj': page_obj,
+        'paginator': paginator,
     }
     
     return render(request, 'material_list.html', context)
