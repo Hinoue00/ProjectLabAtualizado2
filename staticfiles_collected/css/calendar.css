@@ -1,0 +1,374 @@
+/* =============================================================================
+   CALENDAR STYLES - LabConnect Dashboard
+   ============================================================================= */
+
+/* === Calendar Header === */
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-large);
+    padding-bottom: var(--spacing-medium);
+    border-bottom: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    gap: var(--spacing-medium);
+    min-height: 60px; /* Altura mínima fixa */
+}
+
+.calendar-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-color);
+    flex: 1 1 300px; /* Flex grow, shrink, basis */
+    min-width: 250px;
+}
+
+/* === Department Filter === */
+.department-filter-form {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-small);
+    flex: 0 0 auto; /* Não cresce nem encolhe */
+    order: 2; /* Sempre no meio */
+}
+
+.department-filter-form label {
+    margin-bottom: 0;
+    font-weight: 500;
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.department-filter-form select {
+    min-width: 150px;
+    font-size: var(--font-size-sm);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    padding: 0.375rem 0.75rem;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+/* === Calendar Navigation === */
+.calendar-nav {
+    display: flex;
+    gap: var(--spacing-small);
+    flex: 0 0 auto; /* Não cresce nem encolhe */
+    order: 3; /* Sempre à direita */
+    align-items: center;
+}
+
+.calendar-nav a,
+.calendar-nav button {
+    display: inline-flex !important;
+    align-items: center;
+    text-decoration: none;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-muted);
+    background-color: var(--card-bg);
+    transition: var(--transition-normal);
+    font-size: var(--font-size-sm);
+    gap: 0.5rem;
+    white-space: nowrap;
+    min-height: 38px; /* Altura consistente */
+}
+
+.calendar-nav a:hover,
+.calendar-nav button:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.calendar-nav a#today-link {
+    font-weight: 500;
+    color: var(--text-color);
+    background-color: var(--primary-color-light);
+}
+
+.calendar-nav a#today-link:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.calendar-nav i {
+    font-size: 1rem;
+}
+
+/* === Calendar Grid === */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); /* 5 colunas para Seg-Sex */
+    gap: 1px;
+    background-color: var(--border-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    min-height: 400px;
+}
+
+.calendar-day {
+    background-color: var(--card-bg);
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    transition: var(--transition-normal);
+    border-radius: 0; /* Remove border radius individual */
+}
+
+.calendar-day:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    z-index: 1;
+    position: relative;
+}
+
+[data-theme="dark"] .calendar-day:hover {
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.08);
+}
+
+/* Day Header */
+.day-header {
+    background-color: var(--body-bg);
+    padding: var(--spacing-small);
+    border-bottom: 1px solid var(--border-color);
+    text-align: center;
+    flex-shrink: 0;
+}
+
+[data-theme="dark"] .day-header {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.day-name {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.day-number {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-top: 0.25rem;
+}
+
+/* Today Highlight */
+.calendar-day.today .day-header {
+    background-color: var(--primary-color-light);
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.calendar-day.today {
+    background-color: rgba(var(--primary-rgb), 0.05);
+    border: 2px solid var(--primary-color);
+}
+
+/* Day Content */
+.day-content {
+    flex: 1;
+    padding: var(--spacing-small);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    overflow-y: auto;
+}
+
+/* Remove old weekday styling since it's not being used */
+.calendar-weekday {
+    display: none;
+}
+
+/* === Calendar Body === */
+.calendar-body {
+    min-height: 200px;
+    transition: var(--transition-slow);
+}
+
+.calendar-body.loading {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.day-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+/* === Appointment Items === */
+.appointment-item {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--primary-color);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+    cursor: pointer;
+    transition: var(--transition-normal);
+    font-size: var(--font-size-xs);
+}
+
+.appointment-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: var(--primary-color);
+}
+
+.appointment-item.status-approved {
+    border-left-color: var(--status-success);
+}
+
+.appointment-item.status-pending {
+    border-left-color: var(--status-warning);
+}
+
+.appointment-item.status-rejected {
+    border-left-color: var(--status-danger);
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .appointment-item:hover {
+    background-color: rgba(var(--primary-rgb), 0.25);
+}
+
+/* === Appointment Details === */
+.appointment-details {
+    line-height: 1.4;
+}
+
+.appointment-professor {
+    font-weight: 500;
+    color: var(--text-color);
+    font-size: var(--font-size-xs);
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.appointment-lab {
+    color: var(--text-muted);
+    font-size: var(--font-size-xs);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.appointment-time {
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: var(--font-size-xs);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.appointment-status {
+    text-align: right;
+}
+
+.appointment-status .badge {
+    font-size: 0.65rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* === Empty State === */
+.no-appointments {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    text-align: center;
+}
+
+.no-appointments i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.6;
+}
+
+/* === Modal Styles === */
+.detail-group {
+    margin-bottom: var(--spacing-large);
+}
+
+.detail-label {
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.detail-value {
+    color: var(--text-color);
+    font-size: var(--font-size-base);
+    margin: 0;
+    padding: 0.5rem;
+    background-color: var(--body-bg);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+}
+
+/* === Responsive Design === */
+@media (max-width: 768px) {
+    .calendar-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-xs);
+    }
+    
+    .calendar-day {
+        min-height: 120px;
+        margin-bottom: var(--spacing-xs);
+        border-radius: var(--border-radius);
+    }
+    
+    .calendar-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-medium);
+    }
+    
+    .calendar-nav {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .department-filter-form {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 576px) {
+    .appointment-item {
+        padding: var(--spacing-xs);
+        font-size: 0.7rem;
+    }
+    
+    .calendar-day {
+        padding: var(--spacing-xs);
+        min-height: 100px;
+    }
+    
+    .day-header {
+        padding: var(--spacing-xs);
+    }
+}

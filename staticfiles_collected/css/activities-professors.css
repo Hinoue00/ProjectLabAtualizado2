@@ -1,0 +1,321 @@
+/* =============================================================================
+   ACTIVITIES & PROFESSORS STYLES - LabConnect Dashboard
+   ============================================================================= */
+
+/* === Recent Activity List === */
+.recent-activity-list {
+    padding: 0;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.recent-activity-list.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color-light) transparent;
+}
+
+.activity-item {
+    padding: var(--spacing-medium) var(--spacing-large);
+    border-bottom: 1px solid var(--border-color);
+    transition: var(--transition-normal);
+    cursor: pointer;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-item:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+    transform: translateX(4px);
+}
+
+[data-theme="dark"] .activity-item:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* === Activity Content === */
+.activity-title {
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-xs);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.activity-details {
+    margin-top: var(--spacing-xs);
+}
+
+.activity-details p {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+    line-height: var(--line-height-base);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.activity-details i {
+    width: 1em;
+    text-align: center;
+    color: var(--primary-color);
+    flex-shrink: 0;
+}
+
+.activity-date {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted-light);
+    text-align: right;
+    margin-top: var(--spacing-xs);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.2rem;
+}
+
+/* === Professors List === */
+.professor-list {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.professor-list.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color-light) transparent;
+}
+
+.professor-list-item {
+    display: flex;
+    align-items: center;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--border-color-light);
+    font-size: var(--font-size-sm);
+    transition: var(--transition-normal);
+}
+
+.professor-list-item:last-child {
+    border-bottom: none;
+}
+
+.professor-list-item:hover {
+    background-color: var(--primary-color-light);
+    border-radius: var(--border-radius-sm);
+    padding-left: var(--spacing-xs);
+    padding-right: var(--spacing-xs);
+}
+
+/* === Professor Info === */
+.professor-list-item i.bi-person-circle {
+    color: var(--primary-color);
+    margin-right: var(--spacing-small);
+    font-size: 1.1rem;
+    width: 1.2em;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.professor-info {
+    flex-grow: 1;
+    line-height: 1.4;
+}
+
+.professor-name {
+    font-weight: 600;
+    color: var(--text-color);
+    display: block;
+    margin-bottom: 0.1rem;
+}
+
+.professor-contact {
+    color: var(--text-muted);
+    font-size: var(--font-size-xs);
+    display: block;
+    margin-top: 0.1rem;
+}
+
+.professor-contact i {
+    font-size: 0.9rem;
+    margin-right: 0.4rem;
+    color: var(--text-muted);
+    width: 1em;
+    text-align: center;
+}
+
+/* === Card Footer Links === */
+.card-footer-link {
+    display: block;
+    text-align: center;
+    padding: var(--spacing-small) var(--spacing-large);
+    background-color: rgba(0, 0, 0, 0.02);
+    border-top: 1px solid var(--border-color);
+    font-weight: 500;
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: var(--transition-normal);
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+[data-theme="dark"] .card-footer-link {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.card-footer-link:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: var(--primary-color-dark);
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+[data-theme="dark"] .card-footer-link:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.card-footer-link i {
+    margin-right: var(--spacing-xs);
+}
+
+/* === Pending Requests Container === */
+.pending-requests-container {
+    max-height: 300px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color-light) transparent;
+    border-radius: var(--border-radius-sm);
+}
+
+.pending-requests-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.pending-requests-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.pending-requests-container::-webkit-scrollbar-thumb {
+    background-color: var(--primary-color-light);
+    border-radius: 3px;
+}
+
+.pending-requests-container::-webkit-scrollbar-thumb:hover {
+    background-color: var(--primary-color);
+}
+
+/* === Status Indicators === */
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-xs);
+    padding: 0.2rem 0.4rem;
+    border-radius: var(--border-radius-sm);
+    font-weight: 500;
+}
+
+.status-indicator.approved {
+    background-color: var(--bs-success-bg-subtle, rgba(25, 135, 84, 0.1));
+    color: var(--bs-success-text-emphasis, #0a3622);
+}
+
+.status-indicator.pending {
+    background-color: var(--bs-warning-bg-subtle, rgba(255, 193, 7, 0.1));
+    color: var(--bs-warning-text-emphasis, #664d03);
+}
+
+.status-indicator.rejected {
+    background-color: var(--bs-danger-bg-subtle, rgba(220, 53, 69, 0.1));
+    color: var(--bs-danger-text-emphasis, #58151c);
+}
+
+/* === Empty States === */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl);
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-medium);
+    opacity: 0.5;
+}
+
+.empty-state h5 {
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-xs);
+}
+
+.empty-state p {
+    font-size: var(--font-size-sm);
+    margin: 0;
+}
+
+/* === Activity Type Icons === */
+.activity-icon {
+    width: 2rem;
+    height: 2rem;
+    background: var(--primary-color-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: var(--spacing-sm);
+    flex-shrink: 0;
+}
+
+.activity-icon i {
+    color: var(--primary-color);
+    font-size: 0.9rem;
+}
+
+/* === Responsive Adjustments === */
+@media (max-width: 768px) {
+    .professor-list {
+        max-height: 120px;
+    }
+    
+    .recent-activity-list {
+        max-height: 250px;
+    }
+    
+    .activity-item {
+        padding: var(--spacing-sm) var(--spacing-medium);
+    }
+    
+    .professor-list-item {
+        padding: 0.4rem 0;
+    }
+}
+
+@media (max-width: 576px) {
+    .activity-title {
+        font-size: var(--font-size-xs);
+    }
+    
+    .activity-details p {
+        font-size: 0.7rem;
+    }
+    
+    .professor-name {
+        font-size: var(--font-size-xs);
+    }
+    
+    .professor-contact {
+        font-size: 0.65rem;
+    }
+    
+    .card-footer-link {
+        padding: var(--spacing-xs) var(--spacing-medium);
+        font-size: var(--font-size-xs);
+    }
+}
