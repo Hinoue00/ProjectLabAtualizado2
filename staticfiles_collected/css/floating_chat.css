@@ -1,0 +1,330 @@
+/* static/css/floating_chat.css */
+.rafa-chat-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 350px;
+    height: 500px;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.rafa-chat-container.closed {
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.rafa-chat-container.minimized {
+    width: 200px; /* Substitua pelo valor desejado - atualmente 350px */
+    height: 50px; /* Já está com altura reduzida */
+}
+
+.rafa-chat-header {
+    background-color: #4a6fa5;
+    color: white;
+    padding: 12px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.rafa-chat-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+}
+
+.rafa-logo {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+}
+
+.rafa-chat-controls {
+    display: flex;
+    gap: 5px;
+}
+
+.rafa-control-btn {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.rafa-control-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.rafa-chat-messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background-color: #f5f7fb;
+}
+
+.rafa-message {
+    display: flex;
+    margin-bottom: 10px;
+    max-width: 85%;
+}
+
+.user-message {
+    margin-left: auto;
+    flex-direction: row-reverse;
+}
+
+.assistant-message {
+    margin-right: auto;
+}
+
+.rafa-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 8px;
+    background-color: #4a6fa5;
+    color: white;
+    font-size: 14px;
+}
+
+.user-message .rafa-avatar {
+    background-color: #6c757d;
+}
+
+.rafa-text {
+    padding: 10px 15px;
+    border-radius: 18px;
+    line-height: 1.4;
+    font-size: 14px;
+}
+
+.user-message .rafa-text {
+    background-color: #4a6fa5;
+    color: white;
+    border-top-right-radius: 4px;
+}
+
+.assistant-message .rafa-text {
+    background-color: white;
+    border: 1px solid #e1e4e8;
+    border-top-left-radius: 4px;
+}
+
+.rafa-chat-form {
+    display: flex;
+    padding: 10px 15px;
+    background-color: white;
+    border-top: 1px solid #e1e4e8;
+}
+
+.rafa-chat-form input {
+    flex-grow: 1;
+    padding: 8px 12px;
+    border: 1px solid #e1e4e8;
+    border-radius: 20px;
+    margin-right: 8px;
+    font-size: 14px;
+}
+
+.rafa-chat-form button {
+    background-color: #4a6fa5;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.rafa-chat-form button:hover {
+    background-color: #3a5985;
+}
+
+.rafa-chat-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background-color: #4a6fa5;
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s;
+}
+
+.rafa-chat-toggle:hover {
+    transform: scale(1.1);
+}
+
+.rafa-toggle-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    margin: 0 10px;
+}
+
+.typing-indicator span {
+    height: 8px;
+    width: 8px;
+    background-color: #9E9EA1;
+    border-radius: 50%;
+    display: block;
+    margin: 0 1px;
+    opacity: 0.4;
+    animation: typing 1s infinite;
+}
+
+.typing-indicator span:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing {
+    0% { opacity: 0.4; }
+    50% { opacity: 1; }
+    100% { opacity: 0.4; }
+}
+
+/* Tema escuro */
+[data-theme="dark"] .rafa-chat-container {
+    background-color: #343a40;
+    border: 1px solid #495057;
+}
+
+[data-theme="dark"] .rafa-chat-messages {
+    background-color: #212529;
+}
+
+[data-theme="dark"] .assistant-message .rafa-text {
+    background-color: #495057;
+    color: #e9ecef;
+    border-color: #6c757d;
+}
+
+[data-theme="dark"] .user-message .rafa-text {
+    background-color: #4a6fa5;
+}
+
+[data-theme="dark"] .rafa-chat-form {
+    background-color: #343a40;
+    border-color: #495057;
+}
+
+[data-theme="dark"] .rafa-chat-form input {
+    background-color: #212529;
+    border-color: #495057;
+    color: #e9ecef;
+}
+
+/* Adicione estas regras ao arquivo static/css/floating_chat.css */
+
+/* Ajustes para responsividade */
+@media (max-height: 600px) {
+    .rafa-chat-container {
+        height: 400px; /* Altura menor para telas baixas */
+        bottom: 10px; /* Mais próximo da borda inferior */
+    }
+}
+
+@media (max-height: 500px) {
+    .rafa-chat-container {
+        height: 350px;
+    }
+}
+
+@media (max-width: 400px) {
+    .rafa-chat-container {
+        width: 300px; /* Largura menor para telas estreitas */
+        right: 10px; /* Mais próximo da borda direita */
+    }
+}
+
+/* Para telas muito pequenas como celulares em modo paisagem */
+@media (max-height: 400px) {
+    .rafa-chat-container {
+        height: 300px;
+        width: 280px;
+    }
+    
+    .rafa-chat-header {
+        padding: 8px 12px; /* Header mais compacto */
+    }
+    
+    .rafa-logo {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+/* Para dispositivos móveis muito pequenos */
+@media (max-width: 320px) {
+    .rafa-chat-container {
+        width: 280px;
+        right: 5px;
+        bottom: 5px;
+    }
+    
+    .rafa-chat-toggle {
+        width: 50px;
+        height: 50px;
+        right: 10px;
+        bottom: 10px;
+    }
+    
+    .rafa-toggle-logo {
+        width: 35px;
+        height: 35px;
+    }
+}
+
+/* Garantir que o chat nunca ultrapasse o viewport */
+.rafa-chat-container {
+    max-height: 90vh; /* Limita a altura a 90% da altura da janela */
+    max-width: 90vw; /* Limita a largura a 90% da largura da janela */
+    transition: height 0.3s ease, opacity 0.3s ease;
+}

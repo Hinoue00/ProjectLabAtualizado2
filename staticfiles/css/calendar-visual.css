@@ -1,0 +1,275 @@
+/* =============================================================================
+   CALENDARIO VISUAL MELHORADO - LabConnect
+   Design moderno com cores e visual elegante
+   ============================================================================= */
+
+/* === Calendar Grid Melhorado === */
+.calendar-grid {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 8px !important;
+    background-color: var(--body-bg, #f8f9fa) !important;
+    border-radius: 12px !important;
+    padding: 8px !important;
+    min-height: 400px !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.06) !important;
+}
+
+/* === Cada Dia com Visual Único === */
+.calendar-day {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+    min-height: 200px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    transition: all 0.3s ease !important;
+    border: 2px solid transparent !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+/* === Cores Temáticas para Cada Dia === */
+.calendar-day:nth-child(1) { 
+    /* Segunda - Azul Suave */
+    border-top: 4px solid #3498db !important;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.15) !important;
+}
+
+.calendar-day:nth-child(1):hover {
+    border-color: #3498db !important;
+    box-shadow: 0 4px 20px rgba(52, 152, 219, 0.25) !important;
+    transform: translateY(-2px) !important;
+}
+
+.calendar-day:nth-child(2) { 
+    /* Terça - Verde Fresco */
+    border-top: 4px solid #2ecc71 !important;
+    box-shadow: 0 2px 8px rgba(46, 204, 113, 0.15) !important;
+}
+
+.calendar-day:nth-child(2):hover {
+    border-color: #2ecc71 !important;
+    box-shadow: 0 4px 20px rgba(46, 204, 113, 0.25) !important;
+    transform: translateY(-2px) !important;
+}
+
+.calendar-day:nth-child(3) { 
+    /* Quarta - Laranja Vibrante */
+    border-top: 4px solid #f39c12 !important;
+    box-shadow: 0 2px 8px rgba(243, 156, 18, 0.15) !important;
+}
+
+.calendar-day:nth-child(3):hover {
+    border-color: #f39c12 !important;
+    box-shadow: 0 4px 20px rgba(243, 156, 18, 0.25) !important;
+    transform: translateY(-2px) !important;
+}
+
+.calendar-day:nth-child(4) { 
+    /* Quinta - Roxo Elegante */
+    border-top: 4px solid #9b59b6 !important;
+    box-shadow: 0 2px 8px rgba(155, 89, 182, 0.15) !important;
+}
+
+.calendar-day:nth-child(4):hover {
+    border-color: #9b59b6 !important;
+    box-shadow: 0 4px 20px rgba(155, 89, 182, 0.25) !important;
+    transform: translateY(-2px) !important;
+}
+
+.calendar-day:nth-child(5) { 
+    /* Sexta - Rosa Moderno */
+    border-top: 4px solid #e74c3c !important;
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.15) !important;
+}
+
+.calendar-day:nth-child(5):hover {
+    border-color: #e74c3c !important;
+    box-shadow: 0 4px 20px rgba(231, 76, 60, 0.25) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* === Header do Dia Melhorado === */
+.day-header {
+    background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,249,250,0.9) 100%) !important;
+    padding: 12px !important;
+    border-bottom: 1px solid rgba(0,0,0,0.08) !important;
+    text-align: center !important;
+    flex-shrink: 0 !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.day-name {
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    color: var(--text-muted, #6c757d) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    margin-bottom: 4px !important;
+}
+
+.day-number {
+    font-size: 1.2rem !important;
+    font-weight: 700 !important;
+    color: var(--text-color, #2c3e50) !important;
+    line-height: 1 !important;
+}
+
+/* === Headers Coloridos por Dia === */
+.calendar-day:nth-child(1) .day-name { color: #3498db !important; }
+.calendar-day:nth-child(2) .day-name { color: #2ecc71 !important; }
+.calendar-day:nth-child(3) .day-name { color: #f39c12 !important; }
+.calendar-day:nth-child(4) .day-name { color: #9b59b6 !important; }
+.calendar-day:nth-child(5) .day-name { color: #e74c3c !important; }
+
+/* === Destaque para Hoje === */
+.calendar-day.today {
+    background: linear-gradient(135deg, #4a6fa5 0%, #3a5a95 100%) !important;
+    color: white !important;
+    border-top: 4px solid #2c4875 !important;
+    box-shadow: 0 4px 20px rgba(74, 111, 165, 0.4) !important;
+    transform: scale(1.02) !important;
+}
+
+.calendar-day.today .day-header {
+    background: rgba(255,255,255,0.15) !important;
+    backdrop-filter: blur(10px) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.2) !important;
+}
+
+.calendar-day.today .day-name,
+.calendar-day.today .day-number {
+    color: white !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2) !important;
+}
+
+.calendar-day.today .day-name {
+    color: rgba(255,255,255,0.9) !important;
+}
+
+/* === Conteúdo do Dia === */
+.day-content {
+    flex: 1 !important;
+    padding: 12px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    overflow-y: auto !important;
+}
+
+/* === Agendamentos Mais Bonitos === */
+.appointment-item {
+    background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,249,250,0.9) 100%) !important;
+    border: 1px solid rgba(0,0,0,0.08) !important;
+    border-left: 4px solid var(--primary-color, #4a6fa5) !important;
+    border-radius: 8px !important;
+    padding: 10px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    backdrop-filter: blur(5px) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06) !important;
+}
+
+.appointment-item:hover {
+    transform: translateY(-2px) scale(1.02) !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15) !important;
+    border-left-width: 6px !important;
+}
+
+/* === Status Colors === */
+.appointment-item.status-approved {
+    border-left-color: #2ecc71 !important;
+    background: linear-gradient(135deg, rgba(46,204,113,0.1) 0%, rgba(46,204,113,0.05) 100%) !important;
+}
+
+.appointment-item.status-pending {
+    border-left-color: #f39c12 !important;
+    background: linear-gradient(135deg, rgba(243,156,18,0.1) 0%, rgba(243,156,18,0.05) 100%) !important;
+}
+
+.appointment-item.status-rejected {
+    border-left-color: #e74c3c !important;
+    background: linear-gradient(135deg, rgba(231,76,60,0.1) 0%, rgba(231,76,60,0.05) 100%) !important;
+}
+
+/* === Empty State Melhorado === */
+.no-appointments {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
+    color: var(--text-muted, #6c757d) !important;
+    font-size: 0.85rem !important;
+    text-align: center !important;
+    opacity: 0.7 !important;
+}
+
+.no-appointments i {
+    font-size: 2rem !important;
+    margin-bottom: 8px !important;
+    opacity: 0.4 !important;
+}
+
+/* === Tema Escuro === */
+[data-theme="dark"] .calendar-grid {
+    background-color: #2c3e50 !important;
+}
+
+[data-theme="dark"] .calendar-day {
+    background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%) !important;
+}
+
+[data-theme="dark"] .day-header {
+    background: rgba(0,0,0,0.2) !important;
+}
+
+[data-theme="dark"] .appointment-item {
+    background: linear-gradient(135deg, rgba(52,73,94,0.9) 0%, rgba(44,62,80,0.9) 100%) !important;
+    border-color: rgba(255,255,255,0.1) !important;
+}
+
+/* === Animações Suaves === */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.calendar-day {
+    animation: slideInUp 0.3s ease forwards !important;
+}
+
+.calendar-day:nth-child(1) { animation-delay: 0.1s !important; }
+.calendar-day:nth-child(2) { animation-delay: 0.2s !important; }
+.calendar-day:nth-child(3) { animation-delay: 0.3s !important; }
+.calendar-day:nth-child(4) { animation-delay: 0.4s !important; }
+.calendar-day:nth-child(5) { animation-delay: 0.5s !important; }
+
+/* === Responsivo Mobile === */
+@media (max-width: 768px) {
+    .calendar-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+        padding: 12px !important;
+    }
+    
+    .calendar-day {
+        min-height: 140px !important;
+        animation: none !important; /* Remove animações em mobile */
+    }
+    
+    .calendar-day:nth-child(n) {
+        border-top: 3px solid !important;
+    }
+    
+    .calendar-day:hover {
+        transform: none !important; /* Remove hover em mobile */
+    }
+}

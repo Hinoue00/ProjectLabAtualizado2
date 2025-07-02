@@ -1,0 +1,93 @@
+/* =============================================================================
+   CSS VARIABLES - LabConnect Dashboard
+   ============================================================================= */
+
+:root {
+    /* === Cores Primárias === */
+    --primary-color: #4a6fa5;
+    --primary-color-light: rgba(74, 111, 165, 0.1);
+    --primary-color-dark: #3a5a95;
+    --primary-rgb: 74, 111, 165;
+
+    /* === Cores de Texto === */
+    --text-color: #2c3e50;
+    --text-muted: #6c757d;
+    --text-muted-light: #95a5a6;
+
+    /* === Cores de Fundo === */
+    --body-bg: #ffffff;
+    --card-bg: #ffffff;
+    
+    /* === Bordas === */
+    --border-color: #dee2e6;
+    --border-color-light: #e9ecef;
+    --border-radius: 0.375rem;
+    --border-radius-sm: 0.25rem;
+    --border-radius-lg: 0.5rem;
+
+    /* === Espaçamentos === */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-small: 0.75rem;
+    --spacing-medium: 1rem;
+    --spacing-large: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-xxl: 3rem;
+
+    /* === Sombras === */
+    --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+
+    /* === Transições === */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.2s ease;
+    --transition-slow: 0.3s ease;
+
+    /* === Tipografia === */
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.85rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+    --line-height-base: 1.5;
+    
+    /* === Z-Index === */
+    --z-dropdown: 1000;
+    --z-sticky: 1020;
+    --z-fixed: 1030;
+    --z-modal-backdrop: 1040;
+    --z-modal: 1050;
+    --z-popover: 1060;
+    --z-tooltip: 1070;
+}
+
+/* === Tema Escuro === */
+[data-theme="dark"] {
+    --text-color: #e9ecef;
+    --text-muted: #adb5bd;
+    --text-muted-light: #6c757d;
+    --body-bg: #212529;
+    --card-bg: #343a40;
+    --border-color: #495057;
+    --border-color-light: #343a40;
+}
+
+/* === Variáveis de Status (Badges) === */
+:root {
+    --status-success: #198754;
+    --status-warning: #ffc107;
+    --status-danger: #dc3545;
+    --status-info: #0dcaf0;
+    --status-secondary: #6c757d;
+}
+
+/* === Variáveis Bootstrap Customizadas === */
+:root {
+    --bs-primary: var(--primary-color);
+    --bs-success: var(--status-success);
+    --bs-warning: var(--status-warning);
+    --bs-danger: var(--status-danger);
+    --bs-info: var(--status-info);
+    --bs-secondary: var(--status-secondary);
+}
