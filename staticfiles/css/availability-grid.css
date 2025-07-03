@@ -1,0 +1,132 @@
+/* ===================================== */
+/* 3. AVAILABILITY-GRID.CSS */
+/* ===================================== */
+
+/* Grade de disponibilidade */
+.availability-container {
+    margin: 1.5rem 0;
+}
+
+.availability-header {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.availability-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.availability-subtitle {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Grid responsivo */
+.availability-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+@media (min-width: 768px) {
+    .availability-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+/* Slots de disponibilidade */
+.availability-slot {
+    padding: 1rem;
+    border-radius: 12px;
+    text-align: center;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.availability-slot::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.availability-slot:hover::before {
+    left: 100%;
+}
+
+/* Estados de disponibilidade */
+.availability-slot.available {
+    background: rgba(25, 135, 84, 0.1);
+    border-color: var(--professor-success);
+    color: var(--professor-success);
+}
+
+.availability-slot.available:hover {
+    background: rgba(25, 135, 84, 0.2);
+    transform: translateY(-2px);
+}
+
+.availability-slot.partial {
+    background: rgba(255, 193, 7, 0.1);
+    border-color: var(--professor-warning);
+    color: #b8860b;
+}
+
+.availability-slot.partial:hover {
+    background: rgba(255, 193, 7, 0.2);
+    transform: translateY(-2px);
+}
+
+.availability-slot.unavailable {
+    background: rgba(220, 53, 69, 0.1);
+    border-color: var(--professor-danger);
+    color: var(--professor-danger);
+    cursor: not-allowed;
+}
+
+.availability-slot.unavailable:hover {
+    transform: none;
+}
+
+/* Conteúdo do slot */
+.slot-day {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+.slot-date {
+    font-size: 0.8rem;
+    opacity: 0.8;
+    margin-bottom: 0.5rem;
+}
+
+.slot-status {
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Indicadores visuais */
+.availability-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 0.5rem;
+}
+
+.indicator-available { background: var(--professor-success); }
+.indicator-partial { background: var(--professor-warning); }
+.indicator-unavailable { background: var(--professor-danger); }

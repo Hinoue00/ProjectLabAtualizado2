@@ -1,0 +1,89 @@
+/* ===================================== */
+/* 4. PROFESSOR-MOBILE.CSS */
+/* ===================================== */
+
+/* Mobile optimizations específicas do professor */
+@media (max-width: 767px) {
+    .page-header .col-md-6:last-child {
+        margin-top: 0.5rem;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+    }
+
+    .page-subtitle {
+        font-size: 0.875rem;
+    }
+
+    /* Dashboard cards mobile */
+    .dashboard-card {
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        border-radius: 12px;
+    }
+
+    /* Remove hover effects on mobile */
+    .dashboard-card:hover {
+        transform: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .dashboard-card-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+        padding: 0;
+        margin-bottom: 1rem;
+    }
+
+    .dashboard-card-title {
+        font-size: 1rem;
+        text-align: center;
+    }
+
+    /* Stats grid mobile */
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    /* Quick actions mobile */
+    .quick-actions {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .quick-action-btn {
+        min-width: unset;
+        padding: 0.75rem;
+    }
+
+    /* Availability grid mobile */
+    .availability-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .availability-slot {
+        padding: 0.75rem;
+    }
+
+    /* Calendar mobile optimizations */
+    .calendar-scroll-wrapper {
+        overflow-x: auto;
+        scrollbar-width: thin;
+    }
+
+    .calendar-grid {
+        min-width: 600px;
+    }
+
+    /* Touch feedback */
+    .availability-slot:active,
+    .quick-action-btn:active,
+    .dashboard-card:active {
+        opacity: 0.8;
+        transform: scale(0.98);
+    }
+}
