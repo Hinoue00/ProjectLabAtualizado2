@@ -1,0 +1,180 @@
+/* ===================================== */
+/* 1. PROFESSOR-SPECIFIC.CSS */
+/* ===================================== */
+
+/* Variáveis específicas do professor */
+:root {
+    --professor-primary: #0d6efd;
+    --professor-accent: #20c997;
+    --professor-success: #198754;
+    --professor-warning: #ffc107;
+    --professor-danger: #dc3545;
+}
+
+/* Dashboard específico do professor */
+.professor-dashboard {
+    --primary-color: var(--professor-primary);
+    --accent-color: var(--professor-accent);
+}
+
+/* Page header otimizado */
+.page-header {
+    margin-bottom: 1.5rem;
+}
+
+.page-header .row {
+    gap: 1rem;
+}
+
+.page-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--text-primary);
+}
+
+.page-subtitle {
+    color: var(--text-muted);
+    margin-bottom: 0;
+}
+
+/* Button mobile optimization */
+.btn-mobile-full {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+@media (min-width: 768px) {
+    .btn-mobile-full {
+        width: auto;
+    }
+}
+
+/* Stats section específica do professor */
+.stats-section {
+    margin-bottom: 2rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+/* Dashboard grid layout */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas: 
+            "stats stats"
+            "calendar calendar"
+            "upcoming drafts"
+            "history history";
+    }
+
+    .stats-section { grid-area: stats; }
+    .weekly-calendar-row { grid-area: calendar; }
+    .upcoming-classes-card { grid-area: upcoming; }
+    .draft-requests-card { grid-area: drafts; }
+    .history-card { grid-area: history; }
+}
+
+@media (min-width: 1200px) {
+    .dashboard-grid {
+        grid-template-columns: 2fr 1fr;
+        grid-template-areas: 
+            "stats stats"
+            "calendar upcoming"
+            "calendar drafts"
+            "history history";
+    }
+}
+
+/* ===================================== */
+/* 5. LOADING & ANIMATIONS */
+/* ===================================== */
+
+/* Loading states */
+.loading-skeleton {
+    background: linear-gradient(90deg, 
+        rgba(0, 0, 0, 0.05) 25%, 
+        rgba(0, 0, 0, 0.1) 50%, 
+        rgba(0, 0, 0, 0.05) 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s ease-in-out infinite;
+    border-radius: 8px;
+    height: 20px;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Pulse animation for notifications */
+.pulse-notification {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Slide in animations */
+.slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Accessibility */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Focus states melhorados */
+.availability-slot:focus,
+.quick-action-btn:focus,
+.btn:focus {
+    outline: 2px solid var(--professor-primary);
+    outline-offset: 2px;
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

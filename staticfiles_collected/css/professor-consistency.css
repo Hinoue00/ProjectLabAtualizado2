@@ -1,0 +1,414 @@
+/* ===================================== */
+/* PROFESSOR DASHBOARD - CONSISTÊNCIA COM TÉCNICO */
+/* ===================================== */
+
+/* Remover estilos específicos que conflitam */
+.professor-dashboard .dashboard-grid,
+.professor-dashboard .stats-section,
+.professor-dashboard .quick-actions-section,
+.professor-dashboard .weekly-calendar-row,
+.professor-dashboard .upcoming-classes-card,
+.professor-dashboard .draft-requests-card,
+.professor-dashboard .history-card {
+    display: initial !important;
+    grid-template-columns: initial !important;
+    grid-template-areas: initial !important;
+}
+
+/* Usar os mesmos estilos de cards do técnico */
+.professor-dashboard .stats-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.professor-dashboard .stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Stats icon igual ao técnico */
+.professor-dashboard .stats-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(74, 111, 165, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+    font-size: 1.5rem;
+}
+
+/* Stats values igual ao técnico */
+.professor-dashboard .stats-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1;
+}
+
+/* Stats labels igual ao técnico */
+.professor-dashboard .stats-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+/* Professor list styling igual ao técnico */
+.professor-dashboard .professor-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.professor-dashboard .professor-list-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+
+.professor-dashboard .professor-list-item:last-child {
+    border-bottom: none;
+}
+
+.professor-dashboard .professor-list-item:hover {
+    background-color: rgba(74, 111, 165, 0.02);
+    border-radius: 8px;
+    margin: 0 -0.5rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+}
+
+.professor-dashboard .professor-list-item > i {
+    color: var(--primary-color);
+    font-size: 1.25rem;
+    margin-top: 0.125rem;
+    flex-shrink: 0;
+}
+
+.professor-dashboard .professor-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.professor-dashboard .professor-name {
+    display: block;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.professor-dashboard .professor-contact {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.125rem;
+}
+
+.professor-dashboard .professor-contact i {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    margin-right: 0.25rem;
+}
+
+/* Empty state igual ao técnico */
+.professor-dashboard .empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--text-muted);
+}
+
+.professor-dashboard .empty-state i {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.professor-dashboard .empty-state h5 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-muted);
+}
+
+.professor-dashboard .empty-state p {
+    font-size: 0.875rem;
+    margin: 0;
+    opacity: 0.8;
+}
+
+/* Card footer links igual ao técnico */
+.professor-dashboard .card-footer-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.professor-dashboard .card-footer-link:hover {
+    color: var(--primary-color);
+    transform: translateX(2px);
+}
+
+/* Custom scrollbar igual ao técnico */
+.professor-dashboard .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(74, 111, 165, 0.3) transparent;
+}
+
+.professor-dashboard .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.professor-dashboard .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.professor-dashboard .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(74, 111, 165, 0.3);
+    border-radius: 2px;
+}
+
+.professor-dashboard .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(74, 111, 165, 0.5);
+}
+
+/* Draft actions específicas */
+.professor-dashboard .draft-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.professor-dashboard .draft-actions .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    border-radius: 4px;
+}
+
+/* Badges igual ao técnico */
+.professor-dashboard .badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+}
+
+/* Card header consistency */
+.professor-dashboard .card-header {
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--card-bg) !important;
+    padding: 1rem 1.25rem;
+}
+
+.professor-dashboard .card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.professor-dashboard .card-title i {
+    color: var(--primary-color);
+    font-size: 1.125rem;
+}
+
+/* Card body consistency */
+.professor-dashboard .card-body {
+    padding: 1.25rem;
+}
+
+/* Button styles consistency */
+.professor-dashboard .btn-outline-secondary {
+    border-color: var(--border-color);
+    color: var(--text-muted);
+}
+
+.professor-dashboard .btn-outline-secondary:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.professor-dashboard .btn-outline-primary {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.professor-dashboard .btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+/* Navigation buttons igual ao técnico */
+.professor-dashboard .calendar-nav .btn {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.professor-dashboard .dropdown-toggle {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 6px;
+}
+
+/* Calendar header consistency */
+.professor-dashboard .card-header .d-flex {
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+/* Mobile responsiveness igual ao técnico */
+@media (max-width: 768px) {
+    .professor-dashboard .card-header .d-flex {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    
+    .professor-dashboard .d-flex.gap-2 {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .professor-dashboard .btn-sm {
+        font-size: 0.8rem;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .professor-dashboard .stats-value {
+        font-size: 1.75rem;
+    }
+    
+    .professor-dashboard .stats-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.25rem;
+    }
+    
+    .professor-dashboard .professor-list-item {
+        padding: 1rem 0;
+    }
+    
+    .professor-dashboard .professor-list-item:hover {
+        margin: 0;
+        padding-left: 0;
+        padding-right: 0;
+    }
+}
+
+/* Dark mode support igual ao técnico */
+[data-theme="dark"] .professor-dashboard .stats-card {
+    background-color: var(--card-bg-dark);
+    border-color: var(--border-color-dark);
+}
+
+[data-theme="dark"] .professor-dashboard .stats-icon {
+    background: rgba(74, 111, 165, 0.2);
+}
+
+[data-theme="dark"] .professor-dashboard .professor-list-item:hover {
+    background-color: rgba(74, 111, 165, 0.05);
+}
+
+[data-theme="dark"] .professor-dashboard .card-header {
+    border-color: var(--border-color-dark);
+    background-color: var(--card-bg-dark) !important;
+}
+
+/* Animations igual ao técnico */
+.professor-dashboard .stats-value {
+    transition: all 0.3s ease;
+}
+
+.professor-dashboard .stats-card:hover .stats-value {
+    transform: scale(1.05);
+}
+
+.professor-dashboard .professor-list-item {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Loading states igual ao técnico */
+.professor-dashboard .loading-skeleton {
+    background: linear-gradient(90deg, 
+        rgba(0, 0, 0, 0.05) 25%, 
+        rgba(0, 0, 0, 0.1) 50%, 
+        rgba(0, 0, 0, 0.05) 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s ease-in-out infinite;
+    border-radius: 4px;
+    height: 20px;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Focus states igual ao técnico */
+.professor-dashboard .btn:focus,
+.professor-dashboard .card:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Hover effects igual ao técnico */
+.professor-dashboard .card {
+    transition: all 0.2s ease;
+}
+
+.professor-dashboard .card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Text truncation igual ao técnico */
+.professor-dashboard .text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-clamp: 2;
+    overflow: hidden;
+}
+
+.professor-dashboard .text-truncate-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    line-clamp: 3;
+    overflow: hidden;
+}
