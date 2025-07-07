@@ -27,7 +27,7 @@ class AvailabilityChecker {
 
     async refreshAvailability() {
         try {
-            const response = await fetch('/api/laboratory-availability/');
+            const response = await fetch('/dashboard/api/laboratory-availability/');
             const data = await response.json();
             
             this.updateAvailabilityDisplay(data);
@@ -109,7 +109,7 @@ class AvailabilityChecker {
         }
 
         try {
-            const response = await fetch(`/api/laboratory/${labId}/availability/?date=${date}`);
+            const response = await fetch(`/dashboard/api/laboratory/${labId}/availability/?date=${date}`);
             const data = await response.json();
             
             this.cache.set(cacheKey, {

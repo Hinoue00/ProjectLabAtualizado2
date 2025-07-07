@@ -22,33 +22,40 @@
 
 {% block content %}
 <div class="content-container professor-dashboard">      
-    <!-- Page Header -->
-    <div class="page-header">
-        <div class="row align-items-center">
-            <div class="col-md-6">
-                <h1 class="page-title">Olá, {{ user.first_name }}!</h1>
-                <p class="page-subtitle">Bem-vindo ao seu painel.</p>
+    <!-- Page Header - LAYOUT MELHORADO -->
+    <div class="page-header-improved">
+        <div class="header-content">
+            <!-- Título e subtítulo à esquerda -->
+            <div class="header-text">
+                <h1 class="page-title-improved">Olá, {{ user.first_name }}!</h1>
+                <p class="page-subtitle-improved">Bem-vindo ao seu painel.</p>
             </div>
-            <div class="col-md-6 text-md-end">
+            
+            <!-- Botão de agendamento à direita -->
+            <div class="header-actions">
                 {% if is_scheduling_day %}
-                <a href="{% url 'create_schedule_request' %}" class="btn btn-primary btn-mobile-full btn-schedule">
-                    <i class="bi bi-plus-lg me-1"></i> Solicitar Agendamento
+                <a href="{% url 'create_schedule_request' %}" class="btn-schedule-improved btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    <span class="btn-text">Solicitar Agendamento</span>
                 </a>
                 {% else %}
-                <button class="btn btn-secondary btn-mobile-full btn-schedule" disabled>
-                    <i class="bi bi-calendar-x me-1"></i> Agendamento Indisponível
+                <button class="btn-schedule-improved btn-disabled" disabled>
+                    <i class="bi bi-calendar-x me-2"></i>
+                    <span class="btn-text">Agendamento Indisponível</span>
                 </button>
                 {% endif %}
             </div>
         </div>
         
+        <!-- Aviso de agendamento (se necessário) -->
         {% if not is_scheduling_day %}
         <div class="alert alert-warning mt-3 scheduling-warning">
-            <i class="bi bi-info-circle"></i>
+            <i class="bi bi-info-circle me-2"></i>
             <strong>Atenção:</strong> Agendamentos só podem ser feitos às quintas e sextas-feiras para a semana seguinte.
         </div>
         {% endif %}
     </div>
+
     <!-- Stats Cards -->
     <div class="row">
         <div class="col-md-3 mb-4">
@@ -116,42 +123,49 @@
         </div>
     </div>
 
-    <!-- Weekly Calendar -->
     <div class="row">
-        <div class="col-12 mb-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-calendar-range"></i>
+        <div class="col-lg-12 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <!-- ✅ MESMO HEADER DO TÉCNICO -->
+                <div class="card-header bg-transparent calendar-header">
+                    <h5 class="card-title mb-0 calendar-title" id="calendar-title">
                         Calendário Semanal ({{ week_start|date:"d/m" }} - {{ week_end|date:"d/m/Y" }})
                     </h5>
-                    <div class="d-flex gap-2">
-                        <div class="dropdown">
-                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                Departamento: Todos
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#">Todos</a></li>
-                            </ul>
-                        </div>
-                        <a href="#" id="prev-week-link" class="btn btn-outline-secondary btn-sm">
-                            <i class="bi bi-chevron-left"></i> Anterior
+
+                    <!-- ✅ MESMO FILTRO DO TÉCNICO -->
+                    <form method="get" action="{% url 'professor_dashboard' %}" class="department-filter-form" id="department-filter-form">
+                        <input type="hidden" name="week_offset" id="week_offset_input" value="{{ week_offset }}">
+                        <label for="department-select">Departamento:</label>
+                        <select name="department" id="department-select" class="form-select form-select-sm">
+                            <option value="all" {% if not current_department or current_department == 'all' %}selected{% endif %}>Todos</option>
+                            {% for dept in departments %}
+                                <option value="{{ dept }}" {% if current_department == dept %}selected{% endif %}>{{ dept|capfirst }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+
+                    <!-- ✅ MESMA NAVEGAÇÃO DO TÉCNICO -->
+                    <div class="calendar-nav">
+                        <a href="#" id="prev-week-link" class="nav-link">
+                            <i class="bi bi-chevron-left"></i>
+                            Anterior
                         </a>
-                        <a href="#" id="today-link" class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-house"></i> Hoje
+                        <a href="#" id="today-link" class="nav-link">
+                            <i class="bi bi-house"></i>
+                            Hoje
                         </a>
-                        <a href="#" id="next-week-link" class="btn btn-outline-secondary btn-sm">
-                            Próxima <i class="bi bi-chevron-right"></i>
+                        <a href="#" id="next-week-link" class="nav-link">
+                            <i class="bi bi-chevron-right"></i>
+                            Próxima
                         </a>
                     </div>
                 </div>
-                
+
                 <div class="card-body">
                     <div class="calendar-body" id="calendar-body">
-                        {% include 'partials/calendar_week.html' with calendar_data=calendar_data %}
+                        <!-- ✅ TEMPLATE ESPECÍFICO PARA PROFESSOR (só seus agendamentos) -->
+                        {% include 'partials/calendar_week_professor.html' with calendar_data=calendar_data %}
                     </div>
-                    <!-- Input hidden para controlar o offset da semana -->
-                    <input type="hidden" id="week_offset_input" value="{{ week_offset|default:0 }}">
                 </div>
             </div>
         </div>
@@ -419,9 +433,10 @@ window.professorConfig = {
 };
 
 // Funções auxiliares globais para navegação do calendário
-async function loadWeekData(weekOffset) {
+async function loadWeekData(weekOffset, department = null) {
     const calendarBody = document.getElementById('calendar-body');
     const weekOffsetInput = document.getElementById('week_offset_input');
+    const departmentSelect = document.getElementById('department-select');
     
     if (!calendarBody) {
         console.error('Calendar body não encontrado');
@@ -429,16 +444,16 @@ async function loadWeekData(weekOffset) {
     }
     
     try {
-        // Mostrar loading
+        if (department === null) {
+            department = departmentSelect ? departmentSelect.value : 'all';
+        }
+        
         calendarBody.style.opacity = '0.6';
         calendarBody.style.pointerEvents = 'none';
         calendarBody.innerHTML = '<div class="text-center p-4"><i class="bi bi-arrow-clockwise spin"></i> Carregando...</div>';
         
-        console.log(`🔄 Iniciando requisição AJAX para week_offset: ${weekOffset}`);
-        
-        // Fazer requisição AJAX
-        const url = `{% url 'professor_dashboard' %}?week_offset=${weekOffset}`;
-        console.log(`📡 URL da requisição: ${url}`);
+        // ✅ ÚNICA DIFERENÇA: URL do professor em vez do técnico
+        const url = `{% url 'professor_dashboard' %}?week_offset=${weekOffset}&department=${department}`;
         
         const response = await fetch(url, {
             method: 'GET',
@@ -449,88 +464,41 @@ async function loadWeekData(weekOffset) {
             }
         });
         
-        console.log(`📥 Resposta recebida - Status: ${response.status}`);
-        console.log(`📋 Headers da resposta:`, [...response.headers.entries()]);
-        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        // Verificar o content-type da resposta
-        const contentType = response.headers.get('content-type');
-        console.log(`🏷️ Content-Type: ${contentType}`);
-        
-        if (!contentType || !contentType.includes('application/json')) {
-            // Se não for JSON, vamos ver o que é
-            const text = await response.text();
-            console.error('❌ Resposta não é JSON:', text.substring(0, 500));
-            
-            // Tentar extrair erro do HTML
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = text;
-            const errorMsg = tempDiv.querySelector('.errorlist, .error, .alert-danger');
-            
-            throw new Error(errorMsg ? errorMsg.textContent : 'Resposta inválida do servidor');
-        }
-        
         const data = await response.json();
-        console.log('✅ Dados JSON recebidos:', data);
         
         if (data.success) {
-            // Atualizar conteúdo do calendário
             calendarBody.innerHTML = data.calendar_html;
             
-            // Atualizar o offset
             if (weekOffsetInput) {
                 weekOffsetInput.value = weekOffset;
             }
             
-            // Atualizar URL sem recarregar a página
+            if (departmentSelect) {
+                departmentSelect.value = department;
+            }
+            
             const newUrl = new URL(window.location);
             newUrl.searchParams.set('week_offset', weekOffset);
-            window.history.pushState({week_offset: weekOffset}, '', newUrl);
+            newUrl.searchParams.set('department', department);
+            window.history.pushState({week_offset: weekOffset, department: department}, '', newUrl);
             
-            console.log(`✅ Calendário atualizado para semana offset: ${weekOffset}`);
-            
-            // Log de debug se disponível
-            if (data.debug_info) {
-                console.log('🐛 Debug info:', data.debug_info);
-            }
+            console.log(`✅ Calendário do professor atualizado`);
         } else {
-            console.error('❌ Erro do servidor:', data);
             throw new Error(data.message || 'Erro desconhecido do servidor');
         }
         
     } catch (error) {
-        console.error('💥 Erro completo:', error);
-        
-        // Mostrar erro detalhado no calendário
+        console.error('💥 Erro:', error);
         calendarBody.innerHTML = `
             <div class="alert alert-danger" role="alert">
-                <div class="d-flex align-items-center mb-2">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    <strong>Erro ao carregar calendário</strong>
-                </div>
-                <div class="mb-2">
-                    <strong>Detalhes:</strong> ${error.message}
-                </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-outline-primary btn-sm" onclick="window.location.reload()">
-                        <i class="bi bi-arrow-clockwise me-1"></i>Recarregar página
-                    </button>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="loadWeekData(${weekOffset})">
-                        <i class="bi bi-arrow-repeat me-1"></i>Tentar novamente
-                    </button>
-                </div>
-                <details class="mt-2">
-                    <summary class="btn btn-link btn-sm p-0">Ver detalhes técnicos</summary>
-                    <pre class="mt-2 p-2 bg-light border rounded" style="font-size: 0.8em; max-height: 200px; overflow-y: auto;">${error.stack || 'Stack trace não disponível'}</pre>
-                </details>
+                <strong>Erro ao carregar calendário:</strong> ${error.message}
             </div>
         `;
-        
     } finally {
-        // Remover loading
         calendarBody.style.opacity = '1';
         calendarBody.style.pointerEvents = 'auto';
     }
@@ -538,62 +506,42 @@ async function loadWeekData(weekOffset) {
 
 // Event listeners para os botões de navegação
 document.addEventListener('DOMContentLoaded', function() {
-    // Botão anterior
     const prevWeekLink = document.getElementById('prev-week-link');
+    const nextWeekLink = document.getElementById('next-week-link');
+    const todayLink = document.getElementById('today-link');
+    const departmentSelect = document.getElementById('department-select');
+    const weekOffsetInput = document.getElementById('week_offset_input');
+
     if (prevWeekLink) {
         prevWeekLink.addEventListener('click', function(e) {
             e.preventDefault();
-            const weekOffsetInput = document.getElementById('week_offset_input');
             const currentOffset = weekOffsetInput ? parseInt(weekOffsetInput.value) : 0;
             loadWeekData(currentOffset - 1);
         });
     }
-    
-    // Botão hoje
-    const todayLink = document.getElementById('today-link');
+
+    if (nextWeekLink) {
+        nextWeekLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            const currentOffset = weekOffsetInput ? parseInt(weekOffsetInput.value) : 0;
+            loadWeekData(currentOffset + 1);
+        });
+    }
+
     if (todayLink) {
         todayLink.addEventListener('click', function(e) {
             e.preventDefault();
             loadWeekData(0);
         });
     }
-    
-    // Botão próxima
-    const nextWeekLink = document.getElementById('next-week-link');
-    if (nextWeekLink) {
-        nextWeekLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            const weekOffsetInput = document.getElementById('week_offset_input');
+
+    if (departmentSelect) {
+        departmentSelect.addEventListener('change', function(e) {
             const currentOffset = weekOffsetInput ? parseInt(weekOffsetInput.value) : 0;
-            loadWeekData(currentOffset + 1);
+            const selectedDepartment = e.target.value;
+            loadWeekData(currentOffset, selectedDepartment);
         });
     }
-    
-    // Teclas de navegação (opcional)
-    document.addEventListener('keydown', function(e) {
-        // Apenas se não estiver em um input
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-            return;
-        }
-        
-        const weekOffsetInput = document.getElementById('week_offset_input');
-        const currentOffset = weekOffsetInput ? parseInt(weekOffsetInput.value) : 0;
-        
-        switch(e.key) {
-            case 'ArrowLeft':
-                e.preventDefault();
-                loadWeekData(currentOffset - 1);
-                break;
-            case 'ArrowRight':
-                e.preventDefault();
-                loadWeekData(currentOffset + 1);
-                break;
-            case 'Home':
-                e.preventDefault();
-                loadWeekData(0);
-                break;
-        }
-    });
 });
 
 function refreshDashboard() {
