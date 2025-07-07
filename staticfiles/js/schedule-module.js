@@ -52,7 +52,7 @@ class ScheduleModule {
 
     async loadAvailability() {
         try {
-            const response = await fetch('/api/laboratory-availability/');
+            const response = await fetch('/dashboard/api/laboratory-availability/');
             this.availabilityData = await response.json();
             this.renderAvailabilityGrid();
         } catch (error) {
@@ -155,7 +155,7 @@ class ScheduleModule {
         if (!labId) return;
 
         try {
-            const response = await fetch(`/api/laboratory/${labId}/availability/`);
+            const response = await fetch(`/dashboard/api/laboratory/${labId}/availability/`);
             const data = await response.json();
             this.updateTimeSlots(data.timeSlots);
         } catch (error) {
@@ -175,7 +175,7 @@ class ScheduleModule {
         if (!this.selectedDate || !this.selectedLab) return;
 
         try {
-            const response = await fetch('/api/schedule-conflict-check/', {
+            const response = await fetch('/dashboard/api/schedule-conflict-check/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

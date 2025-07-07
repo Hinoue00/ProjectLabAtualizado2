@@ -411,13 +411,18 @@ class ModalModule {
      */
     refreshModalTriggers() {
         // Get new modal triggers
-        this.elements.modalTriggers = this.dashboard.dom.$('[data-bs-toggle="modal"]');
+        const triggers = this.dashboard.dom.$$('[data-bs-toggle="modal"]');
+        
+        // Converter para array se necessário
+        this.elements.modalTriggers = Array.from(triggers || []);
         
         // Add event listeners to new triggers
         this.elements.modalTriggers.forEach(trigger => {
-            // Remove existing listener first (prevent duplicates)
-            trigger.removeEventListener('click', this.handleTriggerClick.bind(this));
-            trigger.addEventListener('click', this.handleTriggerClick.bind(this));
+            if (trigger && typeof trigger.addEventListener === 'function') {
+                // Remove existing listener first (prevent duplicates)
+                trigger.removeEventListener('click', this.handleTriggerClick.bind(this));
+                trigger.addEventListener('click', this.handleTriggerClick.bind(this));
+            }
         });
         
         this.dashboard.log(`🔄 Refreshed ${this.elements.modalTriggers.length} modal triggers`);

@@ -57,7 +57,7 @@ class ProfessorDashboard {
 
     async refreshStats() {
         try {
-            const response = await fetch('/api/professor-stats/');
+            const response = await fetch('/dashboard/api/professor-stats/');
             const data = await response.json();
             
             this.stats = data;
@@ -119,7 +119,7 @@ class ProfessorDashboard {
 
     async loadUpcomingClasses() {
         try {
-            const response = await fetch('/api/upcoming-classes/');
+            const response = await fetch('/dashboard/api/upcoming-classes/');
             const classes = await response.json();
             
             this.renderUpcomingClasses(classes);
@@ -237,7 +237,7 @@ class ProfessorDashboard {
 
     async checkForNotifications() {
         try {
-            const response = await fetch('/api/notifications/check/');
+            const response = await fetch('/dashboard/api/notifications/check/');
             const data = await response.json();
 
             if (data.hasNew) {
