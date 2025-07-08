@@ -108,16 +108,90 @@ class ChartModule {
      * Initialize Lab Activity Chart
      */
     async initLabActivityChart() {
+        if (!this.elements.labActivityChart) {
+            this.dashboard.log('❌ Canvas element not found for lab activity chart', 'error');
+            return;
+        }
+
         const ctx = this.elements.labActivityChart.getContext('2d');
         
-        // Default chart configuration
+        // 🔧 CORREÇÃO: Configuração mais robusta do gráfico
         const config = {
             type: 'line',
             data: {
                 labels: [],
                 datasets: []
             },
-            options: this.getChartOptions('week')
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 750
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        display: true,
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderColor: '#ddd',
+                        borderWidth: 1,
+                        callbacks: {
+                            title: function(context) {
+                                return context[0].label;
+                            },
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.parsed.y} agendamento${context.parsed.y !== 1 ? 's' : ''}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Número de Agendamentos'
+                        },
+                        grid: {
+                            color: '#e9ecef'
+                        },
+                        ticks: {
+                            stepSize: 1,
+                            color: '#6c757d'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Período'
+                        },
+                        grid: {
+                            color: '#f8f9fa'
+                        },
+                        ticks: {
+                            color: '#6c757d',
+                            maxRotation: 45
+                        }
+                    }
+                }
+            }
         };
 
         // Create chart instance
@@ -126,8 +200,13 @@ class ChartModule {
         
         this.dashboard.log('📈 Lab Activity chart created');
 
-        // Load initial data
-        await this.loadChartData('week', 'all');
+        // 🔧 CORREÇÃO: Load initial data with fallback
+        try {
+            await this.loadChartData('week', 'all');
+        } catch (error) {
+            this.dashboard.log(`⚠️ Failed to load initial chart data: ${error.message}`, 'warn');
+            this.showChartError('Falha ao carregar dados iniciais');
+        }
     }
 
     /**
@@ -288,6 +367,13 @@ class ChartModule {
             
             this.dashboard.log(`📊 Loading chart data: period=${period}, department=${department}`);
 
+            // 🔧 CORREÇÃO: Limpar cache se necessário
+            if (period === 'month') {
+                // Para month, sempre buscar dados frescos devido ao bug anterior
+                const cacheKey = `chart_${period}_${department}`;
+                this.chartData.delete(cacheKey);
+            }
+
             // Check cache first
             const cacheKey = `chart_${period}_${department}`;
             let data = this.getFromCache(cacheKey);
@@ -295,10 +381,21 @@ class ChartModule {
             if (!data) {
                 // Fetch from server
                 data = await this.fetchChartData(period, department);
-                this.setCache(cacheKey, data);
+                
+                // 🔧 CORREÇÃO: Validar dados antes de cachear
+                if (data && data.labels && data.datasets) {
+                    this.setCache(cacheKey, data);
+                } else {
+                    throw new Error('Dados inválidos recebidos do servidor');
+                }
             } else {
                 this.dashboard.log('📦 Using cached chart data');
             }
+
+            // 🔧 CORREÇÃO: Log dos dados antes de atualizar
+            this.dashboard.log(`📊 Data received:`, 'info');
+            this.dashboard.log(`   Labels: ${data.labels?.length || 0}`, 'info');
+            this.dashboard.log(`   Datasets: ${data.datasets?.length || 0}`, 'info');
 
             // Update chart
             this.updateChart('labActivity', data, period);
@@ -317,6 +414,8 @@ class ChartModule {
     async fetchChartData(period, department) {
         const url = `/dashboard/chart-data/?period=${period}&department=${department}`;
         
+        this.dashboard.log(`📡 Fetching chart data from: ${url}`);
+        
         const response = await fetch(url, {
             method: 'GET',
             headers: {
@@ -326,14 +425,29 @@ class ChartModule {
             credentials: 'same-origin'
         });
 
+        this.dashboard.log(`📡 Response status: ${response.status}`);
+
         if (!response.ok) {
+            const errorText = await response.text();
+            this.dashboard.log(`❌ Server response: ${errorText}`, 'error');
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
         const data = await response.json();
         
-        if (!data.labels || !data.datasets) {
-            throw new Error('Invalid chart data format received');
+        // 🔧 CORREÇÃO: Log detalhado da resposta
+        this.dashboard.log(`📊 Server response:`, 'info');
+        this.dashboard.log(`   Labels: ${data.labels?.length || 0}`, 'info');
+        this.dashboard.log(`   Datasets: ${data.datasets?.length || 0}`, 'info');
+        this.dashboard.log(`   Full data:`, data);
+        
+        // 🔧 CORREÇÃO: Validação rigorosa dos dados
+        if (!data.labels || !Array.isArray(data.labels)) {
+            throw new Error('Labels inválidos recebidos do servidor');
+        }
+        
+        if (!data.datasets || !Array.isArray(data.datasets)) {
+            throw new Error('Datasets inválidos recebidos do servidor');
         }
 
         return data;
@@ -349,21 +463,95 @@ class ChartModule {
             return;
         }
 
-        // Update chart data
-        chart.data.labels = data.labels;
-        chart.data.datasets = data.datasets;
+        // 🔧 CORREÇÃO: Log detalhado dos dados recebidos
+        this.dashboard.log(`📊 Updating chart '${chartName}' with:`, 'info');
+        this.dashboard.log(`   Labels: ${data.labels?.length || 0}`, 'info');
+        this.dashboard.log(`   Datasets: ${data.datasets?.length || 0}`, 'info');
+        
+        // Debug dos datasets
+        if (data.datasets && data.datasets.length > 0) {
+            data.datasets.forEach((dataset, idx) => {
+                const totalData = dataset.data.reduce((sum, val) => sum + val, 0);
+                this.dashboard.log(`   Dataset ${idx}: ${dataset.label} - Total: ${totalData}`, 'info');
+            });
+        }
 
-        // Update chart options
-        chart.options.scales.x.title.text = data.xAxisTitle || this.getXAxisTitle(period);
-        chart.options.plugins.legend.display = data.datasets.length > 0;
+        // 🔧 CORREÇÃO: Validar dados antes de atualizar
+        if (!data.labels || !Array.isArray(data.labels)) {
+            this.dashboard.log(`❌ Invalid labels data`, 'error');
+            this.showChartError('Dados de labels inválidos');
+            return;
+        }
 
-        // Update colors for current theme
+        if (!data.datasets || !Array.isArray(data.datasets)) {
+            this.dashboard.log(`❌ Invalid datasets data`, 'error');
+            this.showChartError('Dados de datasets inválidos');
+            return;
+        }
+
+        // 🔧 CORREÇÃO: Limpar dados anteriores explicitamente
+        chart.data.labels = [];
+        chart.data.datasets = [];
+
+        // 🔧 CORREÇÃO: Atualizar dados com validação
+        chart.data.labels = [...data.labels];
+        chart.data.datasets = data.datasets.map(dataset => ({
+            ...dataset,
+            data: [...dataset.data] // Criar nova array para evitar referência
+        }));
+
+        // 🔧 CORREÇÃO: Atualizar opções do gráfico
+        if (chart.options.scales) {
+            // Atualizar título do eixo X
+            if (chart.options.scales.x && chart.options.scales.x.title) {
+                chart.options.scales.x.title.text = data.xAxisTitle || this.getXAxisTitle(period);
+            }
+
+            // 🔧 CORREÇÃO: Forçar recálculo dos eixos
+            if (chart.options.scales.y) {
+                // Calcular max dinâmico baseado nos dados
+                const allValues = data.datasets.flatMap(d => d.data).filter(v => v !== null && v !== undefined);
+                const maxValue = Math.max(...allValues, 1); // Mínimo 1 para evitar divisão por zero
+                
+                chart.options.scales.y.max = Math.ceil(maxValue * 1.1); // 10% acima do máximo
+                chart.options.scales.y.min = 0;
+            }
+        }
+
+        // 🔧 CORREÇÃO: Configurar visibilidade da legenda
+        if (chart.options.plugins && chart.options.plugins.legend) {
+            chart.options.plugins.legend.display = data.datasets.length > 0;
+        }
+
+        // 🔧 CORREÇÃO: Atualizar tema
         this.updateChartTheme(chart);
 
-        // Animate chart update
+        // 🔧 CORREÇÃO: Forçar atualização completa com resize
         chart.update('resize');
+        
+        // 🔧 CORREÇÃO: Double-check após update
+        setTimeout(() => {
+            if (chart.data.datasets.length === 0) {
+                this.dashboard.log(`⚠️ Chart still empty after update, showing fallback`, 'warn');
+                this.showEmptyChartMessage(chart);
+            }
+        }, 100);
 
-        this.dashboard.log(`✅ Chart '${chartName}' updated with ${data.datasets.length} datasets`);
+        this.dashboard.log(`✅ Chart '${chartName}' updated successfully`, 'success');
+    }
+
+    showEmptyChartMessage(chart) {
+        // Criar dataset vazio para mostrar mensagem
+        chart.data.labels = ['Sem dados'];
+        chart.data.datasets = [{
+            label: 'Nenhum agendamento encontrado',
+            data: [0],
+            borderColor: '#e9ecef',
+            backgroundColor: '#f8f9fa',
+            borderDash: [5, 5]
+        }];
+        
+        chart.update('none');
     }
 
     /**
@@ -406,17 +594,25 @@ class ChartModule {
     showChartError(message) {
         const chart = this.charts.get('labActivity');
         if (chart) {
+            // Limpar dados do gráfico
             chart.data.labels = [];
             chart.data.datasets = [];
-            chart.update();
+            chart.update('none');
         }
 
-        // Show error message
+        // 🔧 CORREÇÃO: Melhor feedback visual de erro
         if (this.elements.chartContainer) {
+            // Remover erros anteriores
+            const existingErrors = this.elements.chartContainer.querySelectorAll('.chart-error');
+            existingErrors.forEach(error => error.remove());
+            
             const errorHtml = `
-                <div class="alert alert-warning text-center m-3">
+                <div class="chart-error alert alert-warning text-center m-3">
                     <h6><i class="bi bi-exclamation-triangle"></i> Erro no Gráfico</h6>
-                    <p class="mb-0">${message}</p>
+                    <p class="mb-2">${message}</p>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="window.DashboardApp?.chart?.refreshChart('labActivity')">
+                        <i class="bi bi-arrow-clockwise"></i> Tentar Novamente
+                    </button>
                 </div>
             `;
             this.elements.chartContainer.insertAdjacentHTML('beforeend', errorHtml);
@@ -555,6 +751,26 @@ class ChartModule {
         this.chartData.clear();
     }
 }
+
+// ==========================================
+// ADIÇÃO DE FUNÇÃO DE DEBUG NO CONSOLE
+// ==========================================
+
+// Adicione esta função para debug manual:
+window.debugChart = function(period = 'month', department = 'all') {
+    console.log(`🔍 DEBUGGING CHART: period=${period}, department=${department}`);
+    
+    if (window.DashboardApp && window.DashboardApp.chart) {
+        // Limpar cache
+        const cacheKey = `chart_${period}_${department}`;
+        window.DashboardApp.chart.chartData.delete(cacheKey);
+        
+        // Recarregar dados
+        window.DashboardApp.chart.loadChartData(period, department);
+    } else {
+        console.error('❌ DashboardApp.chart not available');
+    }
+};
 
 /**
  * Export to global scope

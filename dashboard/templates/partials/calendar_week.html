@@ -1,3 +1,4 @@
+"""
 <!-- dashboard/templates/partials/calendar_week.html -->
 <div class="calendar-grid">
     {% for day in calendar_data %}
@@ -13,35 +14,25 @@
                 <div class="appointment-item status-{{ appointment.status }}" 
                      data-bs-toggle="modal" 
                      data-bs-target="#appointmentModal"
-                     data-appointment-id="{{ appointment.id }}"
-                     data-professor="{{ appointment.professor__first_name }} {{ appointment.professor__last_name }}"
-                     data-laboratory="{{ appointment.laboratory__name }}"
-                     data-subject="{{ appointment.subject|default:'Não informado' }}"
-                     data-time="{{ appointment.start_time|time:'H:i' }} - {{ appointment.end_time|time:'H:i' }}"
-                     data-date="{{ day.date|date:'d/m/Y' }}"
-                     data-students="{{ appointment.number_of_students|default:'N/A' }}"
-                     data-materials="{{ appointment.materials|default:'Nenhum material especificado' }}"
-                     data-description="{{ appointment.description|default:'Sem descrição' }}">
+                     data-appointment-id="{{ appointment.id }}">
                      
                     <div class="appointment-time">
                         <i class="bi bi-clock"></i>
                         {{ appointment.start_time|time:"H:i" }} - {{ appointment.end_time|time:"H:i" }}
                     </div>
                     
-                    <div class="appointment-professor">
-                        <i class="bi bi-person"></i>
-                        {{ appointment.professor__first_name }} {{ appointment.professor__last_name }}
-                    </div>
-                    
                     <div class="appointment-lab">
                         <i class="bi bi-building"></i>
-                        {{ appointment.laboratory__name }}
+                        {{ appointment.laboratory.name }}
                     </div>
                     
-                    <div class="appointment-status">
-                        <span class="badge bg-{% if appointment.status == 'approved' %}success{% elif appointment.status == 'pending' %}warning{% else %}danger{% endif %}">
-                            {% if appointment.status == 'approved' %}Aprovado{% elif appointment.status == 'pending' %}Pendente{% else %}Rejeitado{% endif %}
-                        </span>
+                    <div class="appointment-subject">
+                        <i class="bi bi-book"></i>
+                        {{ appointment.subject|default:"Sem disciplina" }}
+                    </div>
+                    
+                    <div class="appointment-status badge bg-{% if appointment.status == 'approved' %}success{% elif appointment.status == 'pending' %}warning{% else %}danger{% endif %}">
+                        {{ appointment.get_status_display }}
                     </div>
                 </div>
                 {% endfor %}
@@ -55,3 +46,4 @@
     </div>
     {% endfor %}
 </div>
+"""
