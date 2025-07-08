@@ -2,6 +2,127 @@
 
 {% block title %}{{ title }} - {{ block.super }}{% endblock %}
 
+{% block extra_css %}
+<style>
+/* Estilos específicos para os checkboxes de departamentos */
+.departments-container {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    margin-top: 0.5rem;
+}
+
+.departments-container .form-check {
+    margin-bottom: 0.75rem;
+    padding-left: 0;
+}
+
+.departments-container .form-check-input {
+    margin-right: 0.75rem;
+    transform: scale(1.1);
+    margin-top: 0.125rem;
+}
+
+.departments-container .form-check-label {
+    font-weight: 500;
+    color: #495057;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.departments-container .form-check-label:hover {
+    background-color: #e9ecef;
+}
+
+.departments-container .form-check-input:checked + .form-check-label {
+    color: #0d6efd;
+    font-weight: 600;
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+.departments-container.is-invalid {
+    border-color: #dc3545;
+    background-color: #f8d7da;
+}
+
+.departments-error {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.departments-help {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+}
+
+.technicians-container {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    margin-top: 0.5rem;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.technicians-container .form-check {
+    margin-bottom: 0.75rem;
+    padding-left: 0;
+}
+
+.technicians-container .form-check-input {
+    margin-right: 0.75rem;
+    transform: scale(1.1);
+    margin-top: 0.125rem;
+}
+
+.technicians-container .form-check-label {
+    font-weight: 500;
+    color: #495057;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.technicians-container .form-check-label:hover {
+    background-color: #e9ecef;
+}
+
+.technicians-container .form-check-input:checked + .form-check-label {
+    color: #28a745;
+    font-weight: 600;
+    background-color: rgba(40, 167, 69, 0.1);
+}
+
+.technicians-container.is-invalid {
+    border-color: #dc3545;
+    background-color: #f8d7da;
+}
+
+.technicians-error {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.technicians-help {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>{{ title }}</h1>
@@ -18,85 +139,211 @@
                 <form method="post" class="needs-validation" novalidate>
                     {% csrf_token %}
                     
+                    <!-- Nome do Laboratório -->
                     <div class="mb-3">
-                        <label for="{{ form.name.id_for_label }}" class="form-label">Nome</label>
+                        <label for="{{ form.name.id_for_label }}" class="form-label">
+                            <i class="bi bi-building me-2"></i>Nome do Laboratório
+                        </label>
                         <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" 
                                class="form-control {% if form.name.errors %}is-invalid{% endif %}" 
-                               value="{{ form.name.value|default:'' }}" required>
+                               value="{{ form.name.value|default:'' }}" 
+                               placeholder="Ex: Laboratório de Física"
+                               required>
                         {% if form.name.errors %}
                         <div class="invalid-feedback">{{ form.name.errors.0 }}</div>
                         {% endif %}
                     </div>
                     
+                    <!-- Localização -->
                     <div class="mb-3">
-                        <label for="{{ form.location.id_for_label }}" class="form-label">Local</label>
+                        <label for="{{ form.location.id_for_label }}" class="form-label">
+                            <i class="bi bi-geo-alt me-2"></i>Localização
+                        </label>
                         <input type="text" name="{{ form.location.name }}" id="{{ form.location.id_for_label }}" 
                                class="form-control {% if form.location.errors %}is-invalid{% endif %}" 
-                               value="{{ form.location.value|default:'' }}" required>
+                               value="{{ form.location.value|default:'' }}" 
+                               placeholder="Ex: Bloco A - Sala 101"
+                               required>
                         {% if form.location.errors %}
                         <div class="invalid-feedback">{{ form.location.errors.0 }}</div>
                         {% endif %}
                     </div>
                     
+                    <!-- Capacidade -->
                     <div class="mb-3">
-                        <label for="{{ form.capacity.id_for_label }}" class="form-label">Capacidade</label>
+                        <label for="{{ form.capacity.id_for_label }}" class="form-label">
+                            <i class="bi bi-people me-2"></i>Capacidade (pessoas)
+                        </label>
                         <input type="number" name="{{ form.capacity.name }}" id="{{ form.capacity.id_for_label }}" 
                                class="form-control {% if form.capacity.errors %}is-invalid{% endif %}" 
-                               value="{{ form.capacity.value|default:'' }}" min="1" required>
+                               value="{{ form.capacity.value|default:'' }}" 
+                               min="1" 
+                               placeholder="Ex: 30"
+                               required>
                         {% if form.capacity.errors %}
                         <div class="invalid-feedback">{{ form.capacity.errors.0 }}</div>
                         {% endif %}
                     </div>
 
+                    <!-- NOVO: Departamentos com Múltipla Seleção -->
                     <div class="mb-3">
-                        <label for="{{ form.department.id_for_label }}" class="form-label">Departamento</label>
-                        <select name="{{ form.department.name }}" id="{{ form.department.id_for_label }}" 
-                                class="form-select {% if form.department.errors %}is-invalid{% endif %}" required>
-                            <option value="" {% if not form.department.value %}selected{% endif %}>Selecione...</option>
-                            {% for value, text in form.department.field.choices %}
-                            <option value="{{ value }}" {% if form.department.value == value %}selected{% endif %}>
-                                {{ text }}
-                            </option>
+                        <label class="form-label">
+                            <i class="bi bi-diagram-3 me-2"></i>Departamentos
+                            <span class="text-danger">*</span>
+                        </label>
+                        
+                        <div class="departments-container {% if form.departments.errors %}is-invalid{% endif %}">
+                            {% for choice in form.departments %}
+                                <div class="form-check">
+                                    {{ choice.tag }}
+                                    <label class="form-check-label" for="{{ choice.id_for_label }}">
+                                        {{ choice.choice_label }}
+                                    </label>
+                                </div>
                             {% endfor %}
-                        </select>
-                        {% if form.department.errors %}
-                        <div class="invalid-feedback">{{ form.department.errors.0 }}</div>
+                        </div>
+                        
+                        <div class="departments-help">
+                            Selecione um ou mais departamentos aos quais este laboratório pertence
+                        </div>
+                        
+                        {% if form.departments.errors %}
+                        <div class="departments-error">
+                            {{ form.departments.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Técnicos Responsáveis -->
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-person-gear me-2"></i>Técnicos Responsáveis
+                        </label>
+                        
+                        <div class="technicians-container {% if form.responsible_technicians.errors %}is-invalid{% endif %}">
+                            {% for choice in form.responsible_technicians %}
+                                <div class="form-check">
+                                    {{ choice.tag }}
+                                    <label class="form-check-label" for="{{ choice.id_for_label }}">
+                                        <i class="bi bi-person-circle me-2"></i>{{ choice.choice_label }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                            
+                            {% if not form.responsible_technicians %}
+                                <div class="text-muted p-3">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    Nenhum técnico disponível. Verifique se existem técnicos aprovados no sistema.
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="technicians-help">
+                            Selecione os técnicos que serão responsáveis por este laboratório (opcional)
+                        </div>
+                        
+                        {% if form.responsible_technicians.errors %}
+                        <div class="technicians-error">
+                            {{ form.responsible_technicians.errors.0 }}
+                        </div>
                         {% endif %}
                     </div>
                     
+                    <!-- Descrição -->
                     <div class="mb-3">
-                        <label for="{{ form.responsible_technician.id_for_label }}" class="form-label">Responsável</label>
-                        <select name="{{ form.responsible_technician.name }}" id="{{ form.responsible_technician.id_for_label }}" 
-                                class="form-select {% if form.responsible_technician.errors %}is-invalid{% endif %}" required>
-                            <option value="" {% if not form.responsible_technician.value %}selected{% endif %}>Selecione...</option>
-                            {% for technician in form.responsible_technician.field.queryset %}
-                            <option value="{{ technician.id }}" {% if form.responsible_technician.value|stringformat:'s' == technician.id|stringformat:'s' %}selected{% endif %}>
-                                {{ technician.get_full_name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                        {% if form.responsible_technician.errors %}
-                        <div class="invalid-feedback">{{ form.responsible_technician.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.description.id_for_label }}" class="form-label">Descrição</label>
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            <i class="bi bi-card-text me-2"></i>Descrição
+                        </label>
                         <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" 
                                   class="form-control {% if form.description.errors %}is-invalid{% endif %}" 
-                                  rows="5" required>{{ form.description.value|default:'' }}</textarea>
+                                  rows="3" 
+                                  placeholder="Descrição do laboratório...">{{ form.description.value|default:'' }}</textarea>
                         {% if form.description.errors %}
                         <div class="invalid-feedback">{{ form.description.errors.0 }}</div>
                         {% endif %}
                     </div>
                     
+                    <!-- Equipamentos -->
+                    <div class="mb-3">
+                        <label for="{{ form.equipment.id_for_label }}" class="form-label">
+                            <i class="bi bi-tools me-2"></i>Equipamentos
+                        </label>
+                        <textarea name="{{ form.equipment.name }}" id="{{ form.equipment.id_for_label }}" 
+                                  class="form-control {% if form.equipment.errors %}is-invalid{% endif %}" 
+                                  rows="3" 
+                                  placeholder="Liste os equipamentos disponíveis...">{{ form.equipment.value|default:'' }}</textarea>
+                        {% if form.equipment.errors %}
+                        <div class="invalid-feedback">{{ form.equipment.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Ativo -->
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" name="{{ form.is_active.name }}" id="{{ form.is_active.id_for_label }}" 
+                                   class="form-check-input" 
+                                   {% if form.is_active.value %}checked{% endif %}>
+                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                <i class="bi bi-check-circle me-2"></i>Laboratório Ativo
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">
+                            Laboratórios inativos não aparecem nas opções de agendamento
+                        </small>
+                    </div>
+                    
+                    <!-- Botões -->
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a href="{% url 'laboratory_list' %}" class="btn btn-outline-secondary me-md-2">Cancelar</a>
-                        <button type="submit" class="btn btn-primary">Salvar</button>
+                        <a href="{% url 'laboratory_list' %}" class="btn btn-outline-secondary me-md-2">
+                            <i class="bi bi-x-lg me-1"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>Salvar Laboratório
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+// Validação customizada para departamentos
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const departmentCheckboxes = document.querySelectorAll('input[name="departments"]');
+    const departmentContainer = document.querySelector('.departments-container');
+    
+    function validateDepartments() {
+        const checkedBoxes = document.querySelectorAll('input[name="departments"]:checked');
+        
+        if (checkedBoxes.length === 0) {
+            departmentContainer.classList.add('is-invalid');
+            return false;
+        } else {
+            departmentContainer.classList.remove('is-invalid');
+            return true;
+        }
+    }
+    
+    // Validar quando checkboxes mudarem
+    departmentCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', validateDepartments);
+    });
+    
+    // Validar no submit do formulário
+    form.addEventListener('submit', function(e) {
+        if (!validateDepartments()) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Scroll para o campo com erro
+            departmentContainer.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+        }
+    });
+});
+</script>
 {% endblock %}

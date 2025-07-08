@@ -116,15 +116,22 @@ def laboratory_create(request):
     if request.method == 'POST':
         form = LaboratoryForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Laboratório criado com sucesso.')
+            laboratory = form.save()
+            messages.success(
+                request, 
+                f'Laboratório "{laboratory.name}" criado com sucesso! '
+                f'Departamentos: {laboratory.get_departments_display()}'
+            )
             return redirect('laboratory_list')
+        else:
+            messages.error(request, 'Por favor, corrija os erros abaixo.')
     else:
         form = LaboratoryForm()
     
     return render(request, 'form.html', {
         'form': form,
-        'title': 'Adicionar Laboratório'
+        'title': 'Adicionar Laboratório',
+        'submit_text': 'Criar Laboratório'
     })
 
 @login_required
@@ -135,15 +142,22 @@ def laboratory_update(request, pk):
     if request.method == 'POST':
         form = LaboratoryForm(request.POST, instance=laboratory)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Laboratório atualizado com sucesso.')
+            laboratory = form.save()
+            messages.success(
+                request, 
+                f'Laboratório "{laboratory.name}" atualizado com sucesso! '
+                f'Departamentos: {laboratory.get_departments_display()}'
+            )
             return redirect('laboratory_list')
+        else:
+            messages.error(request, 'Por favor, corrija os erros abaixo.')
     else:
         form = LaboratoryForm(instance=laboratory)
     
     return render(request, 'form.html', {
         'form': form,
-        'title': 'Editar Laboratório',
+        'title': f'Editar {laboratory.name}',
+        'submit_text': 'Salvar Alterações',
         'laboratory': laboratory
     })
 

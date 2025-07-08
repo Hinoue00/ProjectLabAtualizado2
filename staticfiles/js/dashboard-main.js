@@ -402,3 +402,4 @@ if (document.readyState === 'loading') {
 } else {
     window.Dashboard.init().catch(console.error);
 }
+

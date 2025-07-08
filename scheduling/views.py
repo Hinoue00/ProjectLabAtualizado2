@@ -102,88 +102,91 @@ def schedule_calendar(request):
 @login_required
 @user_passes_test(is_professor)
 def create_schedule_request(request):
-    """
-    Cria uma nova solicitação de agendamento de laboratório com regras especiais
-    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
     today = timezone.now().date()
+    logger.info(f"🔍 INICIANDO CRIAÇÃO DE AGENDAMENTO - Professor: {request.user.get_full_name()}")
     
-    # Define datas da próxima semana para o formulário
+    # Verificar se é quinta ou sexta-feira
+    if today.weekday() not in [3, 4] and not settings.ALLOW_SCHEDULING_ANY_DAY:
+        logger.warning(f"❌ TENTATIVA DE AGENDAMENTO FORA DO DIA PERMITIDO - Dia da semana: {today.weekday()}")
+        messages.warning(request, 'Agendamentos só podem ser feitos às quintas e sextas-feiras.')
+        return redirect('professor_dashboard')
+    
+    # Data da próxima semana
     next_week_start = today + timedelta(days=(7 - today.weekday()))
-    next_week_end = next_week_start + timedelta(days=4)
-    
-    # Verifica se é quinta ou sexta-feira
-    is_confirmation_day = today.weekday() in [3, 4] or settings.ALLOW_SCHEDULING_ANY_DAY  # 3=quinta, 4=sexta 
+    next_week_end = next_week_start + timedelta(days=6)
     
     if request.method == 'POST':
+        logger.info(f"📝 PROCESSANDO FORMULÁRIO DE AGENDAMENTO")
         form = ScheduleRequestForm(request.POST, request.FILES)
+        
         if form.is_valid():
+            logger.info(f"✅ FORMULÁRIO VÁLIDO")
             schedule_request = form.save(commit=False)
             schedule_request.professor = request.user
             
-            # Verifica se a data está na próxima semana
-            if not (next_week_start <= schedule_request.scheduled_date <= next_week_end):
-                messages.error(request, 'Agendamentos só podem ser feitos para a próxima semana.')
-                return render(request, 'create_request.html', {
-                    'form': form, 
-                    'is_confirmation_day': is_confirmation_day
-                })
+            # Log dos dados antes de salvar
+            logger.info(f"📋 DADOS DO AGENDAMENTO:")
+            logger.info(f"   Professor: {schedule_request.professor.get_full_name()}")
+            logger.info(f"   Laboratório: {schedule_request.laboratory.name}")
+            logger.info(f"   Departamento: {schedule_request.laboratory.department}")
+            logger.info(f"   Data: {schedule_request.scheduled_date}")
+            logger.info(f"   Horário: {schedule_request.start_time} - {schedule_request.end_time}")
+            logger.info(f"   Disciplina: {schedule_request.subject}")
             
-           # Se não for quinta/sexta, cria como rascunho
-            if not is_confirmation_day:
-                # Cria um novo modelo para rascunhos de agendamento
-                draft_request = DraftScheduleRequest.objects.create(
-                    professor=request.user,
-                    laboratory=schedule_request.laboratory,
-                    subject=schedule_request.subject,
-                    description=schedule_request.description,
-                    scheduled_date=schedule_request.scheduled_date,
-                    shift=form.cleaned_data['shift'],  # Salva o turno
-                    number_of_students=schedule_request.number_of_students,
-                    materials=schedule_request.materials,
-                    guide_file=schedule_request.guide_file,
-                )
-                
-                # Define os horários baseados no turno
-                draft_request.set_times_from_shift()
-                draft_request.save()
-                
-                messages.success(request, 'Solicitação de agendamento salva como rascunho. Você poderá confirmá-la na quinta ou sexta-feira.')
-                return redirect('professor_dashboard')
-            
-            # Se for quinta/sexta, processa normalmente
-            # Verifica conflitos de horário
+            # Verificar conflitos
             if schedule_request.is_conflicting():
+                logger.warning(f"❌ CONFLITO DE HORÁRIO DETECTADO")
                 messages.error(request, 'Já existe um agendamento aprovado para este laboratório neste horário.')
                 return render(request, 'create_request.html', {
-                    'form': form, 
-                    'is_confirmation_day': is_confirmation_day
+                    'form': form,
+                    'next_week_start': next_week_start,
+                    'next_week_end': next_week_end
                 })
             
-            schedule_request.save()
-
-            # Process file attachments
-            files = request.FILES.getlist('attachments')
-            for file in files:
-                FileAttachment.objects.create(
-                    schedule_request=schedule_request,
-                    file=file,
-                    file_name=file.name,
-                    file_type=file.content_type
-                )
-
-            # Adicionar: Enviar notificação WhatsApp
-            WhatsAppNotificationService.notify_schedule_request(schedule_request)
-            
-            messages.success(request, 'Solicitação de agendamento enviada com sucesso! Aguarde a aprovação.')
-            return redirect('professor_dashboard')
+            try:
+                # Salvar o agendamento
+                logger.info(f"💾 SALVANDO AGENDAMENTO...")
+                schedule_request.save()
+                logger.info(f"✅ AGENDAMENTO SALVO COM SUCESSO - ID: {schedule_request.pk}")
+                
+                # Verificar se foi realmente salvo
+                verificacao = ScheduleRequest.objects.get(pk=schedule_request.pk)
+                logger.info(f"✅ VERIFICAÇÃO DB: ID {verificacao.pk} encontrado")
+                
+                # Notificar laboratoristas (se configurado)
+                try:
+                    from whatsapp.services import WhatsAppNotificationService
+                    WhatsAppNotificationService.notify_schedule_request(schedule_request)
+                    logger.info(f"📱 NOTIFICAÇÃO WHATSAPP ENVIADA")
+                except Exception as e:
+                    logger.warning(f"⚠️ ERRO AO ENVIAR NOTIFICAÇÃO: {str(e)}")
+                
+                messages.success(request, 'Solicitação de agendamento enviada com sucesso! Aguarde a aprovação.')
+                return redirect('professor_dashboard')
+                
+            except Exception as e:
+                logger.error(f"❌ ERRO AO SALVAR AGENDAMENTO: {str(e)}")
+                messages.error(request, f'Erro ao salvar agendamento: {str(e)}')
+                return render(request, 'create_request.html', {
+                    'form': form,
+                    'next_week_start': next_week_start,
+                    'next_week_end': next_week_end
+                })
+        else:
+            logger.warning(f"❌ FORMULÁRIO INVÁLIDO: {form.errors}")
+            messages.error(request, 'Por favor, corrija os erros no formulário.')
     else:
+        logger.info(f"📄 EXIBINDO FORMULÁRIO DE AGENDAMENTO")
         form = ScheduleRequestForm()
     
     context = {
         'form': form,
         'next_week_start': next_week_start,
         'next_week_end': next_week_end,
-        'is_confirmation_day': is_confirmation_day
+        'is_confirmation_day': today.weekday() in [3, 4]
     }
     
     return render(request, 'create_request.html', context)
