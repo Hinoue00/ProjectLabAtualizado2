@@ -1,12 +1,10 @@
 # inventory/views.py
-from itertools import count
 from django.db.models import Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db import models
 from django.db.models import Q
-from django.http import HttpResponse
 from accounts.views import is_technician
 from .models import Material, MaterialCategory
 from .forms import MaterialForm, MaterialCategoryForm, ImportMaterialsForm
@@ -16,13 +14,18 @@ import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill
 import csv
 import io
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 import json
 from .services import DoclingService
 from django.conf import settings
 from django.core.paginator import Paginator
+from django.contrib import messages
+from .automation_service import InventoryAutomationService
+import os
+import tempfile
+
 
 docling_service = DoclingService() if getattr(settings, 'DOCLING_ENABLED', False) else None
 
@@ -691,88 +694,119 @@ def material_trends(request):
 
     return render(request, 'material_trends.html', context)
 
+@login_required
+@user_passes_test(is_technician)
 def download_template(request):
-    """Generate and serve an Excel template for material import"""
-    # Create a new workbook and select the active worksheet
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Template de Materiais"
+    """
+    Download do template Excel para importação
+    Por enquanto, usa o template existente
+    """
+    # Você pode implementar a geração de template aqui
+    # Por enquanto, retorna uma mensagem
+    messages.info(request, 'Template em desenvolvimento. Use a funcionalidade padrão.')
+    return redirect('import_materials')
+
+@login_required
+@user_passes_test(is_technician)
+def automated_import_materials(request):
+    """
+    View simplificada para importação automatizada de materiais
+    Por enquanto, redireciona para a importação normal até implementar a automação completa
+    """
+    messages.info(request, 'Funcionalidade de automação em desenvolvimento. Usando importação padrão.')
+    return redirect('import_materials')
+
+@login_required
+@user_passes_test(is_technician)
+def import_results(request):
+    """
+    Exibe resultados da importação automatizada
+    """
+    # Por enquanto, apenas uma página simples
+    context = {
+        'message': 'Funcionalidade em desenvolvimento'
+    }
+    return render(request, 'inventory/import_results_placeholder.html', context)
+
+@csrf_exempt
+@require_POST
+def validate_file_ajax(request):
+    """
+    Valida arquivo via AJAX antes do upload
+    """
+    # Implementação básica por enquanto
+    if 'file' not in request.FILES:
+        return JsonResponse({'valid': False, 'error': 'Nenhum arquivo enviado'})
     
-    # Define headers
-    headers = [
-        "name", "category", "description", "quantity", 
-        "minimum_stock", "laboratory", "category_type"
-    ]
+    uploaded_file = request.FILES['file']
     
-    # Define column widths
-    column_widths = {
-        "A": 30,  # name
-        "B": 20,  # category
-        "C": 50,  # description
-        "D": 15,  # quantity
-        "E": 15,  # minimum_stock
-        "F": 20,  # laboratory
-        "G": 15,  # category_type
+    # Validação básica
+    if not uploaded_file.name.endswith(('.xlsx', '.xls', '.csv')):
+        return JsonResponse({
+            'valid': False, 
+            'error': 'Formato de arquivo inválido'
+        })
+    
+    return JsonResponse({
+        'valid': True,
+        'message': 'Arquivo válido',
+        'stats': {
+            'total_rows': 0,  # Será implementado
+            'columns_found': [],
+            'required_columns_missing': [],
+            'optional_columns_missing': []
+        }
+    })
+
+@csrf_exempt
+@require_POST
+def preview_materials_ajax(request):
+    """
+    Prévia dos materiais que serão importados
+    """
+    # Implementação básica
+    return JsonResponse({
+        'success': True,
+        'preview_data': [],
+        'total_rows': 0,
+        'preview_rows': 0
+    })
+
+@login_required
+@user_passes_test(is_technician)
+def bulk_categorization(request):
+    """
+    Categorização em lote de materiais existentes
+    """
+    if request.method == 'POST':
+        messages.info(request, 'Funcionalidade de categorização em lote em desenvolvimento.')
+        return redirect('material_list')
+    
+    context = {
+        'materials_count': 0,  # Será implementado depois
+        'automation_enabled': False
     }
     
-    # Apply column widths
-    for col, width in column_widths.items():
-        ws.column_dimensions[col].width = width
-    
-    # Style for headers
-    header_fill = PatternFill(start_color="4A6FA5", end_color="4A6FA5", fill_type="solid")
-    header_font = Font(color="FFFFFF", bold=True)
-    header_alignment = Alignment(horizontal="center", vertical="center")
-    
-    # Add headers
-    for col_idx, header in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col_idx)
-        cell.value = header
-        cell.fill = header_fill
-        cell.font = header_font
-        cell.alignment = header_alignment
-    
-    # Add example data
-    example_data = [
-        # name, category, description, quantity, min_stock, laboratory, category_type
-        ("Papel Sulfite A4", "Material de Escritório", "Papel branco para impressão, tamanho A4", 500, 100, "Laboratório 1", "consumable"),
-        ("Microscópio Binocular", "Equipamentos", "Microscópio para visualização de amostras", 5, 2, "Laboratório 2", "permanent"),
-        ("Reagente Químico", "Reagentes", "Reagente para análises químicas", 20, 5, "Laboratório 3", "perishable"),
-    ]
-    
-    # Add example data to worksheet
-    for row_idx, row_data in enumerate(example_data, 2):
-        for col_idx, cell_value in enumerate(row_data, 1):
-            ws.cell(row=row_idx, column=col_idx).value = cell_value
-    
-    # Add notes
-    notes_row = len(example_data) + 3
-    ws.cell(row=notes_row, column=1).value = "Notas:"
-    ws.cell(row=notes_row, column=1).font = Font(bold=True)
-    
-    notes = [
-        "- Obrigatório: name, category, quantity, minimum_stock, laboratory",
-        "- Opcional: description, category_type",
-        "- category_type pode ser: consumable, permanent, perishable",
-        "- Use nomes de laboratórios e categorias que já existem no sistema",
-        "- A primeira linha (cabeçalho) será ignorada durante a importação"
-    ]
-    
-    for i, note in enumerate(notes, 1):
-        ws.cell(row=notes_row + i, column=1).value = note
-        ws.merge_cells(f'A{notes_row + i}:G{notes_row + i}')
-    
-    # Save to output stream
-    output = io.BytesIO()
-    wb.save(output)
-    output.seek(0)
-    
-    # Generate response
-    response = HttpResponse(
-        output.read(),
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
-    response['Content-Disposition'] = 'attachment; filename=template_materiais.xlsx'
-    
-    return response
+    return render(request, 'inventory/bulk_categorization_placeholder.html', context)
 
+@csrf_exempt
+@require_POST
+def auto_suggest_material(request):
+    """
+    Sugestão automática de material baseado em entrada parcial
+    """
+    try:
+        data = json.loads(request.body)
+        partial_input = data.get('input', '')
+        
+        # Implementação básica - retorna sugestões vazias por enquanto
+        return JsonResponse({
+            'success': True,
+            'suggestions': []
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })

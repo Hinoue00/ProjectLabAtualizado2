@@ -90,6 +90,35 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Logging para automação
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'inventory_automation.log'),
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'inventory.automation_service': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'inventory.services': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
+
 # Internationalization
 LANGUAGE_CODE = 'pt-br'
 TIME_ZONE = 'America/Sao_Paulo'
@@ -144,10 +173,23 @@ WHATSAPP_API_KEY = os.environ.get('WHATSAPP_API_KEY', '')
 OLLAMA_API_URL = os.environ.get('OLLAMA_API_URL', 'http://localhost:11434/api/chat')
 OLLAMA_MODEL = os.environ.get('OLLAMA_MODEL', 'llama3')
 
-# Docling configuration
+# Configurações do Docling para automação de inventário
 DOCLING_ENABLED = os.environ.get('DOCLING_ENABLED', 'True') == 'True'
 DOCLING_MODEL = os.environ.get('DOCLING_MODEL', "pt_core_news_sm")
 DOCLING_CACHE_DIR = os.path.join(BASE_DIR, 'docling_cache')
+
+# Configurações de automação de inventário
+INVENTORY_AUTOMATION = {
+    'ENABLED': os.environ.get('INVENTORY_AUTOMATION_ENABLED', 'True') == 'True',
+    'AUTO_CATEGORIZE': os.environ.get('AUTO_CATEGORIZE_MATERIALS', 'True') == 'True',
+    'AUTO_ASSIGN_LAB': os.environ.get('AUTO_ASSIGN_LABORATORY', 'True') == 'True',
+    'BATCH_SIZE': int(os.environ.get('AUTOMATION_BATCH_SIZE', '100')),
+    'MAX_FILE_SIZE': int(os.environ.get('MAX_IMPORT_FILE_SIZE', '10485760')),  # 10MB
+}
+
+# Configurações de upload de arquivos
+FILE_UPLOAD_MAX_MEMORY_SIZE = INVENTORY_AUTOMATION['MAX_FILE_SIZE']
+DATA_UPLOAD_MAX_MEMORY_SIZE = INVENTORY_AUTOMATION['MAX_FILE_SIZE']
 
 # Scheduling configuration
 ALLOW_SCHEDULING_ANY_DAY = os.environ.get('ALLOW_SCHEDULING_ANY_DAY', 'True') == 'True'

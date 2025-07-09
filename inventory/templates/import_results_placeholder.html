@@ -1,0 +1,28 @@
+<!-- templates/inventory/import_results_placeholder.html -->
+{% extends 'base.html' %}
+
+{% block title %}Resultados da Importação{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-info-circle"></i> Resultados da Importação</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="py-5">
+                        <i class="bi bi-gear" style="font-size: 4em; color: #6c757d;"></i>
+                        <h3 class="mt-3 text-muted">Funcionalidade em Desenvolvimento</h3>
+                        <p class="text-muted">Esta funcionalidade está sendo implementada e estará disponível em breve.</p>
+                        <a href="{% url 'material_list' %}" class="btn btn-primary">
+                            <i class="bi bi-arrow-left"></i> Voltar ao Inventário
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
