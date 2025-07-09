@@ -1,102 +1,493 @@
+<!-- laboratories/templates/form.html -->
 {% extends 'base.html' %}
 
 {% block title %}{{ title }} - {{ block.super }}{% endblock %}
 
-{% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>{{ title }}</h1>
+{% block extra_css %}
+<style>
+/* Container principal responsivo */
+.form-container {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* Estilos para containers de checkboxes */
+.checkbox-container {
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    margin-top: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.checkbox-container.is-invalid {
+    border-color: #dc3545;
+    background-color: #fff5f5;
+}
+
+/* Grid responsivo para checkboxes */
+.checkbox-grid {
+    display: grid;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+/* Layout responsivo - 1 coluna em mobile, 2 em tablet, 3 em desktop */
+@media (max-width: 767px) {
+    .checkbox-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+    .checkbox-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1200px) {
+    .checkbox-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Item individual do checkbox */
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    background-color: white;
+    border: 1px solid #e9ecef;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 60px;
+}
+
+.checkbox-item:hover {
+    background-color: #f8f9fa;
+    border-color: #6c757d;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.checkbox-item.checked {
+    background-color: rgba(13, 110, 253, 0.1);
+    border-color: #0d6efd;
+    color: #0d6efd;
+}
+
+.checkbox-item.checked-technician {
+    background-color: rgba(40, 167, 69, 0.1);
+    border-color: #28a745;
+    color: #28a745;
+}
+
+/* Input checkbox customizado */
+.checkbox-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 0.75rem;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* Label do checkbox */
+.checkbox-item label {
+    margin: 0;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    line-height: 1.4;
+}
+
+.checkbox-item label i {
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+}
+
+/* Container para técnicos com scroll */
+.technicians-container {
+    max-height: 300px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #6c757d #f1f1f1;
+}
+
+.technicians-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.technicians-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.technicians-container::-webkit-scrollbar-thumb {
+    background: #6c757d;
+    border-radius: 4px;
+}
+
+.technicians-container::-webkit-scrollbar-thumb:hover {
+    background: #495057;
+}
+
+/* Mensagens de ajuda e erro */
+.help-text {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 0.5rem;
+    display: block;
+}
+
+.error-text {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+/* Placeholder quando não há itens */
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #6c757d;
+    background-color: white;
+    border: 2px dashed #dee2e6;
+    border-radius: 0.5rem;
+}
+
+.empty-state i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+}
+
+/* Responsividade do card principal */
+@media (max-width: 767px) {
+    .card {
+        margin: 0 0.5rem;
+    }
     
-    <a href="{% url 'laboratory_list' %}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left"></i> Voltar
-    </a>
-</div>
+    .form-container {
+        padding: 0.5rem;
+    }
+}
 
-<div class="row">
-    <div class="col-md-8 mx-auto">
-        <div class="card">
-            <div class="card-body">
-                <form method="post" class="needs-validation" novalidate>
-                    {% csrf_token %}
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.name.id_for_label }}" class="form-label">Nome</label>
-                        <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" 
-                               class="form-control {% if form.name.errors %}is-invalid{% endif %}" 
-                               value="{{ form.name.value|default:'' }}" required>
-                        {% if form.name.errors %}
-                        <div class="invalid-feedback">{{ form.name.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.location.id_for_label }}" class="form-label">Local</label>
-                        <input type="text" name="{{ form.location.name }}" id="{{ form.location.id_for_label }}" 
-                               class="form-control {% if form.location.errors %}is-invalid{% endif %}" 
-                               value="{{ form.location.value|default:'' }}" required>
-                        {% if form.location.errors %}
-                        <div class="invalid-feedback">{{ form.location.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.capacity.id_for_label }}" class="form-label">Capacidade</label>
-                        <input type="number" name="{{ form.capacity.name }}" id="{{ form.capacity.id_for_label }}" 
-                               class="form-control {% if form.capacity.errors %}is-invalid{% endif %}" 
-                               value="{{ form.capacity.value|default:'' }}" min="1" required>
-                        {% if form.capacity.errors %}
-                        <div class="invalid-feedback">{{ form.capacity.errors.0 }}</div>
-                        {% endif %}
-                    </div>
+/* Botões responsivos */
+.button-group {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
 
-                    <div class="mb-3">
-                        <label for="{{ form.department.id_for_label }}" class="form-label">Departamento</label>
-                        <select name="{{ form.department.name }}" id="{{ form.department.id_for_label }}" 
-                                class="form-select {% if form.department.errors %}is-invalid{% endif %}" required>
-                            <option value="" {% if not form.department.value %}selected{% endif %}>Selecione...</option>
-                            {% for value, text in form.department.field.choices %}
-                            <option value="{{ value }}" {% if form.department.value == value %}selected{% endif %}>
-                                {{ text }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                        {% if form.department.errors %}
-                        <div class="invalid-feedback">{{ form.department.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.responsible_technician.id_for_label }}" class="form-label">Responsável</label>
-                        <select name="{{ form.responsible_technician.name }}" id="{{ form.responsible_technician.id_for_label }}" 
-                                class="form-select {% if form.responsible_technician.errors %}is-invalid{% endif %}" required>
-                            <option value="" {% if not form.responsible_technician.value %}selected{% endif %}>Selecione...</option>
-                            {% for technician in form.responsible_technician.field.queryset %}
-                            <option value="{{ technician.id }}" {% if form.responsible_technician.value|stringformat:'s' == technician.id|stringformat:'s' %}selected{% endif %}>
-                                {{ technician.get_full_name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                        {% if form.responsible_technician.errors %}
-                        <div class="invalid-feedback">{{ form.responsible_technician.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.description.id_for_label }}" class="form-label">Descrição</label>
-                        <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" 
-                                  class="form-control {% if form.description.errors %}is-invalid{% endif %}" 
-                                  rows="5" required>{{ form.description.value|default:'' }}</textarea>
-                        {% if form.description.errors %}
-                        <div class="invalid-feedback">{{ form.description.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a href="{% url 'laboratory_list' %}" class="btn btn-outline-secondary me-md-2">Cancelar</a>
-                        <button type="submit" class="btn btn-primary">Salvar</button>
-                    </div>
-                </form>
+@media (max-width: 576px) {
+    .button-group {
+        flex-direction: column-reverse;
+    }
+    
+    .button-group .btn {
+        width: 100%;
+    }
+}
+
+/* Animações suaves */
+.checkbox-item {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid form-container">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <h1 class="mb-2 mb-md-0">{{ title }}</h1>
+        
+        <a href="{% url 'laboratory_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10 col-xl-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Nome do Laboratório -->
+                        <div class="mb-4">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">
+                                <i class="bi bi-building me-2 text-primary"></i>Nome do Laboratório
+                            </label>
+                            <input type="text" 
+                                   name="{{ form.name.name }}" 
+                                   id="{{ form.name.id_for_label }}" 
+                                   class="form-control {% if form.name.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.name.value|default:'' }}" 
+                                   placeholder="Ex: Laboratório de Física"
+                                   required>
+                            {% if form.name.errors %}
+                            <div class="invalid-feedback">{{ form.name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Localização -->
+                        <div class="mb-4">
+                            <label for="{{ form.location.id_for_label }}" class="form-label">
+                                <i class="bi bi-geo-alt me-2 text-primary"></i>Localização
+                            </label>
+                            <input type="text" 
+                                   name="{{ form.location.name }}" 
+                                   id="{{ form.location.id_for_label }}" 
+                                   class="form-control {% if form.location.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.location.value|default:'' }}" 
+                                   placeholder="Ex: Bloco A - Sala 101"
+                                   required>
+                            {% if form.location.errors %}
+                            <div class="invalid-feedback">{{ form.location.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Capacidade -->
+                        <div class="mb-4">
+                            <label for="{{ form.capacity.id_for_label }}" class="form-label">
+                                <i class="bi bi-people me-2 text-primary"></i>Capacidade
+                            </label>
+                            <input type="number" 
+                                   name="{{ form.capacity.name }}" 
+                                   id="{{ form.capacity.id_for_label }}" 
+                                   class="form-control {% if form.capacity.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.capacity.value|default:'' }}" 
+                                   placeholder="Ex: 30"
+                                   min="1"
+                                   required>
+                            {% if form.capacity.errors %}
+                            <div class="invalid-feedback">{{ form.capacity.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Departamentos -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-diagram-3 me-2 text-primary"></i>Departamentos <span class="text-danger">*</span>
+                            </label>
+                            
+                            <div class="checkbox-container {% if form.departments.errors %}is-invalid{% endif %}" id="departments-container">
+                                {% if form.departments %}
+                                    <div class="checkbox-grid">
+                                        {% for choice in form.departments %}
+                                            <div class="checkbox-item" data-type="department">
+                                                {{ choice.tag }}
+                                                <label for="{{ choice.id_for_label }}">
+                                                    <i class="bi bi-building-check"></i>
+                                                    {{ choice.choice_label }}
+                                                </label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="empty-state">
+                                        <i class="bi bi-folder-x d-block"></i>
+                                        <strong>Nenhum departamento disponível</strong>
+                                        <p class="mb-0 mt-1">Crie departamentos primeiro no painel administrativo.</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <small class="help-text">
+                                Selecione um ou mais departamentos aos quais este laboratório pertence
+                            </small>
+                            
+                            {% if form.departments.errors %}
+                            <small class="error-text">{{ form.departments.errors.0 }}</small>
+                            {% endif %}
+                        </div>
+
+                        <!-- Técnicos Responsáveis -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-person-gear me-2 text-success"></i>Técnicos Responsáveis
+                            </label>
+                            
+                            <div class="checkbox-container {% if form.responsible_technicians.errors %}is-invalid{% endif %}">
+                                {% if form.responsible_technicians %}
+                                    <div class="technicians-container">
+                                        <div class="checkbox-grid">
+                                            {% for choice in form.responsible_technicians %}
+                                                <div class="checkbox-item" data-type="technician">
+                                                    {{ choice.tag }}
+                                                    <label for="{{ choice.id_for_label }}">
+                                                        <i class="bi bi-person-circle"></i>
+                                                        {{ choice.choice_label }}
+                                                    </label>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="empty-state">
+                                        <i class="bi bi-person-x d-block"></i>
+                                        <strong>Nenhum técnico disponível</strong>
+                                        <p class="mb-0 mt-1">Verifique se existem técnicos aprovados no sistema.</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <small class="help-text">
+                                Selecione os técnicos que serão responsáveis por este laboratório (opcional)
+                            </small>
+                            
+                            {% if form.responsible_technicians.errors %}
+                            <small class="error-text">{{ form.responsible_technicians.errors.0 }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Descrição -->
+                        <div class="mb-4">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                <i class="bi bi-card-text me-2 text-primary"></i>Descrição
+                            </label>
+                            <textarea name="{{ form.description.name }}" 
+                                      id="{{ form.description.id_for_label }}" 
+                                      class="form-control {% if form.description.errors %}is-invalid{% endif %}" 
+                                      rows="3" 
+                                      placeholder="Descrição do laboratório...">{{ form.description.value|default:'' }}</textarea>
+                            {% if form.description.errors %}
+                            <div class="invalid-feedback">{{ form.description.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Equipamentos -->
+                        <div class="mb-4">
+                            <label for="{{ form.equipment.id_for_label }}" class="form-label">
+                                <i class="bi bi-tools me-2 text-primary"></i>Equipamentos
+                            </label>
+                            <textarea name="{{ form.equipment.name }}" 
+                                      id="{{ form.equipment.id_for_label }}" 
+                                      class="form-control {% if form.equipment.errors %}is-invalid{% endif %}" 
+                                      rows="3" 
+                                      placeholder="Liste os equipamentos disponíveis...">{{ form.equipment.value|default:'' }}</textarea>
+                            {% if form.equipment.errors %}
+                            <div class="invalid-feedback">{{ form.equipment.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Laboratório Ativo -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input type="checkbox" 
+                                       name="{{ form.is_active.name }}" 
+                                       id="{{ form.is_active.id_for_label }}" 
+                                       class="form-check-input {% if form.is_active.errors %}is-invalid{% endif %}"
+                                       {% if form.is_active.value %}checked{% endif %}>
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    <i class="bi bi-toggle-on me-2 text-success"></i>Laboratório ativo
+                                </label>
+                            </div>
+                            {% if form.is_active.errors %}
+                            <div class="invalid-feedback">{{ form.is_active.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Botões -->
+                        <div class="button-group mt-4">
+                            <a href="{% url 'laboratory_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg me-1"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg me-1"></i>{{ submit_text|default:"Salvar Laboratório" }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gerenciar estado visual dos checkboxes
+    function updateCheckboxState(checkbox) {
+        const item = checkbox.closest('.checkbox-item');
+        const type = item.dataset.type;
+        
+        if (checkbox.checked) {
+            if (type === 'department') {
+                item.classList.add('checked');
+            } else if (type === 'technician') {
+                item.classList.add('checked-technician');
+            }
+        } else {
+            item.classList.remove('checked', 'checked-technician');
+        }
+    }
+    
+    // Aplicar estado inicial e adicionar listeners
+    document.querySelectorAll('.checkbox-item input[type="checkbox"]').forEach(checkbox => {
+        updateCheckboxState(checkbox);
+        
+        checkbox.addEventListener('change', function() {
+            updateCheckboxState(this);
+            validateDepartments();
+        });
+    });
+    
+    // Validação de departamentos
+    function validateDepartments() {
+        const departmentCheckboxes = document.querySelectorAll('input[name="departments"]:checked');
+        const container = document.getElementById('departments-container');
+        
+        if (departmentCheckboxes.length === 0) {
+            container.classList.add('is-invalid');
+            return false;
+        } else {
+            container.classList.remove('is-invalid');
+            return true;
+        }
+    }
+    
+    // Validação no submit
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (!validateDepartments()) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            document.getElementById('departments-container').scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+        }
+    });
+    
+    // Fazer labels clicáveis
+    document.querySelectorAll('.checkbox-item label').forEach(label => {
+        label.addEventListener('click', function(e) {
+            e.preventDefault();
+            const checkbox = this.closest('.checkbox-item').querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+            checkbox.dispatchEvent(new Event('change'));
+        });
+    });
+});
+</script>
 {% endblock %}

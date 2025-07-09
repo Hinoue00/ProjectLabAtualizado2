@@ -126,6 +126,38 @@ class ScheduleRequest(models.Model):
         
         return True, ""
     
+    def save(self, *args, **kwargs):
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        # Log detalhado para debug
+        if not self.pk:  # Nova criação
+            logger.info(f"🟢 CRIANDO NOVO AGENDAMENTO:")
+            logger.info(f"   Professor: {self.professor.get_full_name()} (ID: {self.professor.id})")
+            logger.info(f"   Laboratório: {self.laboratory.name} (ID: {self.laboratory.id})")
+            logger.info(f"   Departamento Lab: {self.laboratory.department}")
+            logger.info(f"   Data: {self.scheduled_date}")
+            logger.info(f"   Horário: {self.start_time} - {self.end_time}")
+            logger.info(f"   Status: {self.status}")
+            logger.info(f"   Disciplina: {self.subject}")
+        else:
+            logger.info(f"🔄 ATUALIZANDO AGENDAMENTO ID {self.pk}")
+            logger.info(f"   Status: {self.status}")
+        
+        # Salvar normalmente
+        super().save(*args, **kwargs)
+        
+        # Log após salvar
+        logger.info(f"✅ AGENDAMENTO SALVO COM SUCESSO - ID: {self.pk}")
+        
+        # Debug adicional para verificar se está sendo salvo no DB
+        try:
+            saved_obj = ScheduleRequest.objects.get(pk=self.pk)
+            logger.info(f"✅ CONFIRMADO NO DB - ID: {saved_obj.pk}, Status: {saved_obj.status}")
+        except ScheduleRequest.DoesNotExist:
+            logger.error(f"❌ ERRO: Agendamento não encontrado no DB após salvar!")
+
+    
 # Adicione no arquivo scheduling/models.py
 
 class DraftScheduleRequest(models.Model):

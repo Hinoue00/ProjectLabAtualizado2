@@ -1,902 +1,399 @@
 {% extends 'base.html' %}
 {% load static %}
+
 {% block title %}Dashboard Professor | LabConnect{% endblock %}
 
 {% block extra_css %}
-<style>
-    :root {
-        /* Variáveis de design */
-        --grid-gap: 1.5rem;
-        --card-border-radius: 12px;
-        --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        --transition-speed: 0.3s;
-    }
-
-    .stats-content {
-        flex: 1;
-        text-align: center;
-    }
-
-    /* Mobile-first approach */
-    .dashboard-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-
-    /* Page header mobile optimized */
-    .page-header {
-        margin-bottom: 1rem;
-    }
-
-    .page-header .row {
-        gap: 1rem;
-    }
-
-    @media (max-width: 767px) {
-        .page-header .col-md-6:last-child {
-            margin-top: 0.5rem;
-        }
-
-        .page-title {
-            font-size: 1.5rem;
-        }
-
-        .page-subtitle {
-            font-size: 0.875rem;
-        }
-    }
-
-    /* Dashboard cards base */
-    .dashboard-card {
-        background-color: var(--card-bg);
-        border-radius: var(--card-border-radius);
-        border: 1px solid var(--border-color);
-        box-shadow: var(--box-shadow);
-        padding: 1.25rem;
-        display: flex;
-        flex-direction: column;
-        transition: all var(--transition-speed);
-        position: relative;
-        overflow: hidden;
-    }
-
-    /* Mobile touch optimization */
-    @media (max-width: 767px) {
-        .dashboard-card {
-            padding: 1rem;
-            margin-bottom: 0.75rem;
-        }
-
-        /* Remove hover effects on mobile */
-        .dashboard-card:hover {
-            transform: none;
-            box-shadow: var(--box-shadow);
-        }
-    }
-
-    .dashboard-card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-
-    .dashboard-card-title {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        font-size: 1rem;
-    }
-
-    @media (max-width: 767px) {
-        .dashboard-card-header {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 0.75rem;
-            padding: 1rem;
-        }
-        .dashboard-card-title {
-            font-size: 1rem;
-        }
-
-        .dashboard-card-title i {
-            font-size: 1.1rem;
-        }
-
-        /* Se o badge estiver dentro de um flex container */
-        .dashboard-card-header .badge {
-            flex: 0 0 auto !important;
-            align-self: flex-start !important;
-        }
-
-        /* Específico para badges coloridos do Bootstrap */
-        .badge.bg-warning,
-        .badge.bg-primary,
-        .badge.bg-success,
-        .badge.bg-danger,
-        .badge.bg-info,
-        .badge.bg-secondary {
-            width: auto !important;
-            display: inline-flex !important;
-        }
-    }
-
-    /* Stats cards mobile */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.75rem;
-        margin-bottom: 1rem;
-    }
-
-    .stats-card {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 1rem;
-        min-height: 80px;
-    }
-
-    @media (max-width: 767px) {
-        .stats-card {
-            padding: 0.875rem;
-            gap: 0.5rem;
-            align-items: center;
-        }
-
-        .stats-icon {
-            width: 40px;
-            height: 40px;
-            font-size: 1.25rem;
-        }
-
-        .stats-content {
-            flex: 1;
-            text-align: center;
-        }
-
-        .stats-value {
-            font-size: 1.5rem;
-            flex: 1
-        }
-
-        .stats-label {
-            font-size: 0.75rem;
-            line-height: 1.2;
-        }
-    }
-
-    /* Weekly calendar mobile optimization */
-    .calendar-container {
-        position: relative;
-        overflow: hidden;
-    }
-
-    .calendar-scroll-wrapper {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scroll-snap-type: x mandatory;
-        scrollbar-width: thin;
-        padding-bottom: 0.5rem;
-    }
-
-    .calendar-grid {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr); /* 5 colunas iguais para os dias da semana */
-        gap: 1rem;
-    }
-
-    /* Responsividade */
-    @media (max-width: 1199px) {
-        .calendar-grid {
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
-        }
-    }
-
-    @media (max-width: 767px) {
-
-        .calendar-grid {
-            grid-template-columns: 1fr;
-            gap: 0.5rem;
-        }
-
-        .calendar-day {
-            min-height: 120px;
-        }
-
-        .calendar-day .day-header {
-            padding: 0.5rem;
-        }
-        
-        .calendar-day .day-content {
-            padding: 0.5rem;
-        }
-        
-        .appointment-item {
-            padding: 0.5rem;
-            font-size: 0.8rem;
-        }
-    }
-
-    .calendar-day {
-        background-color: var(--card-bg, white);
-        border: 1px solid var(--border-color, #dee2e6);
-        border-radius: 0.5rem;
-        display: flex;
-        flex-direction: column;
-        min-height: 150px;
-        transition: box-shadow 0.2s ease;
-    }
-
-    .calendar-day:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    }
-
-    [data-theme="dark"] .calendar-day:hover {
-        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.08);
-    }
-
-    .calendar-day.today {
-        border-color: var(--primary-color);
-        background-color: rgba(74, 111, 165, 0.05);
-    }
-
-    .calendar-day .day-header {
-        font-weight: 600;
-        padding: 0.75rem;
-        border-bottom: 1px solid var(--border-color, #dee2e6);
-        text-align: center;
-        background-color: rgba(0,0,0,0.02);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    [data-theme="dark"] .calendar-day .day-header {
-        background-color: rgba(255,255,255,0.03);
-    }
-
-    .calendar-day .day-name {
-        font-weight: 600;
-        font-size: 0.875rem;
-    }
-
-    .calendar-day .day-date {
-        font-size: 0.8rem;
-        color: var(--text-muted, #6c757d);
-    }
-
-    .calendar-day.today .day-header {
-        background-color: rgba(74, 111, 165, 0.1);
-        color: #4a6fa5;
-        border-bottom-color: #4a6fa5;
-    }
-
-    .calendar-day.today {
-        border-color: #4a6fa5;
-    }
-
-    .calendar-day .day-content {
-        padding: 0.75rem;
-        flex-grow: 1;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .day-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.75rem;
-        background-color: rgba(74, 111, 165, 0.05);
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    @media (max-width: 767px) {
-        .day-header {
-            padding: 0.5rem;
-        }
-    }
-
-    .day-content {
-        flex-grow: 1;
-        padding: 0.5rem;
-        overflow-y: auto;
-        max-height: 200px;
-    }
-
-    /* Appointment items mobile */
-    .appointment-item {
-        background-color: rgba(74, 111, 165, 0.05);
-        border-radius: 6px;
-        padding: 0.75rem;
-        margin-bottom: 0.5rem;
-        position: relative;
-        overflow: hidden;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    /* Estilo dos Agendamentos */
-    .appointment-item {
-        padding: 0.6rem;
-        border-radius: 0.3rem;
-        background-color: rgba(74, 111, 165, 0.05);
-        border-left: 3px solid #4a6fa5;
-        font-size: 0.875rem;
-        transition: background-color 0.2s ease;
-    }
-
-    .appointment-item:hover {
-        background-color: rgba(74, 111, 165, 0.1);
-    }
-
-    .appointment-lab-name {
-        font-weight: 600;
-        color: var(--text-dark, #495057);
-        margin-bottom: 0.25rem;
-    }
-
-    .appointment-time {
-        font-size: 0.8rem;
-        color: var(--text-muted, #6c757d);
-        margin-bottom: 0.25rem;
-    }
-
-    .appointment-status .badge {
-        font-size: 0.7rem;
-        padding: 0.25rem 0.5rem;
-    }
-
-    /* Estado vazio */
-    .no-appointments {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100px;
-        color: var(--text-muted, #6c757d);
-        font-size: 0.875rem;
-    }
-
-    .no-appointments i {
-        font-size: 1.5rem;
-        margin-bottom: 0.5rem;
-        opacity: 0.5;
-    }
-
-    /* Status dos agendamentos */
-    .appointment-item.status-pending {
-        border-left-color: #ffc107;
-        background-color: rgba(255, 193, 7, 0.05);
-    }
-
-    .appointment-item.status-approved {
-        border-left-color: #28a745;
-        background-color: rgba(40, 167, 69, 0.05);
-    }
-
-    .appointment-item.status-completed {
-        border-left-color: #6c757d;
-        background-color: rgba(108, 117, 125, 0.05);
-    }
-
-    /* Loading state */
-    .loading {
-        opacity: 0.6;
-        pointer-events: none;
-    }
-
-
-    @media (max-width: 767px) {
-        .appointment-item {
-            padding: 0.625rem;
-            font-size: 0.875rem;
-        }
-
-        .appointment-item:active {
-            background-color: rgba(74, 111, 165, 0.1);
-        }
-    }
-
-    /* Upcoming classes mobile */
-    .upcoming-class-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .upcoming-class-item {
-        background-color: rgba(74, 111, 165, 0.05);
-        border-radius: 8px;
-        padding: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        transition: all var(--transition-speed);
-        cursor: pointer;
-    }
-
-    @media (max-width: 767px) {
-        .upcoming-class-item {
-            padding: 0.875rem;
-            gap: 0.75rem;
-        }
-
-        .upcoming-class-item:active {
-            background-color: rgba(74, 111, 165, 0.1);
-        }
-
-        .upcoming-class-icon {
-            width: 40px;
-            height: 40px;
-            font-size: 1.25rem;
-        }
-    }
-
-    /* Draft requests mobile */
-    .draft-scrollable-content {
-        max-height: 300px;
-        overflow-y: auto;
-        scrollbar-width: thin;
-    }
-
-    @media (max-width: 767px) {
-        .draft-scrollable-content {
-            max-height: 250px;
-        }
-    }
-
-    /* Mobile navigation helpers */
-    .mobile-nav-hint {
-        display: block !important;
-        text-align: center;
-        padding: 0.5rem;
-        font-size: 0.75rem;
-        color: var(--text-muted);
-        background-color: rgba(0,0,0,0.02);
-        border-top: 1px solid var(--border-color);
-        margin-top: 0.5rem;
-    }
-
-    @media (max-width: 767px) {
-        .mobile-nav-hint {
-            display: block;
-        }
-    }
-
-    /* Calendar navigation buttons */
-    .calendar-nav {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    @media (max-width: 767px) {
-        .calendar-nav {
-            padding: 0.6rem 1rem !important;
-            font-size: 0.9rem !important;
-            font-weight: 500;
-            border-radius: 8px;
-            justify-content: center;
-            min-height: 44px; /* Área de toque adequada */
-            touch-action: manipulation;
-            background-color: var(--card-bg) !important; /* Sobrescreve backdrop */
-            backdrop-filter: none !important;
-            border: 1px solid var(--border-color) !important;
-            color: var(--text-muted) !important;
-        }
-
-        .calendar-nav a {
-            padding: 0.375rem 0.75rem;
-            font-size: 0.8rem;
-            background-color: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(4px);
-        }
-
-        [data-theme="dark"] .calendar-nav a {
-            background-color: rgba(33, 37, 41, 0.9);
-        }
-
-        .calendar-nav .btn {
-            padding: 0.6rem 1rem !important;
-            font-size: 0.9rem !important;
-            font-weight: 500;
-            border-radius: 8px;
-            justify-content: center;
-            min-height: 44px; /* Área de toque adequada */
-            touch-action: manipulation;
-            background-color: var(--card-bg) !important; /* Sobrescreve backdrop */
-            backdrop-filter: none !important;
-            border: 1px solid var(--border-color) !important;
-            color: var(--text-muted) !important;
-        }
-
-        /* Distribuição dos botões */
-        .calendar-nav .btn:nth-child(1) {
-            grid-column: 1;
-        }
-
-        .calendar-nav .btn:nth-child(2) { /* Botão "Hoje" */
-            grid-column: 2;
-            background-color: var(--primary-color) !important;
-            border-color: var(--primary-color) !important;
-            color: white !important;
-            font-weight: 600;
-        }
-
-        .calendar-nav .btn:nth-child(3) {
-            grid-column: 3;
-        }
-
-        /* Efeito de toque mais suave */
-        .calendar-nav .btn:active {
-            opacity: 0.7;
-            transform: scale(0.98);
-        }
-
-        /* Remove efeitos hover no mobile */
-        .calendar-nav .btn:hover {
-            transform: none !important;
-            background-color: var(--primary-color) !important;
-        }
-
-        .calendar-nav .btn:nth-child(2):hover {
-            background-color: var(--primary-color) !important;
-        }
-
-    }
-
-    /* Empty states mobile */
-    .empty-state {
-        text-align: center;
-        padding: 2rem 1rem;
-    }
-
-    @media (max-width: 767px) {
-        .empty-state {
-            padding: 1.5rem 0.75rem;
-        }
-
-        .empty-state i {
-            font-size: 2.5rem;
-        }
-
-        .empty-state h5 {
-            font-size: 1.1rem;
-            margin-top: 1rem;
-        }
-
-        .empty-state p {
-            font-size: 0.875rem;
-        }
-    }
-
-    /* Action buttons mobile */
-    .btn {
-        touch-action: manipulation;
-    }
-
-    @media (max-width: 767px) {
-        .btn {
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-        }
-
-        .btn-sm {
-            padding: 0.375rem 0.75rem;
-            font-size: 0.8rem;
-        }
-
-        /* Full width buttons on mobile */
-        .btn-mobile-full {
-            width: 100%;
-        }
-    }
-
-    /* Badge adjustments */
-    @media (max-width: 767px) {
-        .badge {
-            font-size: 0.7rem !important;
-            padding: 0.25rem 0.5rem !important;
-            border-radius: 4px !important;
-            font-weight: 500 !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            white-space: nowrap !important;
-            
-            /* Forçar dimensões específicas */
-            width: auto !important;
-            max-width: fit-content !important;
-            min-width: auto !important;
-            flex: none !important;
-            flex-shrink: 0 !important;
-            flex-grow: 0 !important;
-            
-            /* Remover qualquer largura forçada */
-            box-sizing: content-box !important;
-        }
-
-    /* Responsive grid for desktop */
-    @media (min-width: 768px) {
-        .dashboard-grid {
-            grid-template-columns: 1fr 1fr;
-            grid-template-areas: 
-                "stats stats"
-                "calendar calendar"
-                "upcoming drafts"
-                "history history";
-            gap: var(--grid-gap);
-        }
-
-        .stats-section { grid-area: stats; }
-        .weekly-calendar-row { grid-area: calendar; }
-        .upcoming-classes-card { grid-area: upcoming; }
-        .draft-requests-card { grid-area: drafts; }
-        .history-card { grid-area: history; }
-    }
-
-    @media (min-width: 1200px) {
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-        }
-
-        .calendar-scroll-wrapper {
-            overflow-x: visible;
-        }
-    }
-
-    /* Touch feedback */
-    @media (hover: none) {
-        .dashboard-card:active,
-        .upcoming-class-item:active,
-        .appointment-item:active {
-            opacity: 0.8;
-        }
-    }
-
-    /* Accessibility improvements */
-    .visually-hidden {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border: 0;
-    }
-
-    /* Loading states */
-    .loading-skeleton {
-        background: linear-gradient(90deg, 
-            rgba(0, 0, 0, 0.05) 25%, 
-            rgba(0, 0, 0, 0.1) 50%, 
-            rgba(0, 0, 0, 0.05) 75%);
-        background-size: 200% 100%;
-        animation: loading 1.5s ease-in-out infinite;
-    }
-
-    @keyframes loading {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
-    }
-</style>
+<!-- CSS Base Reutilizados do Technician -->
+<link rel="stylesheet" href="{% static 'css/variables.css' %}">
+<link rel="stylesheet" href="{% static 'css/dashboard-base.css' %}">
+<link rel="stylesheet" href="{% static 'css/calendar.css' %}">
+<link rel="stylesheet" href="{% static 'css/calendar-visual.css' %}">
+<link rel="stylesheet" href="{% static 'css/activities-professors.css' %}">
+<link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+
+<!-- CSS Específicos do Professor -->
+<link rel="stylesheet" href="{% static 'css/professor-specific.css' %}">
+<link rel="stylesheet" href="{% static 'css/professor-consistency.css' %}">
+<link rel="stylesheet" href="{% static 'css/schedule-request.css' %}">
+<link rel="stylesheet" href="{% static 'css/availability-grid.css' %}">
+<link rel="stylesheet" href="{% static 'css/professor-mobile.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="content-container">
-    <!-- Page Header Mobile Optimized -->
-    <div class="page-header">
-        <div class="row align-items-center">
-            <div class="col-md-6">
-                <h1 class="page-title">Olá, {{ user.first_name }}!</h1>
-                <p class="page-subtitle">Bem-vindo ao seu painel.</p>
+<div class="content-container professor-dashboard">      
+    <!-- Page Header - LAYOUT MELHORADO -->
+    <div class="page-header-improved">
+        <div class="header-content">
+            <!-- Título e subtítulo à esquerda -->
+            <div class="header-text">
+                <h1 class="page-title-improved">Olá, {{ user.first_name }}!</h1>
+                <p class="page-subtitle-improved">Bem-vindo ao seu painel.</p>
             </div>
-            <div class="col-md-6 text-md-end">
+            
+            <!-- Botão de agendamento à direita -->
+            <div class="header-actions">
                 {% if is_scheduling_day %}
-                <a href="{% url 'create_schedule_request' %}" class="btn btn-primary btn-mobile-full">
-                    <i class="bi bi-plus-lg me-1"></i> Solicitar Agendamento
+                <a href="{% url 'create_schedule_request' %}" class="btn-schedule-improved btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    <span class="btn-text">Solicitar Agendamento</span>
                 </a>
                 {% else %}
-                <button class="btn btn-outline-secondary btn-mobile-full" disabled>
-                    <i class="bi bi-calendar-plus me-1"></i> Agendamentos às qui/sex
+                <button class="btn-schedule-improved btn-disabled" disabled>
+                    <i class="bi bi-calendar-x me-2"></i>
+                    <span class="btn-text">Agendamento Indisponível</span>
                 </button>
                 {% endif %}
             </div>
         </div>
+        
+        <!-- Aviso de agendamento (se necessário) -->
+        {% if not is_scheduling_day %}
+        <div class="alert alert-warning mt-3 scheduling-warning">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Atenção:</strong> Agendamentos só podem ser feitos às quintas e sextas-feiras para a semana seguinte.
+        </div>
+        {% endif %}
     </div>
 
-    <!-- Stats Cards Mobile Grid -->
-    <div class="stats-section">
-        <div class="stats-grid">
-            <div class="dashboard-card stats-card">
-                <div class="stats-icon">
-                    <i class="bi bi-calendar-check"></i>
-                </div>
-                <div class="stats-content">
-                    <div class="stats-value">{{ upcoming_reservations.count }}</div>
-                    <div class="stats-label">Aulas Agendadas</div>
+    <!-- Stats Cards -->
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="stats-icon">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                        {% if pending_count > 0 %}
+                            <span class="badge bg-warning rounded-pill">Pendente</span>
+                        {% endif %}
+                    </div>
+                    <h3 class="stats-value">{{ pending_count }}</h3>
+                    <p class="stats-label">Agendamentos Pendentes</p>
                 </div>
             </div>
-
-            <div class="dashboard-card stats-card">
-                <div class="stats-icon">
-                    <i class="bi bi-hourglass-split"></i>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="stats-icon">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                        <span class="badge bg-success rounded-pill">Aprovado</span>
+                    </div>
+                    <h3 class="stats-value">{{ approved_count }}</h3>
+                    <p class="stats-label">Agendamentos Aprovados</p>
                 </div>
-                <div class="stats-content">
-                    <div class="stats-value">{{ pending_requests.count }}</div>
-                    <div class="stats-label">Pendentes</div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="stats-icon">
+                            <i class="bi bi-calendar-week"></i>
+                        </div>
+                        <span class="badge bg-{% if week_change > 0 %}success{% else %}danger{% endif %} rounded-pill">
+                            {{ week_change|floatformat:0 }}% {% if week_change > 0 %}↑{% else %}↓{% endif %}
+                        </span>
+                    </div>
+                    <h3 class="stats-value">{{ this_week_count }}</h3>
+                    <p class="stats-label">Aulas esta semana</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="stats-icon">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                        <span class="badge bg-info rounded-pill">Total</span>
+                    </div>
+                    <h3 class="stats-value">{{ total_schedules }}</h3>
+                    <p class="stats-label">Total de Agendamentos</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Dashboard Grid -->
-    <div class="dashboard-grid">
-        <div class="dashboard-card weekly-calendar-row">
-            <div class="dashboard-card-header">
-                <h5 class="dashboard-card-title" id="calendar-title">
-                    <i class="bi bi-calendar-week"></i>
-                    Calendário Semanal ({{ start_of_week|date:"d/m" }} - {{ end_of_week|date:"d/m/Y" }})
-                </h5>
-                <div class="calendar-nav">
-                    <a href="#" id="prev-week-link" data-offset="-1" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-arrow-left"></i>
-                        <span class="d-none d-sm-inline">Anterior</span>
-                    </a>
-                    <a href="#" id="today-link" data-offset="0" class="btn btn-sm btn-outline-primary">Hoje</a>
-                    <a href="#" id="next-week-link" data-offset="1" class="btn btn-sm btn-outline-secondary">
-                        <span class="d-none d-sm-inline">Próxima</span>
-                        <i class="bi bi-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
-            <div class="calendar-container">
-                <div class="dashboard-card-content" id="calendar-body">
-                    {% include 'partials/calendar_week.html' with calendar_data=calendar_data %}
-                </div>
-            </div>
-            <!-- Input hidden para controlar o offset da semana -->
-            <input type="hidden" id="week_offset_input" value="0">
-        </div>
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <!-- ✅ MESMO HEADER DO TÉCNICO -->
+                <div class="card-header bg-transparent calendar-header">
+                    <h5 class="card-title mb-0 calendar-title" id="calendar-title">
+                        Calendário Semanal ({{ week_start|date:"d/m" }} - {{ week_end|date:"d/m/Y" }})
+                    </h5>
 
+                    <!-- ✅ MESMO FILTRO DO TÉCNICO -->
+                    <form method="get" action="{% url 'professor_dashboard' %}" class="department-filter-form" id="department-filter-form">
+                        <input type="hidden" name="week_offset" id="week_offset_input" value="{{ week_offset }}">
+                        <label for="department-select">Departamento:</label>
+                        <select name="department" id="department-select" class="form-select form-select-sm">
+                            <option value="all" {% if not current_department or current_department == 'all' %}selected{% endif %}>Todos</option>
+                            {% for dept in departments %}
+                                <option value="{{ dept }}" {% if current_department == dept %}selected{% endif %}>{{ dept|capfirst }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+
+                    <!-- ✅ MESMA NAVEGAÇÃO DO TÉCNICO -->
+                    <div class="calendar-nav">
+                        <a href="#" id="prev-week-link" class="nav-link">
+                            <i class="bi bi-chevron-left"></i>
+                            Anterior
+                        </a>
+                        <a href="#" id="today-link" class="nav-link">
+                            <i class="bi bi-house"></i>
+                            Hoje
+                        </a>
+                        <a href="#" id="next-week-link" class="nav-link">
+                            <i class="bi bi-chevron-right"></i>
+                            Próxima
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="calendar-body" id="calendar-body">
+                        <!-- ✅ TEMPLATE ESPECÍFICO PARA PROFESSOR (só seus agendamentos) -->
+                        {% include 'partials/calendar_week_professor.html' with calendar_data=calendar_data %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Row -->
+    <div class="row">
         <!-- Upcoming Classes -->
-        <div class="dashboard-card upcoming-classes-card">
-            <div class="dashboard-card-header">
-                <h5 class="dashboard-card-title">
-                    <i class="bi bi-calendar-check"></i>
-                    Próximas Aulas
-                </h5>
-                <a href="{% url 'schedule_calendar' %}" class="btn btn-sm btn-outline-primary">
-                    <span class="d-none d-sm-inline">Ver Calendário</span>
-                    <span class="d-sm-none">Ver Todos</span>
-                </a>
-            </div>
-            <div class="dashboard-card-content">
-                {% if upcoming_reservations %}
-                    <div class="upcoming-class-list">
-                        {% for reservation in upcoming_reservations|slice:":3" %}
-                            <div class="upcoming-class-item" data-reservation-id="{{ reservation.id }}">
-                                <div class="upcoming-class-icon">
-                                    <i class="bi bi-building"></i>
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-calendar-event"></i>
+                        Próximas Aulas
+                    </h5>
+                    <p class="small text-muted mb-0">Total: {{ upcoming_classes.count }}</p>
+                </div>
+                
+                <div class="card-body">
+                    {% if upcoming_classes %}
+                        <ul class="professor-list custom-scrollbar">
+                            {% for class in upcoming_classes|slice:":5" %}
+                            <li class="professor-list-item">
+                                <i class="bi bi-building"></i>
+                                <div class="professor-info">
+                                    <span class="professor-name">{{ class.laboratory.name }}</span>
+                                    <span class="professor-contact">
+                                        <i class="bi bi-calendar3"></i> {{ class.scheduled_date|date:"d/m/Y" }}
+                                    </span>
+                                    <span class="professor-contact">
+                                        <i class="bi bi-clock"></i> {{ class.start_time|time:"H:i" }} - {{ class.end_time|time:"H:i" }}
+                                    </span>
+                                    <span class="professor-contact">
+                                        <i class="bi bi-book"></i> {{ class.subject }}
+                                    </span>
                                 </div>
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-1">{{ reservation.laboratory.name }}</h6>
-                                    <p class="mb-1 text-muted small">
-                                        {{ reservation.subject }}
-                                    </p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <small>
-                                            <i class="bi bi-calendar3"></i> {{ reservation.scheduled_date|date:"d/m" }}
-                                            <i class="bi bi-clock ms-2"></i> {{ reservation.start_time|time:"H:i" }}
-                                        </small>
-                                        <span class="badge bg-success">Aprovado</span>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="empty-state">
-                        <i class="bi bi-calendar-x"></i>
-                        <h5>Nenhuma aula agendada</h5>
-                        <p>Você não possui agendamentos para os próximos dias.</p>
-                    </div>
+                                <span class="badge bg-success">Aprovado</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <li class="empty-state">
+                            <i class="bi bi-calendar-x"></i>
+                            <h5>Nenhuma aula agendada</h5>
+                            <p>Você não tem aulas agendadas para os próximos dias.</p>
+                        </li>
+                    {% endif %}
+                </div>
+                
+                {% if upcoming_classes.count > 5 %}
+                <div class="card-footer text-center">
+                    <a href="{% url 'schedule_requests_list' %}" class="card-footer-link">
+                        <i class="bi bi-arrow-right"></i>
+                        Ver todas as aulas
+                    </a>
+                </div>
                 {% endif %}
             </div>
         </div>
 
         <!-- Draft Requests -->
-        <div class="dashboard-card draft-requests-card">
-            <div class="dashboard-card-header">
-                <h5 class="dashboard-card-title">
-                    <i class="bi bi-file-earmark-text"></i>
-                    Rascunhos
-                </h5>
-                <span class="badge bg-warning">{{ draft_requests.count }}</span>
-            </div>
-            <div class="dashboard-card-content draft-scrollable-content">
-                {% if draft_requests %}
-                    <div class="upcoming-class-list">
-                        {% for draft in draft_requests %}
-                            <div class="upcoming-class-item">
-                                <div class="upcoming-class-icon">
-                                    <i class="bi bi-pencil"></i>
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-file-text"></i>
+                        Rascunhos
+                    </h5>
+                    <p class="small text-muted mb-0">Total: {{ draft_requests.count }}</p>
+                </div>
+                
+                <div class="card-body">
+                    {% if draft_requests %}
+                        <ul class="professor-list custom-scrollbar">
+                            {% for draft in draft_requests|slice:":5" %}
+                            <li class="professor-list-item">
+                                <i class="bi bi-pencil"></i>
+                                <div class="professor-info">
+                                    <span class="professor-name">{{ draft.laboratory.name }}</span>
+                                    <span class="professor-contact">
+                                        <i class="bi bi-book"></i> {{ draft.subject }}
+                                    </span>
+                                    <span class="professor-contact">
+                                        <i class="bi bi-calendar3"></i> {{ draft.scheduled_date|date:"d/m/Y" }}
+                                    </span>
                                 </div>
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-1">{{ draft.laboratory.name }}</h6>
-                                    <p class="mb-1 text-muted small">
-                                        {{ draft.subject }}
-                                    </p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <small>
-                                            <i class="bi bi-calendar3"></i> {{ draft.scheduled_date|date:"d/m" }}
-                                        </small>
-                                        <a href="{% url 'edit_draft_schedule_request' draft.id %}" 
-                                           class="btn btn-sm btn-outline-primary">
-                                            Editar
-                                        </a>
-                                    </div>
+                                <div class="draft-actions">
+                                    <a href="{% url 'edit_draft_schedule_request' draft.id %}" class="btn btn-sm btn-outline-primary">
+                                        Editar
+                                    </a>
                                 </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="empty-state">
-                        <i class="bi bi-file-x"></i>
-                        <p>Nenhum rascunho de agendamento</p>
-                    </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <li class="empty-state">
+                            <i class="bi bi-file-x"></i>
+                            <h5>Nenhum rascunho</h5>
+                            <p>Não há rascunhos salvos.</p>
+                        </li>
+                    {% endif %}
+                </div>
+                
+                {% if draft_requests.count > 5 %}
+                <div class="card-footer text-center">
+                    <a href="{% url 'list_draft_schedule_requests' %}" class="card-footer-link">
+                        <i class="bi bi-arrow-right"></i>
+                        Ver todos os rascunhos
+                    </a>
+                </div>
                 {% endif %}
             </div>
         </div>
+    </div>
 
-        <!-- History -->
-        <div class="dashboard-card history-card">
-            <div class="dashboard-card-header">
-                <h5 class="dashboard-card-title">
-                    <i class="bi bi-clock-history"></i>
-                    Histórico Recente
+    </div>
+
+    <!-- Notifications Container -->
+    <div class="notifications-container position-fixed" style="top: 20px; right: 20px; z-index: 1060;"></div>
+</div>
+
+<!-- Schedule Modal -->
+<div class="modal fade" id="scheduleModal" tabindex="-1" aria-labelledby="scheduleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="scheduleModalLabel">
+                    <i class="bi bi-calendar-plus"></i>
+                    Agendar Laboratório
                 </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
-            <div class="dashboard-card-content">
-                {% if past_reservations %}
-                    <div class="upcoming-class-list">
-                        {% for reservation in past_reservations|slice:":3" %}
-                            <div class="upcoming-class-item">
-                                <div class="upcoming-class-icon">
-                                    <i class="bi bi-archive"></i>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-1">{{ reservation.laboratory.name }}</h6>
-                                    <p class="mb-1 text-muted small">
-                                        {{ reservation.subject }}
-                                    </p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <small>
-                                            <i class="bi bi-calendar3"></i> {{ reservation.scheduled_date|date:"d/m/Y" }}
-                                        </small>
-                                        <span class="badge bg-secondary">Concluído</span>
-                                    </div>
-                                </div>
+            <div class="modal-body">
+                <form id="scheduleForm" method="post" action="{% url 'create_schedule_request' %}">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group-enhanced">
+                                <label class="form-label-enhanced" for="laboratory_select">
+                                    <i class="bi bi-building"></i>
+                                    Laboratório
+                                </label>
+                                <select class="form-control-enhanced" id="laboratory_select" name="laboratory" required>
+                                    <option value="">Selecione um laboratório</option>
+                                    {% for lab in laboratories %}
+                                    <option value="{{ lab.id }}">{{ lab.name }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
-                        {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group-enhanced">
+                                <label class="form-label-enhanced" for="date_select">
+                                    <i class="bi bi-calendar"></i>
+                                    Data
+                                </label>
+                                <input type="date" class="form-control-enhanced" id="date_select" name="scheduled_date" required>
+                            </div>
+                        </div>
                     </div>
-                {% else %}
-                    <div class="empty-state">
-                        <i class="bi bi-journal-x"></i>
-                        <p>Nenhum histórico de aulas</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group-enhanced">
+                                <label class="form-label-enhanced" for="start_time">
+                                    <i class="bi bi-clock"></i>
+                                    Horário de Início
+                                </label>
+                                <input type="time" class="form-control-enhanced" id="start_time" name="start_time" required>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group-enhanced">
+                                <label class="form-label-enhanced" for="end_time">
+                                    <i class="bi bi-clock-fill"></i>
+                                    Horário de Término
+                                </label>
+                                <input type="time" class="form-control-enhanced" id="end_time" name="end_time" required>
+                            </div>
+                        </div>
                     </div>
-                {% endif %}
+                    
+                    <div class="form-group-enhanced">
+                        <label class="form-label-enhanced" for="subject">
+                            <i class="bi bi-book"></i>
+                            Disciplina
+                        </label>
+                        <input type="text" class="form-control-enhanced" id="subject" name="subject" required>
+                    </div>
+                    
+                    <div class="form-group-enhanced">
+                        <label class="form-label-enhanced" for="students">
+                            <i class="bi bi-people"></i>
+                            Número de Alunos
+                        </label>
+                        <input type="number" class="form-control-enhanced" id="students" name="number_of_students" min="1" required>
+                    </div>
+                    
+                    <div class="form-group-enhanced">
+                        <label class="form-label-enhanced" for="materials">
+                            <i class="bi bi-tools"></i>
+                            Materiais Necessários
+                        </label>
+                        <textarea class="form-control-enhanced" id="materials" name="materials" rows="3" placeholder="Liste os materiais necessários para a aula..."></textarea>
+                    </div>
+                    
+                    <div class="form-group-enhanced">
+                        <label class="form-label-enhanced" for="description">
+                            <i class="bi bi-file-text"></i>
+                            Descrição da Atividade
+                        </label>
+                        <textarea class="form-control-enhanced" id="description" name="description" rows="3" placeholder="Descreva brevemente a atividade..."></textarea>
+                    </div>
+                    
+                    <!-- Conflict Warning Container -->
+                    <div class="conflict-warning" style="display: none;"></div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary schedule-form-submit">
+                            <i class="bi bi-send"></i>
+                            Enviar Solicitação
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -904,210 +401,333 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Chart.js (Para possíveis gráficos futuros) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+<!-- JS Base Reutilizados do Technician -->
+<script src="{% static 'js/dashboard-main.js' %}"></script>
+<script src="{% static 'js/calendar-module.js' %}"></script>
+<script src="{% static 'js/modal-handlers.js' %}"></script>
+
+<!-- JS Específicos do Professor -->
+<script src="{% static 'js/professor-dashboard.js' %}"></script>
+<script src="{% static 'js/schedule-module.js' %}"></script>
+<script src="{% static 'js/availability-checker.js' %}"></script>
+
+<!-- Configuração e Inicialização -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Detect mobile device
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+// Configurações específicas do professor
+window.professorConfig = {
+    isSchedulingDay: {{ is_scheduling_day|yesno:"true,false" }},
+    currentWeek: {
+        start: '{{ week_start|date:"Y-m-d" }}',
+        end: '{{ week_end|date:"Y-m-d" }}'
+    },
+    stats: {
+        pending: {{ pending_count }},
+        approved: {{ approved_count }},
+        thisWeek: {{ this_week_count }},
+        total: {{ total_schedules }}
+    }
+};
+
+// 🔧 FUNÇÃO CORRIGIDA - loadWeekData
+async function loadWeekData(weekOffset, department = null) {
+    const calendarBody = document.getElementById('calendar-body');
+    const weekOffsetInput = document.getElementById('week_offset_input');
+    const departmentSelect = document.getElementById('department-select');
     
-    // Calendar horizontal scroll on mobile
-    const calendarScroll = document.getElementById('calendar-scroll');
-    if (calendarScroll && isMobile) {
-        let isDown = false;
-        let startX;
-        let scrollLeft;
+    if (!calendarBody) {
+        console.error('❌ Calendar body não encontrado');
+        return;
+    }
+    
+    try {
+        // 🔧 CORREÇÃO: Fix da sintaxe do departamento
+        if (department === null) {
+            department = departmentSelect ? departmentSelect.value : 'all';
+        }
         
-        // Touch events for smooth scrolling
-        calendarScroll.addEventListener('touchstart', (e) => {
-            // Scroll to today on first load
-            const todayElement = calendarScroll.querySelector('.calendar-day.today');
-            if (todayElement && !calendarScroll.hasAttribute('data-scrolled')) {
-                todayElement.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-                calendarScroll.setAttribute('data-scrolled', 'true');
+        console.log(`📅 Carregando dados: offset=${weekOffset}, department=${department}`);
+        
+        // Mostrar loading
+        calendarBody.style.opacity = '0.6';
+        calendarBody.style.pointerEvents = 'none';
+        calendarBody.innerHTML = `
+            <div class="text-center p-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+                <div class="mt-2">Carregando calendário...</div>
+            </div>
+        `;
+        
+        // 🔧 CORREÇÃO: URL correta para professor
+        const url = `{% url 'professor_dashboard' %}?week_offset=${weekOffset}&department=${department}`;
+        console.log(`📡 Fazendo requisição para: ${url}`);
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
             }
         });
-    }
-    
-    // Calendar navigation with AJAX
-    const calendarBody = document.getElementById('calendar-body');
-    const calendarTitle = document.getElementById('calendar-title');
-    const weekOffsetInput = document.getElementById('week_offset_input');
-    const prevWeekLink = document.getElementById('prev-week-link');
-    const todayLink = document.getElementById('today-link');
-    const nextWeekLink = document.getElementById('next-week-link');
-
-    // Função para formatar data (dd/mm/yyyy)
-    function formatDate(isoDateString) {
-        if (!isoDateString) return '';
-        const date = new Date(isoDateString);
-        const userTimezoneOffset = date.getTimezoneOffset() * 60000;
-        const correctedDate = new Date(date.getTime() + userTimezoneOffset);
-
-        const day = String(correctedDate.getDate()).padStart(2, '0');
-        const month = String(correctedDate.getMonth() + 1).padStart(2, '0');
-        const year = correctedDate.getFullYear();
-        return `${day}/${month}/${year}`;
-    }
-
-    function formatDateShort(isoDateString) {
-        if (!isoDateString) return '';
-        const date = new Date(isoDateString);
-        const userTimezoneOffset = date.getTimezoneOffset() * 60000;
-        const correctedDate = new Date(date.getTime() + userTimezoneOffset);
-        const day = String(correctedDate.getDate()).padStart(2, '0');
-        const month = String(correctedDate.getMonth() + 1).padStart(2, '0');
-        return `${day}/${month}`;
-    }
-    
-    async function loadWeekData(weekOffset) {
-        if (!calendarBody) return;
         
-        calendarBody.classList.add('loading'); // Adiciona feedback visual
-
-        const url = `{% url 'professor_dashboard' %}?week_offset=${weekOffset}`;
-
-        try {
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+        console.log(`📡 Resposta recebida: ${response.status}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('📊 Dados recebidos:', data);
+        
+        if (data.success) {
+            // 🔧 CORREÇÃO: Verificar se temos calendar_html
+            if (data.calendar_html) {
+                calendarBody.innerHTML = data.calendar_html;
+            } else {
+                // Se não tiver calendar_html, construir o calendário com os dados
+                calendarBody.innerHTML = buildCalendarHTML(data.calendar_data);
             }
-
-            const data = await response.json();
-
-            // Atualizar o conteúdo do calendário
-            calendarBody.innerHTML = data.calendar_html;
-
-            // Atualizar o título do calendário
-            const startFormatted = formatDateShort(data.start_of_week);
-            const endFormatted = formatDate(data.end_of_week);
-            calendarTitle.innerHTML = `
-                <i class="bi bi-calendar-week"></i>
-                Calendário Semanal (${startFormatted} - ${endFormatted})
-            `;
-
-            // Atualizar o input hidden com o novo offset
+            
+            // Atualizar controles
             if (weekOffsetInput) {
                 weekOffsetInput.value = weekOffset;
             }
-
-        } catch (error) {
-            console.error('Erro ao carregar dados do calendário:', error);
-            calendarBody.innerHTML = '<p class="text-danger text-center">Erro ao carregar calendário. Tente novamente.</p>';
-        } finally {
-            calendarBody.classList.remove('loading');
+            
+            if (departmentSelect) {
+                departmentSelect.value = department;
+            }
+            
+            // Atualizar URL
+            const newUrl = new URL(window.location);
+            newUrl.searchParams.set('week_offset', weekOffset);
+            newUrl.searchParams.set('department', department);
+            window.history.pushState({week_offset: weekOffset, department: department}, '', newUrl);
+            
+            console.log(`✅ Calendário do professor atualizado com sucesso`);
+        } else {
+            throw new Error(data.message || data.error || 'Erro desconhecido do servidor');
         }
+        
+    } catch (error) {
+        console.error('💥 Erro ao carregar calendário:', error);
+        calendarBody.innerHTML = `
+            <div class="alert alert-danger" role="alert">
+                <strong>Erro ao carregar calendário:</strong> ${error.message}
+                <br><small>Verifique o console para mais detalhes.</small>
+            </div>
+        `;
+    } finally {
+        // Restaurar interatividade
+        calendarBody.style.opacity = '1';
+        calendarBody.style.pointerEvents = 'auto';
+    }
+}
+
+// 🔧 FUNÇÃO AUXILIAR: Construir HTML do calendário se necessário
+function buildCalendarHTML(calendarData) {
+    if (!calendarData || !Array.isArray(calendarData)) {
+        return '<div class="alert alert-warning">Nenhum dado de calendário disponível</div>';
     }
     
-    // Event Listeners para navegação do calendário
+    let html = '<div class="calendar-grid">';
+    
+    calendarData.forEach(day => {
+        const isToday = new Date().toDateString() === new Date(day.date).toDateString();
+        
+        html += `
+        <div class="calendar-day ${isToday ? 'today' : ''}">
+            <div class="day-header">
+                <div class="day-name">${new Date(day.date).toLocaleDateString('pt-BR', {weekday: 'short'})}</div>
+                <div class="day-number">${new Date(day.date).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})}</div>
+            </div>
+            <div class="day-content">
+        `;
+        
+        if (day.appointments && day.appointments.length > 0) {
+            day.appointments.forEach(appointment => {
+                html += `
+                <div class="appointment-item status-${appointment.status}">
+                    <div class="appointment-time">
+                        <i class="bi bi-clock"></i>
+                        ${appointment.start_time} - ${appointment.end_time}
+                    </div>
+                    <div class="appointment-lab">
+                        <i class="bi bi-building"></i>
+                        ${appointment.laboratory_name}
+                    </div>
+                    <div class="appointment-subject">
+                        <i class="bi bi-book"></i>
+                        ${appointment.subject || 'Sem disciplina'}
+                    </div>
+                    <div class="appointment-status badge bg-${appointment.status === 'approved' ? 'success' : appointment.status === 'pending' ? 'warning' : 'danger'}">
+                        ${appointment.status_display || appointment.status}
+                    </div>
+                </div>
+                `;
+            });
+        } else {
+            html += '<div class="no-appointments"><i class="bi bi-calendar-x"></i> Sem agendamentos</div>';
+        }
+        
+        html += '</div></div>';
+    });
+    
+    html += '</div>';
+    return html;
+}
+
+// 🔧 Event listeners para navegação do calendário
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Inicializando event listeners do calendário');
+    
+    const prevWeekLink = document.getElementById('prev-week-link');
+    const nextWeekLink = document.getElementById('next-week-link');
+    const todayLink = document.getElementById('today-link');
+    const departmentSelect = document.getElementById('department-select');
+    const weekOffsetInput = document.getElementById('week_offset_input');
+
+    // Navegação semana anterior
     if (prevWeekLink) {
-        prevWeekLink.addEventListener('click', function(event) {
-            event.preventDefault();
+        prevWeekLink.addEventListener('click', function(e) {
+            e.preventDefault();
             const currentOffset = weekOffsetInput ? parseInt(weekOffsetInput.value) : 0;
-            const newOffset = currentOffset - 1;
-            loadWeekData(newOffset);
+            console.log(`⬅️ Navegando para semana anterior: ${currentOffset - 1}`);
+            loadWeekData(currentOffset - 1);
         });
     }
 
+    // Navegação próxima semana
+    if (nextWeekLink) {
+        nextWeekLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            const currentOffset = weekOffsetInput ? parseInt(weekOffsetInput.value) : 0;
+            console.log(`➡️ Navegando para próxima semana: ${currentOffset + 1}`);
+            loadWeekData(currentOffset + 1);
+        });
+    }
+
+    // Voltar para hoje
     if (todayLink) {
-        todayLink.addEventListener('click', function(event) {
-            event.preventDefault();
+        todayLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log(`🏠 Voltando para semana atual`);
             loadWeekData(0);
         });
     }
 
-    if (nextWeekLink) {
-        nextWeekLink.addEventListener('click', function(event) {
-            event.preventDefault();
+    // Filtro de departamento
+    if (departmentSelect) {
+        departmentSelect.addEventListener('change', function(e) {
             const currentOffset = weekOffsetInput ? parseInt(weekOffsetInput.value) : 0;
-            const newOffset = currentOffset + 1;
-            loadWeekData(newOffset);
+            const selectedDepartment = e.target.value;
+            console.log(`🏢 Mudando departamento para: ${selectedDepartment}`);
+            loadWeekData(currentOffset, selectedDepartment);
         });
     }
     
-    // Touch feedback for mobile
-    if (isMobile) {
-        document.querySelectorAll('.upcoming-class-item, .appointment-item').forEach(item => {
-            item.addEventListener('touchstart', function() {
-                this.style.opacity = '0.7';
-            });
-            
-            item.addEventListener('touchend', function() {
-                setTimeout(() => {
-                    this.style.opacity = '1';
-                }, 100);
-            });
-        });
+    console.log('✅ Event listeners configurados com sucesso');
+});
+
+// 🔧 Função para refresh do dashboard
+function refreshDashboard() {
+    console.log('🔄 Atualizando dashboard...');
+    
+    if (window.ProfessorDashboard) {
+        window.ProfessorDashboard.refreshStats();
+        window.ProfessorDashboard.loadUpcomingClasses();
     }
     
-    // Swipe gestures for calendar navigation
-    if (calendarScroll && isMobile) {
-        let touchStartX = 0;
-        let touchEndX = 0;
-        
-        calendarScroll.addEventListener('touchstart', e => {
-            touchStartX = e.changedTouches[0].screenX;
-        });
-        
-        calendarScroll.addEventListener('touchend', e => {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        });
-        
-        function handleSwipe() {
-            const swipeThreshold = 50;
-            const diff = touchStartX - touchEndX;
-            
-            // Check if we're at the edge of scroll
-            const atRightEdge = calendarScroll.scrollLeft + calendarScroll.clientWidth >= calendarScroll.scrollWidth - 10;
-            const atLeftEdge = calendarScroll.scrollLeft <= 10;
-            
-            if (Math.abs(diff) > swipeThreshold) {
-                if (diff > 0 && atRightEdge && nextWeekLink) {
-                    // Swipe left at edge - next week
-                    nextWeekLink.click();
-                } else if (diff < 0 && atLeftEdge && prevWeekLink) {
-                    // Swipe right at edge - previous week
-                    prevWeekLink.click();
-                }
-            }
+    if (window.AvailabilityChecker) {
+        window.AvailabilityChecker.refreshAvailability();
+    }
+    
+    // Recarregar calendário atual
+    const weekOffsetInput = document.getElementById('week_offset_input');
+    const departmentSelect = document.getElementById('department-select');
+    const currentOffset = weekOffsetInput ? parseInt(weekOffsetInput.value) : 0;
+    const currentDept = departmentSelect ? departmentSelect.value : 'all';
+    
+    loadWeekData(currentOffset, currentDept);
+}
+
+// Auto-refresh a cada 5 minutos
+setInterval(refreshDashboard, 5 * 60 * 1000);
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl+N para novo agendamento
+    if (e.ctrlKey && e.key === 'n') {
+        e.preventDefault();
+        if (window.professorConfig && window.professorConfig.isSchedulingDay) {
+            const scheduleBtn = document.querySelector('.btn-schedule');
+            if (scheduleBtn) scheduleBtn.click();
         }
     }
     
-    // Optimize images and resources for mobile
-    if (isMobile) {
-        // Reduce animation durations
-        document.documentElement.style.setProperty('--transition-speed', '0.2s');
+    // F5 para refresh completo da página
+    if (e.key === 'F5') {
+        e.preventDefault();
+        window.location.reload();
+    }
+});
+
+// 🔧 Inicialização adicional após carregamento
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔄 Inicializando dashboard do professor...');
+    
+    // Marcar body como professor dashboard
+    document.body.classList.add('professor-dashboard');
+    
+    // Configurar tooltips se Bootstrap estiver disponível
+    if (typeof bootstrap !== 'undefined') {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
     }
     
-    // Handle orientation changes
-    window.addEventListener('orientationchange', function() {
-        // Reset calendar scroll position
-        if (calendarScroll) {
-            setTimeout(() => {
-                const todayElement = calendarScroll.querySelector('.calendar-day.today');
-                if (todayElement) {
-                    todayElement.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-                }
-            }, 300);
+    // Inicializar módulos com tratamento de erro
+    try {
+        // Módulo principal do professor
+        if (typeof ProfessorDashboard !== 'undefined') {
+            window.ProfessorDashboard = new ProfessorDashboard();
+            console.log('✅ ProfessorDashboard inicializado');
         }
-    });
-    
-    // Progressive enhancement for form submissions
-    document.querySelectorAll('form').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            const submitBtn = this.querySelector('[type="submit"]');
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Aguarde...';
+        
+        // Módulo de agendamento
+        if (typeof ScheduleModule !== 'undefined') {
+            window.ScheduleModule = new ScheduleModule();
+            console.log('✅ ScheduleModule inicializado');
+        }
+        
+        // Verificador de disponibilidade
+        if (typeof AvailabilityChecker !== 'undefined') {
+            window.AvailabilityChecker = new AvailabilityChecker();
+            console.log('✅ AvailabilityChecker inicializado');
+        } else {
+            console.warn('⚠️ AvailabilityChecker não encontrado');
+        }
+        
+        console.log('🚀 Todos os módulos do professor inicializados com sucesso!');
+        
+        // Verificar se as APIs estão funcionando
+        setTimeout(() => {
+            if (window.ProfessorDashboard) {
+                window.ProfessorDashboard.refreshStats();
             }
-        });
-    });
+        }, 2000);
+        
+    } catch (error) {
+        console.error('❌ Erro ao inicializar módulos:', error);
+        console.log('🔧 Sistema funcionará em modo básico');
+    }
+    
+    console.log('✅ Professor Dashboard carregado com sucesso!');
 });
 </script>
 {% endblock %}

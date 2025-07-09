@@ -1,0 +1,391 @@
+/* =============================================================================
+   RESPONSIVE STYLES - LabConnect Dashboard
+   ============================================================================= */
+
+/* === Breakpoints === */
+/* xs: <576px */
+/* sm: ≥576px */
+/* md: ≥768px */
+/* lg: ≥992px */
+/* xl: ≥1200px */
+/* xxl: ≥1400px */
+
+/* === Large Screens (lg and up) === */
+@media (min-width: 992px) {
+    .content-container {
+        padding: var(--spacing-xl);
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-4px);
+    }
+    
+    .calendar-grid {
+        gap: var(--spacing-medium);
+    }
+    
+    .calendar-day {
+        min-height: 140px;
+        padding: var(--spacing-medium);
+    }
+}
+
+/* === Medium Screens (md) === */
+@media (max-width: 991.98px) {
+    .content-container {
+        padding: var(--spacing-large) var(--spacing-medium);
+    }
+    
+    .page-title {
+        font-size: 1.75rem;
+    }
+    
+    .stats-value {
+        font-size: 2rem;
+    }
+    
+    .calendar-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-medium);
+    }
+    
+    .calendar-title {
+        text-align: center;
+        font-size: 1.2rem;
+    }
+    
+    .department-filter-form {
+        justify-content: center;
+    }
+    
+    .calendar-nav {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
+/* === Small Screens (sm) === */
+@media (max-width: 767.98px) {
+    .content-container {
+        padding: var(--spacing-medium);
+    }
+    
+    .page-header {
+        margin-bottom: var(--spacing-large);
+        padding-bottom: var(--spacing-medium);
+        text-align: center;
+    }
+    
+    .page-title {
+        font-size: 1.5rem;
+    }
+    
+    .page-subtitle {
+        font-size: var(--font-size-base);
+    }
+    
+    /* Stats Cards em mobile */
+    .stats-card {
+        margin-bottom: var(--spacing-medium);
+    }
+    
+    .stats-value {
+        font-size: 1.75rem;
+    }
+    
+    .stats-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1rem;
+    }
+    
+    /* Calendar adjustments */
+    .calendar-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-xs);
+    }
+    
+    .calendar-day {
+        min-height: 80px;
+        padding: var(--spacing-sm);
+    }
+    
+    .calendar-weekday {
+        display: none; /* Hide weekday headers in mobile */
+    }
+    
+    .calendar-day-header {
+        font-weight: 700;
+        color: var(--primary-color);
+        border-bottom: 2px solid var(--primary-color-light);
+        padding-bottom: var(--spacing-xs);
+    }
+    
+    /* Mobile navigation */
+    .calendar-nav a,
+    .calendar-nav button {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        font-size: 0.8rem;
+    }
+    
+    /* Activities and professors */
+    .recent-activity-list {
+        max-height: 250px;
+    }
+    
+    .professor-list {
+        max-height: 120px;
+    }
+    
+    .activity-item {
+        padding: var(--spacing-sm) var(--spacing-medium);
+    }
+    
+    .professor-list-item {
+        padding: 0.4rem 0;
+        font-size: 0.8rem;
+    }
+    
+    /* Modal adjustments */
+    .modal-dialog {
+        margin: var(--spacing-sm);
+    }
+    
+    .detail-group {
+        margin-bottom: var(--spacing-medium);
+    }
+}
+
+/* === Extra Small Screens (xs) === */
+@media (max-width: 575.98px) {
+    .content-container {
+        padding: var(--spacing-sm);
+    }
+    
+    .page-header {
+        margin-bottom: var(--spacing-medium);
+    }
+    
+    .page-title {
+        font-size: 1.25rem;
+    }
+    
+    .page-subtitle {
+        font-size: var(--font-size-sm);
+    }
+    
+    /* Compact stats cards */
+    .stats-card .card-body {
+        padding: var(--spacing-medium);
+    }
+    
+    .stats-value {
+        font-size: 1.5rem;
+    }
+    
+    .stats-label {
+        font-size: 0.7rem;
+    }
+    
+    .stats-icon {
+        width: 2rem;
+        height: 2rem;
+        font-size: 0.9rem;
+    }
+    
+    /* Ultra compact calendar */
+    .calendar-day {
+        min-height: 60px;
+        padding: var(--spacing-xs);
+    }
+    
+    .calendar-day-header {
+        font-size: 0.7rem;
+        margin-bottom: 0.2rem;
+    }
+    
+    .appointment-item {
+        padding: var(--spacing-xs);
+        font-size: 0.65rem;
+        margin-bottom: 0.2rem;
+    }
+    
+    .appointment-time,
+    .appointment-professor,
+    .appointment-lab {
+        font-size: 0.6rem;
+        margin-bottom: 0.1rem;
+    }
+    
+    /* Navigation improvements */
+    .department-filter-form {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-xs);
+    }
+    
+    .department-filter-form select {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .calendar-nav {
+        gap: var(--spacing-xs);
+    }
+    
+    .calendar-nav a,
+    .calendar-nav button {
+        flex: 1;
+        justify-content: center;
+        padding: var(--spacing-xs);
+        font-size: 0.7rem;
+    }
+    
+    /* Activities list improvements */
+    .activity-title {
+        font-size: 0.8rem;
+    }
+    
+    .activity-details p {
+        font-size: 0.7rem;
+        margin-bottom: 0.1rem;
+    }
+    
+    .activity-date {
+        font-size: 0.65rem;
+    }
+    
+    /* Professor list improvements */
+    .professor-name {
+        font-size: 0.8rem;
+    }
+    
+    .professor-contact {
+        font-size: 0.65rem;
+    }
+    
+    .professor-list-item i.bi-person-circle {
+        font-size: 1rem;
+        margin-right: var(--spacing-xs);
+    }
+    
+    /* Card footer */
+    .card-footer-link {
+        padding: var(--spacing-xs) var(--spacing-medium);
+        font-size: 0.8rem;
+    }
+    
+    /* Modal full screen on mobile */
+    .modal-dialog {
+        margin: 0;
+        height: 100vh;
+        max-width: 100%;
+    }
+    
+    .modal-content {
+        height: 100vh;
+        border-radius: 0;
+    }
+    
+    .modal-header {
+        padding: var(--spacing-medium);
+        border-bottom: 2px solid var(--border-color);
+    }
+    
+    .modal-body {
+        padding: var(--spacing-medium);
+        overflow-y: auto;
+    }
+    
+    .detail-value {
+        padding: var(--spacing-xs);
+        font-size: var(--font-size-sm);
+    }
+}
+
+/* === Touch Device Optimizations === */
+@media (hover: none) and (pointer: coarse) {
+    /* Increase touch targets */
+    .appointment-item {
+        min-height: 44px;
+        padding: var(--spacing-sm);
+    }
+    
+    .calendar-nav a,
+    .calendar-nav button {
+        min-height: 44px;
+        padding: var(--spacing-sm) var(--spacing-medium);
+    }
+    
+    .activity-item {
+        min-height: 44px;
+        padding: var(--spacing-sm) var(--spacing-medium);
+    }
+    
+    .professor-list-item {
+        min-height: 44px;
+        padding: var(--spacing-sm) 0;
+    }
+    
+    /* Remove hover effects on touch devices */
+    .stats-card:hover,
+    .appointment-item:hover,
+    .activity-item:hover,
+    .professor-list-item:hover {
+        transform: none;
+        box-shadow: var(--shadow-sm);
+    }
+}
+
+/* === High DPI Displays === */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .stats-icon {
+        /* Ensure crisp icons on retina displays */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}
+
+/* === Print Styles === */
+@media print {
+    .content-container {
+        padding: 0;
+    }
+    
+    .calendar-nav,
+    .department-filter-form {
+        display: none;
+    }
+    
+    .stats-card,
+    .calendar-day {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+    
+    .page-title {
+        color: #000;
+        font-size: 18pt;
+    }
+    
+    .calendar-grid {
+        break-inside: avoid;
+    }
+}
+
+/* === Reduced Motion === */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    
+    .loading::after {
+        animation: none;
+    }
+}
