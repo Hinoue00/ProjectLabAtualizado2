@@ -1,0 +1,600 @@
+<!-- templates/inventory/automated_import.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Importação Automatizada de Materiais{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-area {
+        border: 2px dashed #007bff;
+        border-radius: 10px;
+        padding: 40px;
+        text-align: center;
+        background: #f8f9fa;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .upload-area:hover {
+        border-color: #0056b3;
+        background: #e3f2fd;
+    }
+    
+    .upload-area.dragover {
+        border-color: #28a745;
+        background: #d4edda;
+    }
+    
+    .file-preview {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 15px;
+    }
+    
+    .validation-result {
+        margin-top: 15px;
+    }
+    
+    .preview-table {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .automation-badge {
+        background: linear-gradient(45deg, #007bff, #28a745);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.8em;
+    }
+    
+    .step-indicator {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+    }
+    
+    .step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+    }
+    
+    .step::after {
+        content: '';
+        position: absolute;
+        top: 25px;
+        right: -50%;
+        width: 100%;
+        height: 2px;
+        background: #dee2e6;
+        z-index: -1;
+    }
+    
+    .step:last-child::after {
+        display: none;
+    }
+    
+    .step.active .step-number {
+        background: #007bff;
+        color: white;
+    }
+    
+    .step.completed .step-number {
+        background: #28a745;
+        color: white;
+    }
+    
+    .step-number {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #dee2e6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="bi bi-robot"></i> Importação Automatizada de Materiais</h2>
+                    <p class="text-muted">Sistema inteligente para organização automática do inventário</p>
+                </div>
+                <div>
+                    <span class="automation-badge">
+                        <i class="bi bi-gear-fill"></i> Automação Ativa
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Indicador de Etapas -->
+            <div class="step-indicator">
+                <div class="step active">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Upload do Arquivo</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Validação</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Prévia</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Processamento</div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="bi bi-cloud-upload"></i> Upload do Arquivo Excel/CSV</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" enctype="multipart/form-data" id="uploadForm">
+                                {% csrf_token %}
+                                
+                                <div class="upload-area" id="uploadArea">
+                                    <i class="bi bi-cloud-upload" style="font-size: 3em; color: #007bff;"></i>
+                                    <h5>Arraste o arquivo aqui ou clique para selecionar</h5>
+                                    <p class="text-muted">Suporte para Excel (.xlsx, .xls) e CSV (.csv)</p>
+                                    <input type="file" name="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display: none;">
+                                </div>
+                                
+                                <div id="filePreview" class="file-preview" style="display: none;">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-file-earmark-spreadsheet text-success" style="font-size: 2em;"></i>
+                                        <div class="ms-3">
+                                            <h6 id="fileName" class="mb-1"></h6>
+                                            <small id="fileSize" class="text-muted"></small>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-danger ms-auto" id="removeFile">
+                                            <i class="bi bi-x"></i> Remover
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div id="validationResult" class="validation-result"></div>
+                                
+                                <div id="previewSection" style="display: none;">
+                                    <hr>
+                                    <h6><i class="bi bi-eye"></i> Prévia dos Dados</h6>
+                                    <div id="previewTable" class="preview-table"></div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <button type="button" id="validateBtn" class="btn btn-outline-primary" disabled>
+                                        <i class="bi bi-check-circle"></i> Validar Arquivo
+                                    </button>
+                                    <button type="button" id="previewBtn" class="btn btn-outline-info" disabled>
+                                        <i class="bi bi-eye"></i> Visualizar Prévia
+                                    </button>
+                                    <button type="submit" id="processBtn" class="btn btn-success" disabled>
+                                        <i class="bi bi-gear"></i> Processar Automaticamente
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <!-- Painel de Instruções -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6><i class="bi bi-info-circle"></i> Como Funciona</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex mb-3">
+                                <div class="me-3">
+                                    <i class="bi bi-1-circle text-primary" style="font-size: 1.5em;"></i>
+                                </div>
+                                <div>
+                                    <strong>Upload Inteligente</strong>
+                                    <p class="small text-muted">O sistema detecta automaticamente a estrutura do seu arquivo</p>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex mb-3">
+                                <div class="me-3">
+                                    <i class="bi bi-2-circle text-info" style="font-size: 1.5em;"></i>
+                                </div>
+                                <div>
+                                    <strong>Categorização Automática</strong>
+                                    <p class="small text-muted">IA analisa descrições e sugere categorias apropriadas</p>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex mb-3">
+                                <div class="me-3">
+                                    <i class="bi bi-3-circle text-success" style="font-size: 1.5em;"></i>
+                                </div>
+                                <div>
+                                    <strong>Organização Inteligente</strong>
+                                    <p class="small text-muted">Atribui laboratórios e cria categorias automaticamente</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Download Template -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6><i class="bi bi-download"></i> Template Excel</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="small">Baixe nosso template para garantir compatibilidade máxima</p>
+                            <a href="{% url 'download_template' %}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-download"></i> Baixar Template
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Status da Automação -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6><i class="bi bi-gear"></i> Status da Automação</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="me-2">
+                                    {% if automation_enabled %}
+                                        <i class="bi bi-check-circle-fill text-success"></i>
+                                    {% else %}
+                                        <i class="bi bi-x-circle-fill text-danger"></i>
+                                    {% endif %}
+                                </div>
+                                <small>
+                                    Automação: 
+                                    {% if automation_enabled %}
+                                        <span class="text-success">Ativa</span>
+                                    {% else %}
+                                        <span class="text-danger">Inativa</span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                            
+                            <div class="d-flex align-items-center">
+                                <div class="me-2">
+                                    {% if docling_enabled %}
+                                        <i class="bi bi-check-circle-fill text-success"></i>
+                                    {% else %}
+                                        <i class="bi bi-x-circle-fill text-warning"></i>
+                                    {% endif %}
+                                </div>
+                                <small>
+                                    IA Análise: 
+                                    {% if docling_enabled %}
+                                        <span class="text-success">Ativa</span>
+                                    {% else %}
+                                        <span class="text-warning">Fallback</span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary mb-3" role="status"></div>
+                <h5 id="loadingText">Processando arquivo...</h5>
+                <p class="text-muted" id="loadingSubtext">Isso pode levar alguns momentos</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const filePreview = document.getElementById('filePreview');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const removeFileBtn = document.getElementById('removeFile');
+    const validateBtn = document.getElementById('validateBtn');
+    const previewBtn = document.getElementById('previewBtn');
+    const processBtn = document.getElementById('processBtn');
+    const validationResult = document.getElementById('validationResult');
+    const previewSection = document.getElementById('previewSection');
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    
+    let selectedFile = null;
+    let currentStep = 1;
+    
+    // Upload area events
+    uploadArea.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('dragover', handleDragOver);
+    uploadArea.addEventListener('dragleave', handleDragLeave);
+    uploadArea.addEventListener('drop', handleDrop);
+    
+    fileInput.addEventListener('change', handleFileSelect);
+    removeFileBtn.addEventListener('click', removeFile);
+    validateBtn.addEventListener('click', validateFile);
+    previewBtn.addEventListener('click', previewFile);
+    
+    function handleDragOver(e) {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    }
+    
+    function handleDragLeave(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+    }
+    
+    function handleDrop(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileSelect({ target: { files } });
+        }
+    }
+    
+    function handleFileSelect(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        // Validar tipo de arquivo
+        const validTypes = ['.xlsx', '.xls', '.csv'];
+        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+        
+        if (!validTypes.includes(fileExtension)) {
+            showAlert('Tipo de arquivo inválido. Use Excel (.xlsx, .xls) ou CSV (.csv)', 'danger');
+            return;
+        }
+        
+        selectedFile = file;
+        
+        // Mostrar preview do arquivo
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        
+        uploadArea.style.display = 'none';
+        filePreview.style.display = 'block';
+        
+        validateBtn.disabled = false;
+        updateStep(2);
+    }
+    
+    function removeFile() {
+        selectedFile = null;
+        fileInput.value = '';
+        
+        uploadArea.style.display = 'block';
+        filePreview.style.display = 'none';
+        validationResult.innerHTML = '';
+        previewSection.style.display = 'none';
+        
+        validateBtn.disabled = true;
+        previewBtn.disabled = true;
+        processBtn.disabled = true;
+        
+        updateStep(1);
+    }
+    
+    function validateFile() {
+        if (!selectedFile) return;
+        
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        
+        validateBtn.disabled = true;
+        validateBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Validando...';
+        
+        fetch('{% url "validate_file_ajax" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            displayValidationResult(data);
+            
+            if (data.valid) {
+                previewBtn.disabled = false;
+                updateStep(3);
+            }
+        })
+        .catch(error => {
+            showAlert('Erro ao validar arquivo: ' + error.message, 'danger');
+        })
+        .finally(() => {
+            validateBtn.disabled = false;
+            validateBtn.innerHTML = '<i class="bi bi-check-circle"></i> Validar Arquivo';
+        });
+    }
+    
+    function previewFile() {
+        if (!selectedFile) return;
+        
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        
+        previewBtn.disabled = true;
+        previewBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Carregando...';
+        
+        fetch('{% url "preview_materials_ajax" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayPreview(data);
+                processBtn.disabled = false;
+                updateStep(4);
+            } else {
+                showAlert('Erro ao gerar prévia: ' + data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            showAlert('Erro ao carregar prévia: ' + error.message, 'danger');
+        })
+        .finally(() => {
+            previewBtn.disabled = false;
+            previewBtn.innerHTML = '<i class="bi bi-eye"></i> Visualizar Prévia';
+        });
+    }
+    
+    function displayValidationResult(data) {
+        let html = '';
+        
+        if (data.valid) {
+            html = `
+                <div class="alert alert-success">
+                    <h6><i class="bi bi-check-circle"></i> Arquivo Válido</h6>
+                    <p class="mb-2">Total de linhas: <strong>${data.stats.total_rows}</strong></p>
+                    <p class="mb-0">Colunas encontradas: ${data.stats.columns_found.join(', ')}</p>
+                </div>
+            `;
+            
+            if (data.warnings && data.warnings.length > 0) {
+                html += '<div class="alert alert-warning"><ul class="mb-0">';
+                data.warnings.forEach(warning => {
+                    html += `<li>${warning}</li>`;
+                });
+                html += '</ul></div>';
+            }
+        } else {
+            html = '<div class="alert alert-danger"><h6><i class="bi bi-x-circle"></i> Arquivo Inválido</h6><ul class="mb-0">';
+            data.errors.forEach(error => {
+                html += `<li>${error}</li>`;
+            });
+            html += '</ul></div>';
+        }
+        
+        validationResult.innerHTML = html;
+    }
+    
+    function displayPreview(data) {
+        let html = `
+            <div class="alert alert-info">
+                <strong>Prévia:</strong> Mostrando ${data.preview_rows} de ${data.total_rows} registros
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nome</th>
+                            <th>Descrição</th>
+                            <th>Qtd</th>
+                            <th>Min</th>
+                            <th>Categoria</th>
+                            <th>Laboratório</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        data.preview_data.forEach(item => {
+            const statusBadge = item.auto_generated ? 
+                '<span class="badge bg-success">Auto</span>' : 
+                '<span class="badge bg-primary">Manual</span>';
+                
+            html += `
+                <tr>
+                    <td>${item.name}</td>
+                    <td class="small">${item.description}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.minimum_stock}</td>
+                    <td>${item.category}</td>
+                    <td>${item.laboratory}</td>
+                    <td>${statusBadge}</td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        document.getElementById('previewTable').innerHTML = html;
+        previewSection.style.display = 'block';
+    }
+    
+    function updateStep(step) {
+        currentStep = step;
+        
+        document.querySelectorAll('.step').forEach((stepEl, index) => {
+            stepEl.classList.remove('active', 'completed');
+            
+            if (index + 1 < step) {
+                stepEl.classList.add('completed');
+            } else if (index + 1 === step) {
+                stepEl.classList.add('active');
+            }
+        });
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    function showAlert(message, type) {
+        const alertHtml = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        validationResult.innerHTML = alertHtml;
+    }
+    
+    // Handle form submission
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!selectedFile) {
+            showAlert('Selecione um arquivo primeiro', 'warning');
+            return;
+        }
+        
+        loadingModal.show();
+        document.getElementById('loadingText').textContent = 'Processando materiais...';
+        document.getElementById('loadingSubtext').textContent = 'Analisando e categorizando automaticamente';
+        
+        // Submit form normally after showing loading
+        this.submit();
+    });
+});
+</script>
+{% endblock %}
