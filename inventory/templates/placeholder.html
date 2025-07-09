@@ -1,0 +1,43 @@
+<!-- templates/inventory/placeholder.html -->
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <i class="bi bi-gear-fill" style="font-size: 4rem; color: #6c757d;"></i>
+                    </div>
+                    
+                    <h3 class="text-muted mb-3">{{ title|default:"Funcionalidade em Desenvolvimento" }}</h3>
+                    
+                    <p class="text-muted mb-4">
+                        {{ message|default:"Esta funcionalidade está sendo implementada e estará disponível em breve." }}
+                    </p>
+                    
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{% url 'material_list' %}" class="btn btn-primary">
+                            <i class="bi bi-arrow-left"></i> Voltar ao Inventário
+                        </a>
+                        
+                        <a href="{% url 'dashboard_redirect' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-house"></i> Dashboard
+                        </a>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i> 
+                            Funcionalidade planejada para próximas atualizações do LabConnect
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

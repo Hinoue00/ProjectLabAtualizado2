@@ -1170,21 +1170,33 @@ html {
                         </a>
                         <div class="sidebar-dropdown-menu {% if '/inventory/' in request.path %}show{% endif %}" 
                             id="inventorySubmenu">
+                            
+                            <!-- Links que funcionam (views existem) -->
                             <a href="{% url 'material_list' %}" class="sidebar-dropdown-link {% if '/inventory/materials/' in request.path %}active{% endif %}">
-                                Materiais
+                                <i class="bi bi-list-ul"></i> Materiais
                             </a>
                             <a href="{% url 'category_list' %}" class="sidebar-dropdown-link {% if '/inventory/categories/' in request.path %}active{% endif %}">
-                                Categorias
+                                <i class="bi bi-tags"></i> Categorias
                             </a>
                             <a href="{% url 'import_materials' %}" class="sidebar-dropdown-link {% if '/inventory/import/' in request.path %}active{% endif %}">
-                                Importar Materiais
+                                <i class="bi bi-upload"></i> Importar Materiais
                             </a>
+                            
+                            <!-- Links temporariamente removidos (podem ser readicionados quando as views existirem) -->
+                            <!--
                             <a href="{% url 'analyze_materials_batch' %}" class="sidebar-dropdown-link {% if '/inventory/analyze-batch/' in request.path %}active{% endif %}">
-                                Análise Inteligente
+                                <i class="bi bi-robot"></i> Análise Inteligente
                             </a>
                             <a href="{% url 'material_trends' %}" class="sidebar-dropdown-link {% if '/inventory/trends/' in request.path %}active{% endif %}">
-                                Tendência
+                                <i class="bi bi-graph-up"></i> Tendências
                             </a>
+                            -->
+                            
+                            <!-- Placeholder para funcionalidades futuras -->
+                            <div class="sidebar-dropdown-divider"></div>
+                            <span class="sidebar-dropdown-text">
+                                <i class="bi bi-gear"></i> Funcionalidades em desenvolvimento
+                            </span>
                         </div>
                     </div>
                     
