@@ -1,615 +1,18 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load l10n %}
-{% block title %}Dashboard Técnico | LabConnect{% endblock %}
+
+{% block title %}Dashboard - Técnico{% endblock %}
 
 {% block extra_css %}
-<style>
-
-    .stats-card {
-        transition: all 0.3s ease;
-    }
-    
-    .stats-card:hover {
-        transform: translateY(-5px);
-    }
-
-    /* CORREÇÃO - Stats Cards do Dashboard Técnico */
-    .stats-card .card-body {
-        padding: 1.5rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        justify-content: center;
-        min-height: 140px;
-        position: relative;
-    }
-
-    /* Header com ícone - centralizado */
-    .stats-card .d-flex.justify-content-between {
-        width: 100%;
-        margin-bottom: 1rem;
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-        flex-direction: column !important;
-        gap: 0.75rem;
-    }
-
-    /* Ícone centralizado */
-    .stats-card .stats-icon {
-        background: linear-gradient(135deg, var(--primary-color), var(--primary-color-light));
-        color: white;
-        width: 60px;
-        height: 60px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        margin: 0 auto;
-    }
-
-    /* Badge - reposicionado para o canto superior direito */
-    .stats-card .badge {
-        position: absolute !important;
-        top: 1rem !important;
-        right: 1rem !important;
-        font-size: 0.7rem !important;
-        padding: 0.25rem 0.5rem !important;
-        margin: 0 !important;
-    }
-
-    /* Número centralizado */
-    .stats-card .stats-value {
-        font-size: 2.5rem !important;
-        font-weight: 700 !important;
-        color: var(--text-color) !important;
-        margin: 0.5rem 0 !important;
-        text-align: center !important;
-        line-height: 1 !important;
-    }
-
-    /* Label centralizado */
-    .stats-card .stats-label {
-        color: var(--text-muted) !important;
-        font-size: 0.9rem !important;
-        font-weight: 500 !important;
-        margin: 0 !important;
-        text-align: center !important;
-    }
-
-    /* Responsividade para mobile */
-    @media (max-width: 768px) {
-        .stats-card .card-body {
-            padding: 1.25rem;
-            min-height: 120px;
-        }
-
-        .stats-card .stats-icon {
-            width: 50px;
-            height: 50px;
-            font-size: 1.25rem;
-        }
-
-        .stats-card .stats-value {
-            font-size: 2rem !important;
-        }
-
-        .stats-card .stats-label {
-            font-size: 0.8rem !important;
-        }
-    }
-
-    /* Garantir posição relativa para o badge absoluto */
-    .stats-card {
-        position: relative;
-    }
-    
-    /* --- Estilos Modernizados do Calendário --- */
-    
-    .calendar-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: var(--spacing-large); /* Usando variável */
-        padding-bottom: var(--spacing-medium); /* Usando variável */
-        border-bottom: 1px solid var(--border-color);
-        flex-wrap: wrap;
-        gap: var(--spacing-medium); /* Usando variável */
-    }
-
-    .calendar-title {
-        font-size: 1.3rem; /* Um pouco maior */
-        font-weight: 600;
-        margin: 0;
-        color: var(--text-color);
-        flex-grow: 1; /* Permitir que o título ocupe espaço */
-    }
-
-    .department-filter-form {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-small); /* Usando variável */
-    }
-
-    .department-filter-form label {
-        margin-bottom: 0;
-        font-weight: 500;
-        font-size: 0.9rem; /* Levemente menor */
-    }
-
-    .department-filter-form select {
-        min-width: 150px;
-        font-size: 0.9rem;
-    }
-
-    .calendar-nav {
-        display: flex;
-        gap: var(--spacing-small); /* Usando variável */
-    }
-
-    .calendar-nav a, .calendar-nav button { /* Estilo unificado para links/botões */
-        display: inline-flex;
-        align-items: center;
-        text-decoration: none;
-        padding: 0.4rem 0.8rem; /* Ajuste no padding */
-        border: 1px solid var(--border-color);
-        border-radius: 0.375rem; /* Bordas levemente arredondadas */
-        color: var(--text-muted); /* Cor mais suave */
-        background-color: transparent; /* Fundo transparente */
-        transition: all 0.2s ease;
-        font-size: 0.85rem;
-    }
-    .calendar-nav a:hover, .calendar-nav button:hover {
-        background-color: var(--primary-color-light); /* Cor primária mais clara no hover */
-        border-color: var(--primary-color-light);
-        color: var(--primary-color); /* Texto na cor primária */
-    }
-    .calendar-nav i {
-        margin-right: 0.4rem; /* Mantido específico por enquanto */
-        font-size: 1rem; /* Tamanho do ícone */
-    }
-     .calendar-nav a#today-link { /* Destaque sutil para o botão Hoje */
-        font-weight: 500;
-        color: var(--text-color);
-     }
-     .calendar-nav a#today-link:hover {
-        background-color: var(--primary-color);
-        border-color: var(--primary-color);
-        color: white;
-     }
-
-    @media (max-width: 768px) {
-        .calendar-grid {
-            grid-template-columns: 1fr;
-            gap: 0.5rem;
-        }
-        
-        .calendar-day {
-            min-height: 150px;
-        }
-        
-        .appointment-item {
-            padding: 0.5rem;
-        }
-        
-        .appointment-professor,
-        .appointment-lab {
-            font-size: 0.75rem;
-        }
-    }
-
-
-    /* Grade do Calendário */
-    .calendar-grid { /* Adicionaremos esta classe no HTML parcial */
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 1px;
-        background-color: var(--border-color);
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-    .calendar-day {
-        background-color: var(--card-bg);
-        min-height: 200px;
-        display: flex;
-        flex-direction: column;
-        transition: background-color 0.2s ease;
-    }
-    .calendar-day:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    }
-    [data-theme="dark"] .calendar-day:hover {
-         box-shadow: 0 4px 12px rgba(255, 255, 255, 0.08);
-    }
-
-    .day-name {
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .day-number {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: var(--text-color);
-        margin-top: 0.25rem;
-    }
-
-    .calendar-day .day-header {
-        background-color: var(--body-bg);
-        padding: 0.75rem;
-        border-bottom: 1px solid var(--border-color);
-        text-align: center;
-    }
-
-    [data-theme="dark"] .calendar-day .day-header {
-        background-color: rgba(255,255,255,0.03);
-    }
-
-    .calendar-day .day-date { /* Nova classe para a data */
-        font-size: 0.9rem;
-        color: var(--text-muted);
-    }
-
-    .calendar-day.today .day-header { /* Destaque para hoje */
-        background-color: var(--primary-color-light);
-        color: var(--primary-color);
-        border-bottom-color: var(--primary-color);
-    }
-
-    .calendar-day.today {
-        background-color: rgba(var(--primary-color-rgb), 0.05);
-        border: 2px solid var(--primary-color);
-    }
-
-
-    .calendar-day .day-content {
-        flex: 1;
-        padding: 0.75rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        overflow-y: auto;
-    }
-
-    /* Estilo dos Agendamentos */
-    .appointment-item {
-        background: white;
-        border: 1px solid var(--border-color);
-        border-left: 4px solid var(--primary-color);
-        border-radius: 6px;
-        padding: 0.75rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        position: relative;
-    }
-
-     [data-theme="dark"] .appointment-item {
-        background-color: rgba(var(--primary-rgb), 0.15); /* Usar RGB para transparência */
-     }
-
-    .appointment-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        border-color: var(--primary-color);
-    }
-
-    [data-theme="dark"] .appointment-item:hover {
-        background-color: rgba(var(--primary-rgb), 0.25);
-    }
-
-    .appointment-item.status-approved {
-        border-left-color: var(--bs-success);
-    }
-
-    .appointment-item.status-pending {
-        border-left-color: var(--bs-warning);
-    }
-
-    .appointment-item.status-rejected {
-        border-left-color: var(--bs-danger);
-    }
-
-    .appointment-details { /* Novo container para detalhes */
-         line-height: 1.4;
-    }
-
-    .appointment-professor {
-        font-weight: 500;
-        color: var(--text-color);
-        font-size: 0.8rem;
-        margin-bottom: 0.25rem;
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-
-    .appointment-status {
-        text-align: right;
-    }
-
-    .appointment-status .badge {
-        font-size: 0.65rem;
-        padding: 0.25rem 0.5rem;
-    }
-
-    .appointment-lab {
-        color: var(--text-muted);
-        font-size: 0.75rem;
-        margin-bottom: 0.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-    
-    .appointment-time {
-        font-weight: 600;
-        color: var(--primary-color);
-        font-size: 0.85rem;
-        margin-bottom: 0.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-
-    }
-    .appointment-time i {
-        margin-right: 0.2rem; /* Mantido específico */
-    }
-
-    /* Estilos para o container de solicitações pendentes */
-    .pending-requests-container {
-        max-height: 300px;
-        overflow-y: auto;
-        scrollbar-width: thin;
-        scrollbar-color: rgba(74, 111, 165, 0.3) transparent;
-    }
-    
-    .pending-requests-container::-webkit-scrollbar {
-        width: 6px;
-    }
-    
-    .pending-requests-container::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    
-    .pending-requests-container::-webkit-scrollbar-thumb {
-        background-color: rgba(74, 111, 165, 0.3);
-        border-radius: 3px;
-    }
-    
-    .pending-requests-container::-webkit-scrollbar-thumb:hover {
-        background-color: rgba(74, 111, 165, 0.5);
-    }
-
-    /* Estilos para o carregamento do gráfico */
-.chart-container.loading {
-    opacity: 0.5;
-    pointer-events: none;
-    position: relative;
-}
-
-.chart-container.loading::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 30px;
-    height: 30px;
-    border: 3px solid rgba(74, 111, 165, 0.3);
-    border-top: 3px solid var(--primary-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: translate(-50%, -50%) rotate(0deg); }
-    100% { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-    /* Estilo para dias vazios */
-    .day-content .no-appointments {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        color: var(--text-muted);
-        font-size: 0.85rem;
-        text-align: center;
-    }
-
-    .day-content .no-appointments i {
-        font-size: 1.5rem;
-        margin-bottom: 0.5rem;
-        opacity: 0.6;
-    }
-
-    /* Modal de detalhes */
-    .detail-group {
-        margin-bottom: 1.5rem;
-    }
-
-    .detail-label {
-        font-weight: 600;
-        color: var(--text-muted);
-        font-size: 0.85rem;
-        margin-bottom: 0.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .detail-value {
-        color: var(--text-color);
-        font-size: 1rem;
-        margin: 0;
-        padding: 0.5rem;
-        background-color: var(--body-bg);
-        border-radius: 4px;
-        border: 1px solid var(--border-color);
-    }
-
-
-
-    /* --- Fim dos Estilos Modernizados do Calendário --- */
-
-    .calendar-body.loading {
-        opacity: 0.5;
-        pointer-events: none;
-        transition: opacity 0.3s ease;
-    }
-    /* --- Estilos Modernizados do Histórico de Agendamentos --- */
-    .recent-activity-list {
-        padding: 0; /* Remover padding se o card-body já tiver */
-        max-height: 400px; /* Altura máxima com scroll, ajuste se necessário */
-        overflow-y: auto;
-    }
-
-    .activity-item {
-        padding: 1rem 1.25rem; /* Mais padding interno */
-        border-bottom: 1px solid var(--border-color);
-        transition: background-color 0.2s ease;
-    }
-
-    .activity-item:last-child {
-        border-bottom: none; /* Remover borda do último item */
-    }
-
-    .activity-item:hover {
-        background-color: rgba(0, 0, 0, 0.02); /* Fundo sutil no hover */
-    }
-    [data-theme="dark"] .activity-item:hover {
-         background-color: rgba(255, 255, 255, 0.03);
-    }
-
-
-    .activity-title {
-        font-weight: 600;
-        color: var(--text-color);
-        font-size: 0.95rem; /* Levemente maior */
-    }
-
-    .activity-details p {
-        font-size: 0.85rem; /* Tamanho da fonte dos detalhes */
-        color: var(--text-muted);
-        margin-bottom: 0.25rem; /* Mantido específico */
-        line-height: 1.5;
-    }
-    .activity-details i {
-        width: 1em; /* Alinhar ícones */
-        text-align: center;
-        margin-right: 0.3rem; /* Mantido específico */
-        color: var(--primary-color); /* Cor dos ícones */
-    }
-
-
-    .activity-date {
-        font-size: 0.75rem; /* Data menor */
-        color: var(--text-muted-light); /* Cor mais suave para a data */
-        text-align: right; /* Alinhar à direita */
-    }
-     .activity-date i {
-         margin-right: 0.2rem; /* Mantido específico */
-     }
-
-    /* Estilos para os Badges de Status (Exemplo) */
-    .badge.badge-approved { background-color: var(--bs-success-bg-subtle); color: var(--bs-success-text-emphasis); border: 1px solid var(--bs-success-border-subtle); }
-    .badge.badge-rejected { background-color: var(--bs-danger-bg-subtle); color: var(--bs-danger-text-emphasis); border: 1px solid var(--bs-danger-border-subtle); }
-    .badge.badge-pending { background-color: var(--bs-warning-bg-subtle); color: var(--bs-warning-text-emphasis); border: 1px solid var(--bs-warning-border-subtle); }
-    /* Adicione outros status conforme necessário */
-
-
-    /* --- Fim dos Estilos do Histórico --- */
-
-    /* --- Estilos para Lista de Professores Ativos --- */
-    .professor-list {
-        padding: 0;
-        margin: 0;
-        list-style: none;
-        max-height: 180px; /* Altura máxima antes de scroll, ajuste conforme necessário */
-        overflow-y: auto;
-    }
-
-    .professor-list-item {
-        display: flex;
-        align-items: center;
-        padding: 0.6rem 0; /* Espaçamento vertical */
-        border-bottom: 1px solid var(--border-color-light); /* Linha separadora sutil */
-        font-size: 0.85rem;
-    }
-
-    .professor-list-item:last-child {
-        border-bottom: none;
-    }
-
-    .professor-list-item i.bi-person-circle { /* Ícone principal do professor */
-        color: var(--primary-color);
-        margin-right: 0.75rem; /* Mantido específico por enquanto */
-        font-size: 1.1rem;
-        width: 1.2em; /* Alinhamento */
-        text-align: center;
-    }
-
-    .professor-info {
-        flex-grow: 1;
-        line-height: 1.4;
-    }
-
-    .professor-name {
-        font-weight: 600;
-        color: var(--text-color);
-        display: block;
-    }
-
-    .professor-contact {
-        color: var(--text-muted);
-        font-size: 0.8rem;
-        display: block; /* Garante nova linha */
-        margin-top: 0.1rem; /* Mantido específico */
-    }
-     .professor-contact i { /* Ícones menores para contato (telefone, email) */
-        font-size: 0.9rem;
-        margin-right: 0.4rem; /* Mantido específico por enquanto */
-        color: var(--text-muted);
-        width: 1em; /* Alinhamento dos ícones de contato */
-        text-align: center;
-     }
-
-    .card-footer-link {
-        display: block;
-        text-align: center;
-        padding: 0.75rem 1.25rem; /* Mantido específico por enquanto */
-        background-color: rgba(0,0,0,0.02);
-        border-top: 1px solid var(--border-color);
-        font-weight: 500;
-        color: var(--primary-color);
-        text-decoration: none;
-        transition: background-color 0.2s ease;
-    }
-     [data-theme="dark"] .card-footer-link {
-         background-color: rgba(255,255,255,0.03);
-     }
-
-    .card-footer-link:hover {
-        background-color: rgba(0,0,0,0.05);
-        color: var(--primary-color-dark); /* Escurecer um pouco no hover */
-    }
-     [data-theme="dark"] .card-footer-link:hover {
-         background-color: rgba(255,255,255,0.06);
-     }
-    /* --- Fim dos Estilos Professores --- */
-
-    /* Removido o bloco duplicado que estava aqui */
-
-</style>
+<!-- CSS Files Organizados -->
+<link rel="stylesheet" href="{% static 'css/variables.css' %}">
+<link rel="stylesheet" href="{% static 'css/dashboard-base.css' %}">
+<link rel="stylesheet" href="{% static 'css/calendar.css' %}">
+<link rel="stylesheet" href="{% static 'css/calendar-visual.css' %}">
+<link rel="stylesheet" href="{% static 'css/activities-professors.css' %}">
+<link rel="stylesheet" href="{% static 'css/responsive.css' %}">
 {% endblock %}
+
 {% block content %}
 <div class="content-container">
     <!-- Page Header -->
@@ -617,175 +20,384 @@
         <h1 class="page-title">Dashboard</h1>
         <p class="page-subtitle">Bem-vindo de volta, {{ request.user.first_name }}!</p>
     </div>
-<!-- Stats Cards -->
-<div class="row">
-    <div class="col-md-3 mb-4">
-        <div class="card stats-card border-0 shadow-sm h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div class="stats-icon">
-                        <i class="bi bi-calendar-check"></i>
-                    </div>
-                    <span class="badge bg-{% if percentage_change > 0 %}success{% else %}danger{% endif %} rounded-pill">
-                        {{ percentage_change|floatformat:0 }}% {% if percentage_change > 0 %}↑{% else %}↓{% endif %}
-                    </span>
-                </div>
-                <h3 class="stats-value">{{ current_count }}</h3>
-                <p class="stats-label">Agendamentos esta semana</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3 mb-4">
-        <div class="card stats-card border-0 shadow-sm h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div class="stats-icon">
-                        <i class="bi bi-hourglass-split"></i>
-                    </div>
-                    {% if pending_approvals > 0 or pending_appointments.count > 0 %}
-                        <span class="badge bg-warning rounded-pill">Pendente</span>
-                    {% endif %}
-                </div>
-                <h3 class="stats-value">{{ pending_approvals|add:pending_appointments }}</h3>
-                <p class="stats-label">Solicitações pendentes</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3 mb-4">
-        <div class="card stats-card border-0 shadow-sm h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div class="stats-icon">
-                        <i class="bi bi-exclamation-triangle"></i>
-                    </div>
-                    {% if materials_in_alert.count > 0 %}
-                        <span class="badge bg-danger rounded-pill">Alerta</span>
-                    {% endif %}
-                </div>
-                <h3 class="stats-value">{{ materials_in_alert.count }}</h3>
-                <p class="stats-label">Materiais em alerta</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3 mb-4">
-        <div class="card stats-card border-0 shadow-sm h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div class="stats-icon">
-                        <i class="bi bi-people"></i>
-                    </div>
-                </div>
-                <h3 class="stats-value">{{ active_professors.count }}</h3>
-                <p class="stats-label">Professores ativos</p>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Main Content Row -->
-<!-- Calendário ocupando toda a largura da tela -->
-<div class="row">
-    <!-- Calendar Column - alterado para col-lg-12 -->
-    <div class="col-lg-12 mb-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent calendar-header">
-                <h5 class="card-title mb-0 calendar-title" id="calendar-title">
-                    Calendário Semanal ({{ start_of_week|date:"d/m" }} - {{ end_of_week|date:"d/m/Y" }})
-                </h5>
-
-                <!-- Formulário de Filtro de Departamento -->
-                <form method="get" action="{% url 'technician_dashboard' %}" class="department-filter-form" id="department-filter-form">
-                    <input type="hidden" name="week_offset" id="week_offset_input" value="{{ week_offset }}">
-                    <label for="department-select">Departamento:</label>
-                    <select name="department" id="department-select" class="form-select form-select-sm">
-                        <option value="all" {% if not current_department or current_department == 'all' %}selected{% endif %}>Todos</option>
-                        {% for dept in departments %}
-                            <option value="{{ dept }}" {% if current_department == dept %}selected{% endif %}>{{ dept|capfirst }}</option>
-                        {% endfor %}
-                    </select>
-                </form>
-
-                <!-- Navegação da Semana -->
-                <div class="calendar-nav">
-                    <a href="#" id="prev-week-link" data-offset="{{ prev_week_offset }}" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-chevron-left"></i>
-                        <span class="d-none d-sm-inline">Anterior</span>
-                    </a>
-                    <a href="#" id="today-link" data-offset="0" class="btn btn-sm btn-outline-primary">Hoje</a>
-                    <a href="#" id="next-week-link" data-offset="{{ next_week_offset }}" class="btn btn-sm btn-outline-secondary">
-                        <span class="d-none d-sm-inline">Próxima</span>
-                        <i class="bi bi-chevron-right"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div class="card-body p-0">
-                <div class="calendar-grid" id="calendar-body">
-                    {% for day in calendar_data %}
-                    <div class="calendar-day {% if day.date == today %}today{% endif %}">
-                        <div class="day-header">
-                            <div class="day-name">{{ day.date|date:"D" }}</div>
-                            <div class="day-number">{{ day.date|date:"d/m" }}</div>
+    <!-- Stats Cards -->
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="stats-icon">
+                            <i class="bi bi-calendar-check"></i>
                         </div>
+                        <span class="badge bg-{% if percentage_change > 0 %}success{% else %}danger{% endif %} rounded-pill">
+                            {{ percentage_change|floatformat:0 }}% {% if percentage_change > 0 %}↑{% else %}↓{% endif %}
+                        </span>
+                    </div>
+                    <h3 class="stats-value">{{ current_count }}</h3>
+                    <p class="stats-label">Agendamentos esta semana</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="stats-icon">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                        {% if pending_approvals > 0 or pending_appointments.count > 0 %}
+                            <span class="badge bg-warning rounded-pill">Pendente</span>
+                        {% endif %}
+                    </div>
+                    <h3 class="stats-value">{{ pending_approvals|add:pending_appointments }}</h3>
+                    <p class="stats-label">Solicitações pendentes</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="stats-icon">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                        {% if materials_in_alert.count > 0 %}
+                            <span class="badge bg-danger rounded-pill">Alerta</span>
+                        {% endif %}
+                    </div>
+                    <h3 class="stats-value">{{ materials_in_alert.count }}</h3>
+                    <p class="stats-label">Materiais em alerta</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="stats-icon">
+                            <i class="bi bi-people"></i>
+                        </div>
+                    </div>
+                    <h3 class="stats-value">{{ active_professors.count }}</h3>
+                    <p class="stats-label">Professores ativos</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar Section -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent calendar-header">
+                    <h5 class="card-title mb-0 calendar-title" id="calendar-title">
+                        Calendário Semanal ({{ start_of_week|date:"d/m" }} - {{ end_of_week|date:"d/m/Y" }})
+                    </h5>
+
+                    <!-- Department Filter Form -->
+                    <form method="get" action="{% url 'technician_dashboard' %}" class="department-filter-form" id="department-filter-form">
+                        <input type="hidden" name="week_offset" id="week_offset_input" value="{{ week_offset }}">
+                        <label for="department-select">Departamento:</label>
+                        <select name="department" id="department-select" class="form-select form-select-sm">
+                            <option value="all" {% if not current_department or current_department == 'all' %}selected{% endif %}>Todos</option>
+                            {% for dept in departments %}
+                                <option value="{{ dept }}" {% if current_department == dept %}selected{% endif %}>{{ dept|capfirst }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+
+                    <!-- Calendar Navigation -->
+                    <div class="calendar-nav">
+                        <a href="#" id="prev-week-link" class="nav-link">
+                            <i class="bi bi-chevron-left"></i>
+                            Anterior
+                        </a>
+                        <a href="#" id="today-link" class="nav-link">
+                            <i class="bi bi-house"></i>
+                            Hoje
+                        </a>
+                        <a href="#" id="next-week-link" class="nav-link">
+                            <i class="bi bi-chevron-right"></i>
+                            Próxima
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="calendar-body" id="calendar-body">
+                        <div class="calendar-grid">
+                            <!-- Days will be populated by JavaScript or server -->
+                            {% for day_data in calendar_data %}
+                            <div class="calendar-day {% if day_data.date == today %}today{% endif %}">
+                                <div class="day-header">
+                                    <div class="day-name">{{ day_data.date|date:"D" }}</div>
+                                    <div class="day-number">{{ day_data.date|date:"d/m" }}</div>
+                                </div>
+                                <div class="day-content">
+                                    {% if day_data.appointments %}
+                                        {% for appointment in day_data.appointments %}
+                                        <div class="appointment-item status-{{ appointment.status }}"
+                                             data-bs-toggle="modal"
+                                             data-bs-target="#appointmentModal"
+                                             data-professor="{{ appointment.professor.get_full_name }}"
+                                             data-laboratory="{{ appointment.laboratory.name }}"
+                                             data-subject="{{ appointment.subject }}"
+                                             data-time="{{ appointment.start_time|time:'H:i' }} - {{ appointment.end_time|time:'H:i' }}"
+                                             data-date="{{ appointment.scheduled_date|date:'d/m/Y' }}"
+                                             data-students="{{ appointment.number_of_students }}"
+                                             data-materials="{{ appointment.required_materials|default:'Não especificado' }}"
+                                             data-description="{{ appointment.description|default:'Sem descrição' }}"
+                                             data-status="{{ appointment.get_status_display }}">
+                                             
+                                            <div class="appointment-time">
+                                                <i class="bi bi-clock"></i>
+                                                {{ appointment.start_time|time:"H:i" }} - {{ appointment.end_time|time:"H:i" }}
+                                            </div>
+                                            
+                                            <div class="appointment-professor">
+                                                <i class="bi bi-person"></i>
+                                                {{ appointment.professor.get_full_name }}
+                                            </div>
+                                            
+                                            <div class="appointment-lab">
+                                                <i class="bi bi-building"></i>
+                                                {{ appointment.laboratory.name }}
+                                            </div>
+                                            
+                                            <div class="appointment-status">
+                                                <span class="badge bg-{% if appointment.status == 'approved' %}success{% elif appointment.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                                    {{ appointment.get_status_display }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="no-appointments">
+                                            <i class="bi bi-calendar-x"></i>
+                                            <span>Sem agendamentos</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Second Row with Chart and Recent Activities -->
+    <div class="row">
+        <!-- Lab Activity Chart -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-bar-chart"></i>
+                            Atividade dos Laboratórios
+                        </h5>
                         
-                        <div class="day-content">
-                            {% if day.appointments %}
-                                {% for appointment in day.appointments %}
-                                <div class="appointment-item status-{{ appointment.status }}" 
-                                     data-bs-toggle="modal" 
-                                     data-bs-target="#appointmentModal"
-                                     data-appointment-id="{{ appointment.id }}"
-                                     data-professor="{{ appointment.professor.get_full_name }}"
-                                     data-laboratory="{{ appointment.laboratory.name }}"
-                                     data-subject="{{ appointment.subject }}"
-                                     data-time="{{ appointment.start_time|time:'H:i' }} - {{ appointment.end_time|time:'H:i' }}"
-                                     data-date="{{ appointment.scheduled_date|date:'d/m/Y' }}"
-                                     data-students="{{ appointment.number_of_students|default:'N/A' }}"
-                                     data-materials="{{ appointment.materials|default:'Nenhum material especificado' }}"
-                                     data-description="{{ appointment.description|default:'Sem descrição' }}"
-                                     data-status="{{ appointment.get_status_display }}">
-                                     
-                                    <div class="appointment-time">
-                                        <i class="bi bi-clock"></i>
-                                        {{ appointment.start_time|time:"H:i" }} - {{ appointment.end_time|time:"H:i" }}
-                                    </div>
-                                    
-                                    <div class="appointment-professor">
-                                        <i class="bi bi-person"></i>
-                                        {{ appointment.professor.get_full_name }}
-                                    </div>
-                                    
-                                    <div class="appointment-lab">
-                                        <i class="bi bi-building"></i>
-                                        {{ appointment.laboratory.name }}
-                                    </div>
-                                    
-                                    <div class="appointment-status">
-                                        <span class="badge bg-{% if appointment.status == 'approved' %}success{% elif appointment.status == 'pending' %}warning{% else %}danger{% endif %}">
-                                            {{ appointment.get_status_display }}
-                                        </span>
-                                    </div>
-                                </div>
+                        <!-- Chart Controls -->
+                        <div class="d-flex align-items-center gap-3">
+                            <!-- Period Filter -->
+                            <div class="btn-group" id="labActivityPeriod" role="group">
+                                <button type="button" class="btn btn-outline-primary btn-sm active" data-period="week">
+                                    Semana
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm" data-period="month">
+                                    Mês
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm" data-period="year">
+                                    Ano
+                                </button>
+                            </div>
+                            
+                            <!-- Department Filter -->
+                            <select id="chartDepartmentFilter" class="form-select form-select-sm" style="width: auto;">
+                                <option value="all">Todos</option>
+                                {% for dept in departments %}
+                                    <option value="{{ dept }}">{{ dept|capfirst }}</option>
                                 {% endfor %}
-                            {% else %}
-                                <div class="no-appointments">
-                                    <i class="bi bi-calendar-x"></i>
-                                    <span>Sem agendamentos</span>
-                                </div>
-                            {% endif %}
+                            </select>
                         </div>
                     </div>
-                    {% endfor %}
                 </div>
+                
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height: 350px;">
+                        <canvas id="labActivityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Requests -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-hourglass-split"></i>
+                        Solicitações Pendentes
+                    </h5>
+                </div>
+                
+                <div class="card-body p-0">
+                    <div class="pending-requests-container">
+                        {% for request in pending_requests|slice:":10" %}
+                        <div class="activity-item">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="activity-title mb-0">{{ request.professor.get_full_name }}</h6>
+                                <span class="badge bg-warning rounded-pill">Pendente</span>
+                            </div>
+                            <div class="activity-details">
+                                <p><i class="bi bi-building"></i> {{ request.laboratory.name }}</p>
+                                <p><i class="bi bi-calendar-date"></i> {{ request.scheduled_date|date:"d/m/Y" }}</p>
+                                <p><i class="bi bi-clock"></i> {{ request.start_time|time:"H:i" }} - {{ request.end_time|time:"H:i" }}</p>
+                            </div>
+                            <div class="activity-date">
+                                <i class="bi bi-clock-history"></i>
+                                Solicitado {{ request.request_date|timesince }} atrás
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="empty-state">
+                            <i class="bi bi-check-circle"></i>
+                            <h5>Nenhuma solicitação pendente</h5>
+                            <p>Todas as solicitações foram processadas.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                {% if pending_requests.count > 10 %}
+                <div class="card-footer text-center">
+                    <a href="{% url 'pending_requests' %}" class="card-footer-link">
+                        <i class="bi bi-arrow-right"></i>
+                        Ver todas as solicitações
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Third Row -->
+    <div class="row">
+        <!-- Recent Appointments -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-clock-history"></i>
+                        Histórico de Agendamentos
+                    </h5>
+                </div>
+                
+                <div class="card-body p-0">
+                    <div class="recent-activity-list custom-scrollbar">
+                        {% for appointment in recent_appointments|slice:":10" %}
+                        <div class="activity-item">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="activity-title mb-0">{{ appointment.professor.get_full_name }}</h6>
+                                <span class="badge rounded-pill badge-{{ appointment.status }}">
+                                    {{ appointment.get_status_display }}
+                                </span>
+                            </div>
+                            <div class="activity-details">
+                                <p><i class="bi bi-building"></i> {{ appointment.laboratory.name }}</p>
+                                <p><i class="bi bi-calendar-date"></i> {{ appointment.scheduled_date|date:"d/m/Y" }}</p>
+                                <p><i class="bi bi-clock"></i> {{ appointment.start_time|time:"H:i" }} - {{ appointment.end_time|time:"H:i" }}</p>
+                            </div>
+                            <div class="activity-date">
+                                <i class="bi bi-clock-history"></i>
+                                {% if appointment.review_date %}
+                                    Atualizado {{ appointment.review_date|timesince }} atrás
+                                {% else %}
+                                    Criado {{ appointment.request_date|timesince }} atrás
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="empty-state">
+                            <i class="bi bi-journal-bookmark"></i>
+                            <h5>Nenhum agendamento recente</h5>
+                            <p>Não há agendamentos para exibir.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                {% if recent_appointments.count > 10 %}
+                <div class="card-footer text-center">
+                    <a href="{% url 'appointment_history' %}" class="card-footer-link">
+                        <i class="bi bi-arrow-right"></i>
+                        Ver histórico completo
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Active Professors -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-people"></i>
+                        Professores Ativos
+                    </h5>
+                    <p class="small text-muted mb-0">Total: {{ active_professors.count }}</p>
+                </div>
+                
+                <div class="card-body">
+                    <ul class="professor-list custom-scrollbar">
+                        {% for professor in active_professors|slice:":8" %}
+                        <li class="professor-list-item">
+                            <i class="bi bi-person-circle"></i>
+                            <div class="professor-info">
+                                <span class="professor-name">{{ professor.get_full_name }}</span>
+                                {% if professor.email %}
+                                <span class="professor-contact">
+                                    <i class="bi bi-envelope"></i> {{ professor.email }}
+                                </span>
+                                {% endif %}
+                                {% if professor.phone_number %}
+                                <span class="professor-contact">
+                                    <i class="bi bi-telephone"></i> {{ professor.phone_number }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </li>
+                        {% empty %}
+                        <li class="empty-state">
+                            <i class="bi bi-person-x"></i>
+                            <h5>Nenhum professor ativo</h5>
+                            <p>Não há professores ativos no momento.</p>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                
+                {% if active_professors.count > 8 %}
+                <div class="card-footer text-center">
+                    <a href="{% url 'professor_list' %}" class="card-footer-link">
+                        <i class="bi bi-arrow-right"></i>
+                        Ver todos os professores
+                    </a>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal de Detalhes do Agendamento -->
+<!-- Appointment Details Modal -->
 <div class="modal fade" id="appointmentModal" tabindex="-1" aria-labelledby="appointmentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -861,7 +473,7 @@
                 
                 <div class="detail-group">
                     <label class="detail-label">
-                        <i class="bi bi-box"></i>
+                        <i class="bi bi-tools"></i>
                         Materiais Necessários
                     </label>
                     <p class="detail-value" id="modal-materials"></p>
@@ -869,802 +481,42 @@
                 
                 <div class="detail-group">
                     <label class="detail-label">
-                        <i class="bi bi-info-circle"></i>
+                        <i class="bi bi-check-circle"></i>
                         Status
                     </label>
-                    <p class="detail-value">
-                        <span class="badge" id="modal-status-badge"></span>
-                    </p>
+                    <span class="badge" id="modal-status-badge"></span>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="bi bi-x-lg"></i>
-                    Fechar
-                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
             </div>
         </div>
     </div>
-</div>
-
-<!-- Segunda linha remodelada - Atividade de Laboratórios e Solicitações Pendentes lado a lado -->
-<div class="row">
-    <!-- Lab Activity Chart -->
-    <div class="col-lg-6 mb-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent">
-                <div class="d-flex justify-content-between align-items-center flex-wrap">
-                    <h5 class="card-title mb-0">Atividade de Laboratórios</h5>
-                    <!-- Filtros do gráfico -->
-                    <div class="d-flex align-items-center gap-2 flex-wrap mt-2 mt-sm-0">
-                        <!-- Filtro de departamento para o gráfico -->
-                        <select id="chartDepartmentFilter" class="form-select form-select-sm me-2">
-                            <option value="all">Todos departamentos</option>
-                            {% for dept in departments %}
-                                <option value="{{ dept }}">{{ dept|capfirst }}</option>
-                            {% endfor %}
-                        </select>
-                        <!-- Botões de período -->
-                        <div class="btn-group" id="labActivityPeriod">
-                            <button type="button" class="btn btn-sm btn-outline-secondary active" data-period="week">Semana</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" data-period="month">Mês</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" data-period="year">Ano</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="chart-container" style="position: relative; height:300px">
-                    <canvas id="labActivityChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Pending Requests Column - movido para esta linha -->
-    <div class="col-lg-6 mb-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Solicitações Pendentes</h5>
-                    {% if pending_appointments > 0 or pending_approvals > 0 %}
-                        <a href="{% url 'schedule_requests_list' %}" class="btn btn-sm btn-primary">Ver todos</a>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="card-body p-0 pending-requests-container">
-                <div class="list-group list-group-flush">
-                    {% if pending_approvals > 0 %}
-                        <a href="{% url 'pending_approvals' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="mb-1">Aprovações de usuários</h6>
-                                <p class="mb-0 small">Novos usuários aguardando aprovação</p>
-                            </div>
-                            <span class="badge bg-warning rounded-pill">{{ pending_approvals }}</span>
-                        </a>
-                    {% endif %}
-
-                    {% if pending_appointments > 0 %}
-                        <a href="{% url 'schedule_requests_list' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="mb-1">Agendamentos pendentes</h6>
-                                <p class="mb-0 small">Solicitações de laboratório aguardando análise</p>
-                            </div>
-                            <span class="badge bg-warning rounded-pill">{{ pending_appointments }}</span>
-                        </a>
-                    {% endif %}
-
-                    {% for appointment in pending_appointment_objects %}
-                        <a href="{% url 'schedule_request_detail' appointment.pk %}" class="list-group-item list-group-item-action">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h6 class="mb-1 small">{{ appointment.professor.get_full_name }}</h6>
-                                <small>{{ appointment.scheduled_date|date:"d/m" }}</small>
-                            </div>
-                            <p class="mb-1 small">{{ appointment.laboratory.name }}</p>
-                            <p class="mb-0 small">
-                                <i class="bi bi-clock"></i> {{ appointment.start_time|time:"H:i" }} - {{ appointment.end_time|time:"H:i" }}
-                            </p>
-                        </a>
-                    {% endfor %}
-
-                    {% if pending_approvals == 0 and pending_appointments == 0 %}
-                        <div class="list-group-item text-center py-4">
-                            <i class="bi bi-check-circle text-success" style="font-size: 1.5rem;"></i>
-                            <p class="mt-2 mb-0">Nenhuma solicitação pendente.</p>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-    
-    <!-- Materials Alert -->
-    <div class="col-lg-4 mb-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Materiais em Alerta</h5>
-                    <a href="{% url 'material_list' %}" class="btn btn-sm btn-primary">Ver todos</a>
-                </div>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table mb-0">
-                        <thead>
-                            <tr>
-                                <th>Material</th>
-                                <th>Estoque</th>
-                                <th>Mínimo</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for material in materials_in_alert %}
-                                <tr>
-                                    <td>{{ material.name }}</td>
-                                    <td class="alert-quantity">{{ material.quantity }}</td>
-                                    <td>{{ material.minimum_stock }}</td>
-                                </tr>
-                            {% empty %}
-                                <tr>
-                                    <td colspan="3" class="text-center py-4">
-                                        <i class="bi bi-check-circle text-success"></i>
-                                        Nenhum material em alerta!
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Third Row -->
-<div class="row">
-    <!-- Recent Appointments -->
-    <div class="col-lg-6 mb-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent">
-                <h5 class="card-title mb-0">Histórico de Agendamentos</h5>
-            </div>
-            {# Adicionado p-0 para controlar padding nos items #}
-            <div class="card-body p-0">
-                <div class="recent-activity-list">
-                    {% for appointment in recent_appointments %}
-                        <div class="activity-item">
-                            <div class="d-flex justify-content-between align-items-start mb-2"> {# Alterado para align-items-start #}
-                                <h6 class="activity-title mb-0">{{ appointment.professor.get_full_name }}</h6>
-                                {# Usando as novas classes de badge baseadas no status #}
-                                <span class="badge rounded-pill badge-{{ appointment.status|lower }}">
-                                    {{ appointment.get_status_display }}
-                                </span>
-                            </div>
-                            <div class="activity-details mb-2"> {# Adicionado mb-2 #}
-                                <p class="mb-1">
-                                    <i class="bi bi-building"></i> {{ appointment.laboratory.name }}
-                                </p>
-                                <p class="mb-1">
-                                    <i class="bi bi-calendar-date"></i> {{ appointment.scheduled_date|date:"d/m/Y" }}
-                                </p>
-                                <p class="mb-0"> {# Removido mb-1 do último item #}
-                                    <i class="bi bi-clock"></i> {{ appointment.start_time|time:"H:i" }} - {{ appointment.end_time|time:"H:i" }}
-                                </p>
-                            </div>
-                            <div class="activity-date"> {# Removido mt-2, espaçamento controlado pelo item #}
-                                <i class="bi bi-clock-history"></i> Atualizado {{ appointment.review_date|timesince }} atrás
-                            </div>
-                        </div>
-                    {% empty %}
-                        <div class="text-center py-5"> {# Aumentado padding vertical #}
-                            <i class="bi bi-journal-bookmark d-block mb-2" style="font-size: 1.8rem;"></i>
-                            Nenhum agendamento recente.
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Active Professors -->
-    <div class="col-lg-6 mb-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent pb-0 border-0"> {# Removido padding-bottom e borda #}
-                <h5 class="card-title mb-0">Professores Ativos</h5>
-                 <p class="small mb-2">Total: {{ active_professors.count }}</p> {# Mantém a contagem total #}
-            </div>
-            {# Adicionado p-0 para controlar padding nos items da lista #}
-            <div class="card-body pt-0 pb-0"> {# Removido padding vertical do body #}
-                <ul class="professor-list">
-                    {% for professor in active_professors|slice:":5" %} {# Mostra os 5 primeiros #}
-                        <li class="professor-list-item">
-                            <i class="bi bi-person-circle"></i>
-                            <div class="professor-info">
-                                <span class="professor-name">{{ professor.get_full_name }}</span>
-                                {% if professor.phone_number %}
-                                <span class="professor-contact">
-                                    <i class="bi bi-telephone-fill"></i> {{ professor.phone_number }}
-                                </span>
-                                {% endif %}
-                                {% if professor.email %}
-                                <span class="professor-contact">
-                                     <i class="bi bi-envelope-fill"></i> {{ professor.email }}
-                                </span>
-                                {% endif %}
-                                {# Adicionar curso/departamento se disponível no modelo Professor #}
-                                {# Ex: <span class="professor-contact"><i class="bi bi-building"></i> {{ professor.department }}</span> #}
-                            </div>
-                        </li>
-                    {% empty %}
-                        <li class="text-center py-3 small">Nenhum professor ativo encontrado.</li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% if active_professors.count > 5 %} {# Mostra o link apenas se houver mais professores #}
-            <div class="card-footer bg-transparent p-0"> {# Removido padding e fundo padrão #}
-                {# Substitua '#' por uma URL real se tiver uma página de listagem de professores #}
-                <a href="#" class="card-footer-link">Ver todos ({{ active_professors.count }})</a>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Chart.js (Required for chart module) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+<!-- Modular JavaScript Files -->
+<script src="{% static 'js/dashboard-main.js' %}"></script>
+<script src="{% static 'js/calendar-module.js' %}"></script>
+<script src="{% static 'js/modal-handlers.js' %}"></script>
+<script src="{% static 'js/chart-module.js' %}"></script>
+
+<!-- Initialize Dashboard -->
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const appointmentModal = document.getElementById('appointmentModal');
-    
-        appointmentModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            
-            // Extrair dados dos atributos data-*
-            const professor = button.getAttribute('data-professor');
-            const laboratory = button.getAttribute('data-laboratory');
-            const subject = button.getAttribute('data-subject');
-            const time = button.getAttribute('data-time');
-            const date = button.getAttribute('data-date');
-            const students = button.getAttribute('data-students');
-            const materials = button.getAttribute('data-materials');
-            const description = button.getAttribute('data-description');
-            const status = button.getAttribute('data-status');
-            
-            // Preencher o modal
-            document.getElementById('modal-professor').textContent = professor;
-            document.getElementById('modal-laboratory').textContent = laboratory;
-            document.getElementById('modal-subject').textContent = subject;
-            document.getElementById('modal-time').textContent = time;
-            document.getElementById('modal-date').textContent = date;
-            document.getElementById('modal-students').textContent = students;
-            document.getElementById('modal-materials').textContent = materials;
-            document.getElementById('modal-description').textContent = description;
-            
-            // Configurar badge do status
-            const statusBadge = document.getElementById('modal-status-badge');
-            statusBadge.textContent = status;
-            
-            // Remover classes anteriores
-            statusBadge.className = 'badge';
-            
-            // Adicionar classe baseada no status
-            const statusClass = button.classList.contains('status-approved') ? 'bg-success' :
-                            button.classList.contains('status-pending') ? 'bg-warning' : 'bg-danger';
-            statusBadge.classList.add(statusClass);
-        });
-        // --- Lab Activity Chart ---
-        const labActivityCtx = document.getElementById('labActivityChart').getContext('2d');
-        let labActivityChart; // Declarar a variável do gráfico aqui para ser acessível
-        const chartDepartmentFilter = document.getElementById('chartDepartmentFilter');
-
-        // Função para carregar dados do gráfico
-        async function loadChartData(period = 'week', department = 'all') {
-            // Mostrar indicador de carregamento
-            const chartContainer = document.querySelector('.chart-container');
-            if (chartContainer) {
-                chartContainer.classList.add('loading');
-            }
-            
-            try {
-                // Fazer requisição AJAX para buscar dados do gráfico
-                const response = await fetch(`/dashboard/chart-data/?period=${period}&department=${department}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                // Atualizar ou criar o gráfico
-                updateLabActivityChart(data, period);
-            } catch (error) {
-                console.error('Erro ao carregar dados do gráfico:', error);
-                // Mostrar mensagem de erro (opcional)
-            } finally {
-                // Remover indicador de carregamento
-                if (chartContainer) {
-                    chartContainer.classList.remove('loading');
-                }
-            }
-        }
-    
-        // Função para criar ou atualizar o gráfico de atividade
-        function updateLabActivityChart(data, period = 'week') {
-            console.log(`Atualizando gráfico para o período: ${period}`);
-            
-            const chartData = {
-                labels: data.labels,
-                datasets: data.datasets
-            };
-            
-            // Configurações do gráfico
-            const chartOptions = {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        display: chartData.datasets.length > 0
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Número de Agendamentos'
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: data.xAxisTitle || 'Período'
-                        }
-                    }
-                }
-            };
-    
-            // Se o gráfico já existe, atualiza os dados. Senão, cria um novo.
-            if (labActivityChart) {
-                labActivityChart.data = chartData;
-                labActivityChart.options = chartOptions;
-                labActivityChart.update();
-            } else {
-                labActivityChart = new Chart(labActivityCtx, {
-                    type: 'line',
-                    data: chartData,
-                    options: chartOptions
-                });
-            }
-        }
-    
-        // Carregar dados iniciais do gráfico
-        if (labActivityCtx) {
-            // Carregar dados iniciais do gráfico (semana atual, todos departamentos)
-            loadChartData('week', 'all');
-            
-            // Event listeners para o filtro de período
-            const periodButtons = document.querySelectorAll('#labActivityPeriod button');
-            periodButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    // Remover classe 'active' de todos os botões
-                    periodButtons.forEach(btn => btn.classList.remove('active'));
-                    // Adicionar classe 'active' ao botão clicado
-                    this.classList.add('active');
-                    // Obter o período selecionado
-                    const period = this.dataset.period;
-                    // Obter o departamento selecionado
-                    const department = chartDepartmentFilter.value;
-                    // Carregar dados do gráfico com os filtros aplicados
-                    loadChartData(period, department);
-                });
-            });
-            
-            // Event listener para o filtro de departamento
-            if (chartDepartmentFilter) {
-                chartDepartmentFilter.addEventListener('change', function() {
-                    // Obter o período atual
-                    const activePeriodBtn = document.querySelector('#labActivityPeriod button.active');
-                    const period = activePeriodBtn ? activePeriodBtn.dataset.period : 'week';
-                    // Carregar dados do gráfico com o novo departamento selecionado
-                    loadChartData(period, this.value);
-                });
-            }
-        }
-
-        // Função para criar ou atualizar o gráfico de atividade
-        function updateLabActivityChart(period = 'week') {
-            console.log(`Atualizando gráfico para o período: ${period}`); // Log para depuração
-
-            // Dados de exemplo - Substituir pela lógica de busca AJAX
-            let chartData;
-            if (period === 'week') {
-                chartData = {
-                    labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'], // Exemplo: Dias da semana
-                    datasets: [
-                        // Removido dataset de exemplo 'Lab. Engenharia (Semana)'
-                        // {
-                        //     label: 'Lab. Engenharia (Semana)',
-                        //     data: [10, 8, 12, 15, 10, 2, 0], // Dados semanais
-                        //     borderColor: '#4a6fa5',
-                        //     backgroundColor: 'rgba(74, 111, 165, 0.1)',
-                        //     tension: 0.3,
-                        //     fill: true
-                        // },
-                        // Adicione outros datasets conforme necessário (ou deixe vazio por enquanto)
-                    ]
-                };
-            } else if (period === 'month') {
-                chartData = {
-                    labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'], // Exemplo: Semanas do mês
-                    datasets: [
-                        // Removido dataset de exemplo 'Lab. Engenharia (Mês)'
-                        // {
-                        //     label: 'Lab. Engenharia (Mês)',
-                        //     data: [45, 50, 55, 48], // Dados mensais
-                        //     borderColor: '#198754',
-                        //     backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                        //     tension: 0.3,
-                        //     fill: true
-                        // },
-                         // Adicione outros datasets conforme necessário (ou deixe vazio por enquanto)
-                    ]
-                };
-            } else if (period === 'year') {
-                 chartData = {
-                    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'], // Exemplo: Meses do ano
-                    datasets: [
-                        // Removido dataset de exemplo 'Lab. Engenharia (Ano)'
-                        // {
-                        //     label: 'Lab. Engenharia (Ano)',
-                        //     data: [200, 210, 230, 220, 240, 250, 260, 270, 250, 240, 230, 220], // Dados anuais
-                        //     borderColor: '#dc3545',
-                        //     backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                        //     tension: 0.3,
-                        //     fill: true
-                        // },
-                         // Adicione outros datasets conforme necessário (ou deixe vazio por enquanto)
-                    ]
-                };
-            }
-
-            // Se o gráfico já existe, atualiza os dados. Senão, cria um novo.
-            if (labActivityChart) {
-                labActivityChart.data = chartData;
-                labActivityChart.update();
-            } else {
-                labActivityChart = new Chart(labActivityCtx, {
-                    type: 'line',
-                    data: chartData, // Usa os dados definidos acima (agora vazios ou com outros dados)
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'top',
-                                display: chartData.datasets.length > 0 // Oculta a legenda se não houver datasets
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'Número de Agendamentos'
-                                }
-                            },
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: 'Período' // Texto genérico para o eixo X
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        // Inicializar o gráfico com dados da semana (agora vazio)
-        updateLabActivityChart('week');
-
-        // Adicionar Event Listeners aos botões de período do gráfico
-        const periodButtons = document.querySelectorAll('#labActivityPeriod button'); // Selecionar botões dentro do grupo
-        periodButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                // Remover classe 'active' de todos os botões
-                periodButtons.forEach(btn => btn.classList.remove('active'));
-                // Adicionar classe 'active' ao botão clicado
-                this.classList.add('active');
-                // Obter o período (week, month, year) - pode ser do data-period ou do texto
-                const period = this.dataset.period; // Adicione data-period="week/month/year" aos botões no HTML
-                updateLabActivityChart(period);
-            });
-        });
-
-        // --- Fim do Lab Activity Chart ---
-
-        // Update chart if theme changes
-        const themeToggleBtn = document.getElementById('themeToggleBtn');
-        if (themeToggleBtn) {
-            themeToggleBtn.addEventListener('click', function() {
-                setTimeout(() => {
-                    const theme = document.documentElement.getAttribute('data-theme');
-                    
-                    labActivityChart.options.scales.x.grid.color = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-                    labActivityChart.options.scales.y.grid.color = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-                    labActivityChart.options.scales.x.ticks.color = theme === 'dark' ? '#adb5bd' : '#6c757d';
-                    labActivityChart.options.scales.y.ticks.color = theme === 'dark' ? '#adb5bd' : '#6c757d';
-                    
-                    labActivityChart.update();
-                }, 300);
-            });
-        }
-    });
-    
-// ✅ AGUARDAR DOM READY
+// Dashboard will auto-initialize when DOM is ready
+// Additional configuration can be added here if needed
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Iniciando JavaScript do calendário...');
-
-    // ✅ ELEMENTOS
-    const calendarBody = document.getElementById('calendar-body');
-    const calendarTitle = document.getElementById('calendar-title');
-    const weekOffsetInput = document.getElementById('week_offset_input');
-    const departmentSelect = document.getElementById('department-select');
-
-    // ✅ DEBUG: Verificar se elementos existem
-    console.log('📋 Elementos encontrados:');
-    console.log('calendarBody:', !!calendarBody);
-    console.log('calendarTitle:', !!calendarTitle);
-    console.log('weekOffsetInput:', !!weekOffsetInput);
-    console.log('departmentSelect:', !!departmentSelect);
-
-    // ✅ FUNÇÃO PARA FORMATAR DATAS
-    function formatDate(isoString) {
-        const date = new Date(isoString + 'T00:00:00');
-        return date.toLocaleDateString('pt-BR');
-    }
-
-    function formatDateShort(isoString) {
-        const date = new Date(isoString + 'T00:00:00');
-        return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-    }
-
-    // ✅ FUNÇÃO PRINCIPAL DE CARREGAMENTO
-    async function loadWeekData(weekOffset, department = 'all') {
-        console.log(`📅 Carregando semana: offset=${weekOffset}, department=${department}`);
+    // Optional: Configure dashboard settings
+    if (window.Dashboard) {
+        window.Dashboard.config.debug = true; // Enable debug mode
         
-        if (!calendarBody) {
-            console.error('❌ calendarBody não encontrado!');
-            return;
-        }
-
-        // Loading state
-        calendarBody.innerHTML = `
-            <div class="d-flex justify-content-center align-items-center p-5">
-                <div class="spinner-border text-primary me-3" role="status"></div>
-                <span>Carregando calendário...</span>
-            </div>
-        `;
-
-        try {
-            const url = new URL(window.location.href);
-            url.searchParams.set('week_offset', weekOffset);
-            url.searchParams.set('department', department);
-
-            console.log('📡 Fazendo requisição para:', url.toString());
-
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                },
-                credentials: 'same-origin'
-            });
-
-            console.log('📊 Status da resposta:', response.status);
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            const data = await response.json();
-            console.log('✅ Dados recebidos:', data);
-
-            if (!data.success) {
-                throw new Error(data.message || 'Erro desconhecido');
-            }
-
-            // ✅ ATUALIZAR CALENDÁRIO
-            if (data.calendar_html) {
-                calendarBody.innerHTML = data.calendar_html;
-                console.log('✅ HTML do calendário atualizado');
-                
-                // Reativar event listeners dos modais
-                setupModalListeners();
-            }
-
-            // ✅ ATUALIZAR TÍTULO
-            if (calendarTitle && data.start_of_week && data.end_of_week) {
-                const startFormatted = formatDateShort(data.start_of_week);
-                const endFormatted = formatDate(data.end_of_week);
-                calendarTitle.textContent = `Calendário Semanal (${startFormatted} - ${endFormatted})`;
-                console.log('✅ Título atualizado');
-            }
-
-            // ✅ ATUALIZAR INPUT HIDDEN
-            if (weekOffsetInput) {
-                weekOffsetInput.value = weekOffset;
-                console.log('✅ Offset atualizado para:', weekOffset);
-            }
-
-            // ✅ ATUALIZAR SELECT
-            if (departmentSelect) {
-                departmentSelect.value = department;
-                console.log('✅ Departamento atualizado para:', department);
-            }
-
-        } catch (error) {
-            console.error('❌ Erro:', error);
-            
-            calendarBody.innerHTML = `
-                <div class="alert alert-danger text-center m-3">
-                    <h5><i class="bi bi-exclamation-triangle"></i> Erro ao carregar calendário</h5>
-                    <p class="mb-3">${error.message}</p>
-                    <button class="btn btn-outline-primary btn-sm" onclick="window.location.reload()">
-                        <i class="bi bi-arrow-clockwise"></i> Recarregar página
-                    </button>
-                </div>
-            `;
-        }
+        // Optional: Add custom event handlers
+        // window.Dashboard.broadcast('custom-event', { data: 'example' });
     }
-
-    // ✅ CONFIGURAR EVENT LISTENERS DOS MODAIS
-    function setupModalListeners() {
-        const modalItems = document.querySelectorAll('.appointment-item[data-bs-toggle="modal"]');
-        console.log(`🔗 Configurando ${modalItems.length} event listeners de modal`);
-    }
-
-    // ✅ EVENT LISTENERS DE NAVEGAÇÃO (Event Delegation)
-    document.addEventListener('click', function(event) {
-        const target = event.target.closest('a[id$="-link"]');
-        if (!target) return;
-
-        event.preventDefault();
-        
-        const currentOffset = weekOffsetInput ? parseInt(weekOffsetInput.value) || 0 : 0;
-        const department = departmentSelect ? departmentSelect.value : 'all';
-        let newOffset = currentOffset;
-
-        if (target.id === 'prev-week-link') {
-            newOffset = currentOffset - 1;
-            console.log('⬅️ Semana anterior clicada');
-        } else if (target.id === 'today-link') {
-            newOffset = 0;
-            console.log('🏠 Hoje clicado');
-        } else if (target.id === 'next-week-link') {
-            newOffset = currentOffset + 1;
-            console.log('➡️ Próxima semana clicada');
-        }
-
-        loadWeekData(newOffset, department);
-    });
-
-    // ✅ EVENT LISTENER DO FILTRO DE DEPARTAMENTO
-    if (departmentSelect) {
-        departmentSelect.addEventListener('change', function() {
-            const currentOffset = weekOffsetInput ? parseInt(weekOffsetInput.value) || 0 : 0;
-            console.log('🏢 Departamento alterado para:', this.value);
-            loadWeekData(currentOffset, this.value);
-        });
-    }
-
-    // ✅ EVENT LISTENER DO MODAL (Bootstrap)
-    document.addEventListener('show.bs.modal', function(event) {
-        if (event.target.id === 'appointmentModal') {
-            const button = event.relatedTarget;
-            if (!button) return;
-
-            console.log('📅 Abrindo modal de agendamento');
-
-            // Extrair dados
-            const data = {
-                professor: button.getAttribute('data-professor') || 'Não informado',
-                laboratory: button.getAttribute('data-laboratory') || 'Não informado',
-                subject: button.getAttribute('data-subject') || 'Não informado',
-                time: button.getAttribute('data-time') || 'Não informado',
-                date: button.getAttribute('data-date') || 'Não informado',
-                students: button.getAttribute('data-students') || 'Não informado',
-                materials: button.getAttribute('data-materials') || 'Não especificado',
-                description: button.getAttribute('data-description') || 'Sem descrição',
-                status: button.getAttribute('data-status') || 'Não informado'
-            };
-
-            // Preencher modal
-            const fields = [
-                'modal-professor', 'modal-laboratory', 'modal-subject',
-                'modal-time', 'modal-date', 'modal-students',
-                'modal-materials', 'modal-description'
-            ];
-
-            fields.forEach((fieldId, index) => {
-                const element = document.getElementById(fieldId);
-                const key = Object.keys(data)[index];
-                if (element && data[key]) {
-                    element.textContent = data[key];
-                }
-            });
-
-            // Status badge
-            const statusBadge = document.getElementById('modal-status-badge');
-            if (statusBadge) {
-                statusBadge.textContent = data.status;
-                statusBadge.className = 'badge';
-                
-                if (button.classList.contains('status-approved')) {
-                    statusBadge.classList.add('bg-success');
-                } else if (button.classList.contains('status-pending')) {
-                    statusBadge.classList.add('bg-warning');
-                } else {
-                    statusBadge.classList.add('bg-danger');
-                }
-            }
-        }
-    });
-
-    // ✅ INICIALIZAÇÃO
-    console.log('✅ JavaScript do calendário carregado com sucesso!');
-    setupModalListeners();
 });
 </script>
-
-<!-- ✅ CSS DE APOIO -->
-<style>
-.calendar-body {
-    min-height: 200px;
-}
-
-.appointment-item {
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.appointment-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.spinner-border {
-    width: 2rem;
-    height: 2rem;
-}
-
-/* Ensure navigation buttons are visible */
-.calendar-nav a {
-    display: inline-flex !important;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    text-decoration: none;
-    border: 1px solid var(--bs-border-color);
-    border-radius: 0.375rem;
-    background-color: var(--bs-body-bg);
-    color: var(--bs-body-color);
-    transition: all 0.2s ease;
-}
-
-.calendar-nav a:hover {
-    background-color: var(--bs-primary);
-    border-color: var(--bs-primary);
-    color: white;
-    text-decoration: none;
-}
-</style>
 {% endblock %}

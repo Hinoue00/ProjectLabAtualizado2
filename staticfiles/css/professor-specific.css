@@ -1,0 +1,286 @@
+/* ===================================== */
+/* 1. PROFESSOR-SPECIFIC.CSS */
+/* ===================================== */
+
+/* Variáveis específicas do professor */
+:root {
+    --professor-primary: #0d6efd;
+    --professor-accent: #20c997;
+    --professor-success: #198754;
+    --professor-warning: #ffc107;
+    --professor-danger: #dc3545;
+}
+
+/* Dashboard específico do professor */
+.professor-dashboard {
+    --primary-color: var(--professor-primary);
+    --accent-color: var(--professor-accent);
+}
+
+/* ===================================== */
+/* HEADER MELHORADO - NOVO LAYOUT */
+/* ===================================== */
+
+/* Page header melhorado com flexbox */
+.page-header {
+    margin-bottom: 2rem;
+    padding: 1.5rem 0;
+}
+
+.page-header .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    margin: 0;
+}
+
+.page-header .col-md-6 {
+    padding: 0;
+}
+
+.page-header .col-md-6:first-child {
+    flex: 1;
+}
+
+.page-header .col-md-6:last-child {
+    flex-shrink: 0;
+}
+
+/* Títulos melhorados */
+.page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.page-subtitle {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    margin-bottom: 0;
+    line-height: 1.4;
+}
+
+/* ===================================== */
+/* BOTÃO DE AGENDAMENTO MELHORADO */
+/* ===================================== */
+
+.btn-schedule-improved {
+    /* Resetar para estilos padrão do Bootstrap */
+    padding: 0.75rem 1rem !important;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    font-size: 1rem !important;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.2s ease !important;
+    border: 1px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    /* Remover sombras e gradientes customizados */
+    box-shadow: none;
+    background: none;
+}
+
+/* Botão primário - estilo Bootstrap original */
+.btn-schedule-improved.btn-primary {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    color: #fff !important;
+}
+
+.btn-schedule-improved.btn-primary:hover {
+    background-color: #0b5ed7 !important;
+    border-color: #0a58ca !important;
+    transform: none;
+    box-shadow: none !important;
+}
+
+.btn-schedule-improved.btn-primary:focus {
+    background-color: #0b5ed7 !important;
+    border-color: #0a58ca !important;
+    box-shadow: 0 0 0 0.25rem rgba(49, 132, 253, 0.5) !important;
+}
+
+/* Botão secundário - estilo Bootstrap original */
+.btn-schedule-improved.btn-secondary {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    color: #fff !important;
+    cursor: not-allowed;
+}
+
+.btn-schedule-improved.btn-secondary:disabled {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    opacity: 0.65;
+}
+
+/* Ícone do botão */
+.btn-schedule-improved i {
+    font-size: 1rem;
+    margin-right: 0.5rem;
+}
+
+/* ===================================== */
+/* RESPONSIVIDADE DO HEADER */
+/* ===================================== */
+
+@media (max-width: 768px) {
+    .page-header .row {
+        flex-direction: column;
+        text-align: center;
+        gap: 1.5rem;
+    }
+    
+    .page-title {
+        font-size: 1.75rem;
+    }
+    
+    .page-subtitle {
+        font-size: 1rem;
+    }
+    
+    .btn-schedule {
+        width: 100% !important;
+        justify-content: center;
+        padding: 1rem 1.5rem !important;
+        font-size: 1.1rem !important;
+    }
+    
+    .page-header .col-md-6:last-child {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .page-header {
+        padding: 1rem 0;
+        margin-bottom: 1.5rem;
+    }
+    
+    .page-title {
+        font-size: 1.5rem;
+    }
+}
+
+/* Para telas muito pequenas, simplificar o texto do botão */
+@media (max-width: 400px) {
+    .btn-schedule {
+        padding: 0.875rem !important;
+        aspect-ratio: 1;
+        border-radius: 50% !important;
+        width: auto !important;
+        justify-content: center;
+    }
+    
+    .btn-schedule .btn-text {
+        display: none;
+    }
+}
+
+/* ===================================== */
+/* MELHORAR O ALERTA DE AGENDAMENTO */
+/* ===================================== */
+
+.scheduling-warning {
+    border-radius: 10px !important;
+    border: none !important;
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%) !important;
+    border-left: 4px solid #ffc107 !important;
+    margin-top: 1.5rem;
+}
+
+.scheduling-warning i {
+    margin-right: 0.5rem;
+}
+
+/* ===================================== */
+/* ESTILOS ORIGINAIS MANTIDOS */
+/* ===================================== */
+
+/* Button mobile optimization */
+.btn-mobile-full {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+@media (min-width: 768px) {
+    .btn-mobile-full {
+        width: auto;
+    }
+}
+
+/* Stats section específica do professor */
+.stats-section {
+    margin-bottom: 2rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+/* Dashboard grid layout */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas: 
+            "stats stats"
+            "calendar calendar"
+            "upcoming drafts"
+            "history history";
+    }
+
+    .stats-section { grid-area: stats; }
+    .weekly-calendar-row { grid-area: calendar; }
+    .upcoming-classes-card { grid-area: upcoming; }
+    .draft-requests-card { grid-area: drafts; }
+    .history-card { grid-area: history; }
+}
+
+@media (min-width: 1200px) {
+    .dashboard-grid {
+        grid-template-columns: 2fr 1fr;
+        grid-template-areas: 
+            "stats stats"
+            "calendar upcoming"
+            "calendar drafts"
+            "history history";
+    }
+}
+
+/* ===================================== */
+/* MELHORIAS ADICIONAIS */
+/* ===================================== */
+
+/* Smooth transitions para todos os elementos interativos */
+.professor-dashboard .card,
+.professor-dashboard .btn,
+.professor-dashboard .stats-card {
+    transition: all 0.3s ease;
+}
+
+/* Melhorar spacing geral */
+.professor-dashboard .content-container {
+    padding: 1.5rem;
+}
+
+@media (min-width: 992px) {
+    .professor-dashboard .content-container {
+        padding: 2rem;
+    }
+}
