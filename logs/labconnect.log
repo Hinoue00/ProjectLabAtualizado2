@@ -1,0 +1,201 @@
+INFO 2025-07-07 14:30:05,499 autoreload 15160 18788 Watching for file changes with StatReloader
+INFO 2025-07-07 14:30:11,442 autoreload 15160 18788 C:\Users\jason\Documents\ProjetosDEV\ProjectLabAtualizado2\LabConnect\settings\development.py changed, reloading.
+INFO 2025-07-07 14:30:12,408 autoreload 21092 2100 Watching for file changes with StatReloader
+INFO 2025-07-07 14:31:00,600 autoreload 21092 2100 C:\Users\jason\Documents\ProjetosDEV\ProjectLabAtualizado2\scheduling\admin.py changed, reloading.
+INFO 2025-07-07 14:31:01,877 autoreload 18912 11368 Watching for file changes with StatReloader
+INFO 2025-07-07 14:39:29,876 autoreload 18912 11368 C:\Users\jason\Documents\ProjetosDEV\ProjectLabAtualizado2\dashboard\views.py changed, reloading.
+INFO 2025-07-07 14:39:30,941 autoreload 18668 12984 Watching for file changes with StatReloader
+INFO 2025-07-07 14:39:52,028 autoreload 18668 12984 C:\Users\jason\Documents\ProjetosDEV\ProjectLabAtualizado2\LabConnect\settings\development.py changed, reloading.
+INFO 2025-07-07 20:20:29,308 views 2780 5652    Labels: 9
+INFO 2025-07-07 20:20:29,309 views 2780 5652    Datasets: 2
+INFO 2025-07-07 20:20:29,310 views 2780 5652    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-07 20:20:29,310 views 2780 5652    Dataset 1 (testetes): Total=1
+INFO 2025-07-07 20:20:30,757 views 2780 5652    Labels: 13
+INFO 2025-07-07 20:20:30,757 views 2780 5652    Datasets: 2
+INFO 2025-07-07 20:20:30,757 views 2780 5652    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-07 20:20:30,757 views 2780 5652    Dataset 1 (testetes): Total=1
+INFO 2025-07-07 20:20:32,847 views 2780 5652    Labels: 13
+INFO 2025-07-07 20:20:32,847 views 2780 5652    Datasets: 2
+INFO 2025-07-07 20:20:32,847 views 2780 5652    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-07 20:20:32,847 views 2780 5652    Dataset 1 (testetes): Total=1
+INFO 2025-07-07 20:20:33,826 views 2780 5652    Labels: 6
+INFO 2025-07-07 20:20:33,826 views 2780 5652    Datasets: 2
+INFO 2025-07-07 20:20:33,827 views 2780 5652    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-07 20:20:33,827 views 2780 5652    Dataset 1 (testetes): Total=1
+INFO 2025-07-07 20:20:40,604 views 2780 5652    Labels: 13
+INFO 2025-07-07 20:20:40,605 views 2780 5652    Datasets: 2
+INFO 2025-07-07 20:20:40,605 views 2780 5652    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-07 20:20:40,605 views 2780 5652    Dataset 1 (testetes): Total=1
+INFO 2025-07-07 20:20:44,405 views 2780 5652    Labels: 6
+INFO 2025-07-07 20:20:44,405 views 2780 5652    Datasets: 1
+INFO 2025-07-07 20:20:44,405 views 2780 5652    Dataset 0 (testetes): Total=1
+INFO 2025-07-07 20:20:46,408 views 2780 5652    Labels: 6
+INFO 2025-07-07 20:20:46,409 views 2780 5652    Datasets: 1
+INFO 2025-07-07 20:20:46,409 views 2780 5652    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-07 20:20:48,638 views 2780 5652    Labels: 13
+INFO 2025-07-07 20:20:48,638 views 2780 5652    Datasets: 1
+INFO 2025-07-07 20:20:48,638 views 2780 5652    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-07 20:20:49,434 views 2780 5652    Labels: 9
+INFO 2025-07-07 20:20:49,435 views 2780 5652    Datasets: 1
+INFO 2025-07-07 20:20:49,435 views 2780 5652    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-07 20:21:25,050 views 2780 5652    Labels: 13
+INFO 2025-07-07 20:21:25,050 views 2780 5652    Datasets: 2
+INFO 2025-07-07 20:21:25,050 views 2780 5652    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-07 20:21:25,051 views 2780 5652    Dataset 1 (testetes): Total=1
+INFO 2025-07-07 20:22:05,822 views 2780 1616    Pendentes: 0
+INFO 2025-07-07 20:22:05,822 views 2780 1616    Aprovados: 3
+INFO 2025-07-07 20:22:05,822 views 2780 1616    Esta semana: 1
+INFO 2025-07-07 20:22:05,822 views 2780 1616    Total: 4
+INFO 2025-07-07 21:01:08,568 views 2780 17616    Labels: 13
+INFO 2025-07-07 21:01:08,568 views 2780 17616    Datasets: 2
+INFO 2025-07-07 21:01:08,568 views 2780 17616    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-07 21:01:08,569 views 2780 17616    Dataset 1 (testetes): Total=2
+INFO 2025-07-07 21:01:09,597 views 2780 17616    Labels: 6
+INFO 2025-07-07 21:01:09,597 views 2780 17616    Datasets: 2
+INFO 2025-07-07 21:01:09,597 views 2780 17616    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-07 21:01:09,598 views 2780 17616    Dataset 1 (testetes): Total=2
+INFO 2025-07-07 21:01:10,258 views 2780 17616    Labels: 9
+INFO 2025-07-07 21:01:10,258 views 2780 17616    Datasets: 2
+INFO 2025-07-07 21:01:10,259 views 2780 17616    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-07 21:01:10,259 views 2780 17616    Dataset 1 (testetes): Total=2
+INFO 2025-07-07 21:03:03,344 views 2780 17616    Labels: 9
+INFO 2025-07-07 21:03:03,344 views 2780 17616    Datasets: 3
+INFO 2025-07-07 21:03:03,344 views 2780 17616    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-07 21:03:03,344 views 2780 17616    Dataset 1 (Laboratório de Informática 1): Total=0
+INFO 2025-07-07 21:03:03,345 views 2780 17616    Dataset 2 (Laboratório Solos e Sementes): Total=2
+INFO 2025-07-07 21:03:19,522 views 2780 17616    Labels: 9
+INFO 2025-07-07 21:03:19,522 views 2780 17616    Datasets: 1
+INFO 2025-07-07 21:03:19,522 views 2780 17616    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-07 21:03:21,943 views 2780 17616    Labels: 9
+INFO 2025-07-07 21:03:21,944 views 2780 17616    Datasets: 1
+INFO 2025-07-07 21:03:21,944 views 2780 17616    Dataset 0 (Laboratório Solos e Sementes): Total=2
+INFO 2025-07-07 21:03:55,775 views 2780 17616    Labels: 13
+INFO 2025-07-07 21:03:55,775 views 2780 17616    Datasets: 3
+INFO 2025-07-07 21:03:55,775 views 2780 17616    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-07 21:03:55,775 views 2780 17616    Dataset 1 (Laboratório de Informática 1): Total=0
+INFO 2025-07-07 21:03:55,775 views 2780 17616    Dataset 2 (Laboratório Solos e Sementes): Total=2
+INFO 2025-07-07 21:03:57,385 views 2780 17616    Labels: 6
+INFO 2025-07-07 21:03:57,385 views 2780 17616    Datasets: 3
+INFO 2025-07-07 21:03:57,385 views 2780 17616    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-07 21:03:57,385 views 2780 17616    Dataset 1 (Laboratório de Informática 1): Total=0
+INFO 2025-07-07 21:03:57,386 views 2780 17616    Dataset 2 (Laboratório Solos e Sementes): Total=2
+INFO 2025-07-07 21:03:59,935 views 2780 17616    Labels: 13
+INFO 2025-07-07 21:03:59,936 views 2780 17616    Datasets: 3
+INFO 2025-07-07 21:03:59,936 views 2780 17616    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-07 21:03:59,936 views 2780 17616    Dataset 1 (Laboratório de Informática 1): Total=0
+INFO 2025-07-07 21:03:59,936 views 2780 17616    Dataset 2 (Laboratório Solos e Sementes): Total=2
+INFO 2025-07-08 13:55:25,518 views 1048 8216    Labels: 9
+INFO 2025-07-08 13:55:25,518 views 1048 8216    Datasets: 3
+INFO 2025-07-08 13:55:25,518 views 1048 8216    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-08 13:55:25,519 views 1048 8216    Dataset 1 (Laboratório de Informática 1): Total=0
+INFO 2025-07-08 13:55:25,519 views 1048 8216    Dataset 2 (Laboratório Solos e Sementes): Total=2
+INFO 2025-07-08 13:55:28,932 views 1048 8216    Labels: 13
+INFO 2025-07-08 13:55:28,932 views 1048 8216    Datasets: 3
+INFO 2025-07-08 13:55:28,933 views 1048 8216    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-08 13:55:28,933 views 1048 8216    Dataset 1 (Laboratório de Informática 1): Total=0
+INFO 2025-07-08 13:55:28,933 views 1048 8216    Dataset 2 (Laboratório Solos e Sementes): Total=2
+INFO 2025-07-08 13:55:30,132 views 1048 8216    Labels: 6
+INFO 2025-07-08 13:55:30,133 views 1048 8216    Datasets: 3
+INFO 2025-07-08 13:55:30,133 views 1048 8216    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-08 13:55:30,133 views 1048 8216    Dataset 1 (Laboratório de Informática 1): Total=0
+INFO 2025-07-08 13:55:30,133 views 1048 8216    Dataset 2 (Laboratório Solos e Sementes): Total=2
+INFO 2025-07-08 13:57:56,978 views 1048 8216    Labels: 13
+INFO 2025-07-08 13:57:56,978 views 1048 8216    Datasets: 3
+INFO 2025-07-08 13:57:56,978 views 1048 8216    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-08 13:57:56,979 views 1048 8216    Dataset 1 (Laboratório de Informática 1): Total=0
+INFO 2025-07-08 13:57:56,979 views 1048 8216    Dataset 2 (Laboratório Solos e Sementes): Total=2
+INFO 2025-07-08 14:05:41,303 views 10072 8340    Labels: 9
+INFO 2025-07-08 14:05:41,303 views 10072 8340    Datasets: 3
+INFO 2025-07-08 14:05:41,303 views 10072 8340    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-08 14:05:41,304 views 10072 8340    Dataset 1 (Laboratório de Informática 1): Total=0
+INFO 2025-07-08 14:05:41,304 views 10072 8340    Dataset 2 (Laboratório Solos e Sementes): Total=2
+INFO 2025-07-08 18:44:20,039 views 17432 13960    Labels: 9
+INFO 2025-07-08 18:44:20,040 views 17432 13960    Datasets: 4
+INFO 2025-07-08 18:44:20,041 views 17432 13960    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-08 18:44:20,041 views 17432 13960    Dataset 1 (Laboratório de Informática 1): Total=0
+INFO 2025-07-08 18:44:20,041 views 17432 13960    Dataset 2 (Laboratório Multidisciplinar - Teste): Total=0
+INFO 2025-07-08 18:44:20,041 views 17432 13960    Dataset 3 (Laboratório Solos e Sementes): Total=2
+INFO 2025-07-09 14:13:45,461 views 21752 6760    Labels: 9
+INFO 2025-07-09 14:13:45,462 views 21752 6760    Datasets: 5
+INFO 2025-07-09 14:13:45,462 views 21752 6760    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-09 14:13:45,462 views 21752 6760    Dataset 1 (Laboratório de Informática 1): Total=0
+INFO 2025-07-09 14:13:45,463 views 21752 6760    Dataset 2 (Laboratório de Informática 2): Total=0
+INFO 2025-07-09 14:13:45,463 views 21752 6760    Dataset 3 (Laboratório Multidisciplinar): Total=0
+INFO 2025-07-09 14:13:45,463 views 21752 6760    Dataset 4 (Laboratório Solos e Sementes): Total=3
+INFO 2025-07-09 14:13:51,548 views 21752 9640    Labels: 9
+INFO 2025-07-09 14:13:51,548 views 21752 9640    Datasets: 5
+INFO 2025-07-09 14:13:51,548 views 21752 9640    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-09 14:13:51,549 views 21752 9640    Dataset 1 (Laboratório de Informática 1): Total=0
+INFO 2025-07-09 14:13:51,549 views 21752 9640    Dataset 2 (Laboratório de Informática 2): Total=0
+INFO 2025-07-09 14:13:51,549 views 21752 9640    Dataset 3 (Laboratório Multidisciplinar): Total=0
+INFO 2025-07-09 14:13:51,550 views 21752 9640    Dataset 4 (Laboratório Solos e Sementes): Total=3
+INFO 2025-07-09 14:55:06,844 views 13460 4608    Labels: 9
+INFO 2025-07-09 14:55:06,844 views 13460 4608    Datasets: 5
+INFO 2025-07-09 14:55:06,844 views 13460 4608    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-09 14:55:06,845 views 13460 4608    Dataset 1 (Laboratório de Informática 1): Total=0
+INFO 2025-07-09 14:55:06,845 views 13460 4608    Dataset 2 (Laboratório de Informática 2): Total=0
+INFO 2025-07-09 14:55:06,845 views 13460 4608    Dataset 3 (Laboratório Multidisciplinar): Total=0
+INFO 2025-07-09 14:55:06,846 views 13460 4608    Dataset 4 (Laboratório Solos e Sementes): Total=3
+INFO 2025-07-09 14:55:36,378 views 13460 4608    Labels: 13
+INFO 2025-07-09 14:55:36,378 views 13460 4608    Datasets: 5
+INFO 2025-07-09 14:55:36,379 views 13460 4608    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-09 14:55:36,379 views 13460 4608    Dataset 1 (Laboratório de Informática 1): Total=0
+INFO 2025-07-09 14:55:36,379 views 13460 4608    Dataset 2 (Laboratório de Informática 2): Total=0
+INFO 2025-07-09 14:55:36,379 views 13460 4608    Dataset 3 (Laboratório Multidisciplinar): Total=0
+INFO 2025-07-09 14:55:36,379 views 13460 4608    Dataset 4 (Laboratório Solos e Sementes): Total=3
+INFO 2025-07-09 14:55:37,489 views 13460 4608    Labels: 6
+INFO 2025-07-09 14:55:37,489 views 13460 4608    Datasets: 5
+INFO 2025-07-09 14:55:37,489 views 13460 4608    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-09 14:55:37,490 views 13460 4608    Dataset 1 (Laboratório de Informática 1): Total=0
+INFO 2025-07-09 14:55:37,490 views 13460 4608    Dataset 2 (Laboratório de Informática 2): Total=0
+INFO 2025-07-09 14:55:37,490 views 13460 4608    Dataset 3 (Laboratório Multidisciplinar): Total=0
+INFO 2025-07-09 14:55:37,490 views 13460 4608    Dataset 4 (Laboratório Solos e Sementes): Total=3
+INFO 2025-07-09 15:03:10,237 views 13460 14620    Labels: 9
+INFO 2025-07-09 15:03:10,238 views 13460 14620    Datasets: 5
+INFO 2025-07-09 15:03:10,238 views 13460 14620    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-09 15:03:10,238 views 13460 14620    Dataset 1 (Laboratório de Informática 1): Total=0
+INFO 2025-07-09 15:03:10,238 views 13460 14620    Dataset 2 (Laboratório de Informática 2): Total=0
+INFO 2025-07-09 15:03:10,239 views 13460 14620    Dataset 3 (Laboratório Multidisciplinar): Total=0
+INFO 2025-07-09 15:03:10,239 views 13460 14620    Dataset 4 (Laboratório Solos e Sementes): Total=3
+INFO 2025-07-09 15:07:30,688 views 13460 7080    Labels: 9
+INFO 2025-07-09 15:07:30,689 views 13460 7080    Datasets: 5
+INFO 2025-07-09 15:07:30,689 views 13460 7080    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-09 15:07:30,689 views 13460 7080    Dataset 1 (Laboratório de Informática 1): Total=0
+INFO 2025-07-09 15:07:30,690 views 13460 7080    Dataset 2 (Laboratório de Informática 2): Total=0
+INFO 2025-07-09 15:07:30,690 views 13460 7080    Dataset 3 (Laboratório Multidisciplinar): Total=0
+INFO 2025-07-09 15:07:30,691 views 13460 7080    Dataset 4 (Laboratório Solos e Sementes): Total=3
+INFO 2025-07-09 15:12:25,235 views 2740 7892    Labels: 9
+INFO 2025-07-09 15:12:25,236 views 2740 7892    Datasets: 5
+INFO 2025-07-09 15:12:25,236 views 2740 7892    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-09 15:12:25,237 views 2740 7892    Dataset 1 (Laboratório de Informática 1): Total=0
+INFO 2025-07-09 15:12:25,237 views 2740 7892    Dataset 2 (Laboratório de Informática 2): Total=0
+INFO 2025-07-09 15:12:25,237 views 2740 7892    Dataset 3 (Laboratório Multidisciplinar): Total=0
+INFO 2025-07-09 15:12:25,238 views 2740 7892    Dataset 4 (Laboratório Solos e Sementes): Total=3
+INFO 2025-07-09 15:13:52,080 views 2740 7892    Labels: 13
+INFO 2025-07-09 15:13:52,081 views 2740 7892    Datasets: 5
+INFO 2025-07-09 15:13:52,081 views 2740 7892    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-09 15:13:52,081 views 2740 7892    Dataset 1 (Laboratório de Informática 1): Total=0
+INFO 2025-07-09 15:13:52,082 views 2740 7892    Dataset 2 (Laboratório de Informática 2): Total=0
+INFO 2025-07-09 15:13:52,082 views 2740 7892    Dataset 3 (Laboratório Multidisciplinar): Total=0
+INFO 2025-07-09 15:13:52,082 views 2740 7892    Dataset 4 (Laboratório Solos e Sementes): Total=3
+INFO 2025-07-09 15:13:53,170 views 2740 7892    Labels: 6
+INFO 2025-07-09 15:13:53,170 views 2740 7892    Datasets: 5
+INFO 2025-07-09 15:13:53,170 views 2740 7892    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-09 15:13:53,170 views 2740 7892    Dataset 1 (Laboratório de Informática 1): Total=0
+INFO 2025-07-09 15:13:53,170 views 2740 7892    Dataset 2 (Laboratório de Informática 2): Total=0
+INFO 2025-07-09 15:13:53,171 views 2740 7892    Dataset 3 (Laboratório Multidisciplinar): Total=0
+INFO 2025-07-09 15:13:53,171 views 2740 7892    Dataset 4 (Laboratório Solos e Sementes): Total=3
+INFO 2025-07-09 15:15:12,250 views 2740 3212    Labels: 9
+INFO 2025-07-09 15:15:12,250 views 2740 3212    Datasets: 5
+INFO 2025-07-09 15:15:12,250 views 2740 3212    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-09 15:15:12,251 views 2740 3212    Dataset 1 (Laboratório de Informática 1): Total=0
+INFO 2025-07-09 15:15:12,251 views 2740 3212    Dataset 2 (Laboratório de Informática 2): Total=0
+INFO 2025-07-09 15:15:12,251 views 2740 3212    Dataset 3 (Laboratório Multidisciplinar): Total=0
+INFO 2025-07-09 15:15:12,251 views 2740 3212    Dataset 4 (Laboratório Solos e Sementes): Total=3
+INFO 2025-07-09 15:18:20,029 views 2740 16636    Labels: 9
+INFO 2025-07-09 15:18:20,030 views 2740 16636    Datasets: 5
+INFO 2025-07-09 15:18:20,030 views 2740 16636    Dataset 0 (Laboratório de Anatomia): Total=0
+INFO 2025-07-09 15:18:20,030 views 2740 16636    Dataset 1 (Laboratório de Informática 1): Total=0
+INFO 2025-07-09 15:18:20,030 views 2740 16636    Dataset 2 (Laboratório de Informática 2): Total=0
+INFO 2025-07-09 15:18:20,031 views 2740 16636    Dataset 3 (Laboratório Multidisciplinar): Total=0
+INFO 2025-07-09 15:18:20,031 views 2740 16636    Dataset 4 (Laboratório Solos e Sementes): Total=3
