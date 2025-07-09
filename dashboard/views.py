@@ -1,4 +1,5 @@
 import datetime
+from venv import logger
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, user_passes_test
 from accounts.views import is_technician, is_professor
@@ -22,6 +23,8 @@ import logging
 @login_required
 @user_passes_test(is_technician)
 def technician_dashboard(request):
+    """Dashboard para técnicos com calendário semanal e filtros de departamento"""
+    
     # Get parameters
     week_offset = int(request.GET.get('week_offset', 0))
     department_filter = request.GET.get('department', 'all')
@@ -31,7 +34,7 @@ def technician_dashboard(request):
     start_of_week = today - timedelta(days=today.weekday()) + timedelta(weeks=week_offset)
     end_of_week = start_of_week + timedelta(days=4)
     
-    # Query appointments
+    # Query appointments with proper department filtering
     appointments_base = ScheduleRequest.objects.select_related(
         'professor', 
         'laboratory',
@@ -40,9 +43,10 @@ def technician_dashboard(request):
         scheduled_date__range=[start_of_week, end_of_week]
     )
     
+    # 🔧 APLICAR FILTRO DE DEPARTAMENTO CORRIGIDO
     if department_filter != 'all':
         filtered_labs = get_laboratories_by_department(department_filter)
-        current_week_appointments = current_week_appointments.filter(laboratory__in=filtered_labs)
+        appointments_base = appointments_base.filter(laboratory__in=filtered_labs)
     
     current_week_appointments = list(appointments_base)
     
@@ -69,12 +73,11 @@ def technician_dashboard(request):
             'appointments_count': len(day_appointments)
         })
     
-    # ✅ CHECK FOR AJAX REQUEST
+    # Check for AJAX request
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
     if is_ajax:
         try:
-            # Render calendar partial template
             calendar_html = render_to_string(
                 'partials/calendar_week_technician.html',
                 {
@@ -84,63 +87,82 @@ def technician_dashboard(request):
                 request=request
             )
             
-            return JsonResponse({
+            response_data = {
                 'success': True,
-                'calendar_html': calendar_html,
-                'start_of_week': start_of_week.isoformat(),
-                'end_of_week': end_of_week.isoformat(),
+                'calendar_html': calendar_html,  # 🔧 O JavaScript espera 'calendar_html'
+                'html': calendar_html,           # 🔧 Fallback para compatibilidade
+                'week_start': start_of_week.strftime('%Y-%m-%d'),
+                'week_end': end_of_week.strftime('%Y-%m-%d'),
                 'week_offset': week_offset,
-                'prev_week_offset': week_offset - 1,
-                'next_week_offset': week_offset + 1,
-            })
+                'department_filter': department_filter,
+                'start_of_week': start_of_week.strftime('%Y-%m-%d'),  # 🔧 Formato esperado pelo JS
+                'end_of_week': end_of_week.strftime('%Y-%m-%d'),      # 🔧 Formato esperado pelo JS
+            }
+            
+            logger.info(f"✅ AJAX response sent successfully")
+            return JsonResponse(response_data)
             
         except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"AJAX Calendar Error: {str(e)}")
-            
+            logger.error(f"❌ AJAX Error: {str(e)}")
             return JsonResponse({
                 'success': False,
-                'error': 'Erro ao carregar calendário',
-                'message': str(e)
+                'error': str(e)
             }, status=500)
     
-    # Non-AJAX request - full page load
+    # Get statistics
     pending_appointments_count = ScheduleRequest.objects.filter(status='pending').count()
-    pending_approvals = User.objects.filter(is_approved=False, is_active=True).count()
-    materials_in_alert = Material.objects.filter(quantity__lte=F('minimum_stock'))
+    
+    # Get pending approvals
+    pending_approvals = ScheduleRequest.objects.filter(
+        status='pending'
+    ).select_related('professor', 'laboratory').order_by('-request_date')[:5]
+    
+    # 🔧 CORREÇÃO: Materials in alert (baixo estoque)
+    # Como is_low_stock é uma @property, precisamos usar query diferente
+    from django.db.models import F
+    
+    # Buscar materiais onde quantity <= minimum_stock
+    materials_in_alert = Material.objects.filter(
+        quantity__lte=F('minimum_stock')
+    )
     materials_in_alert_count = materials_in_alert.count()
-    active_professors = User.objects.filter(user_type='professor', is_approved=True, is_active=True)
+    
+    # Active professors count
+    active_professors = User.objects.filter(
+        user_type='professor',
+        is_active=True,
+        is_approved=True
+    )
     active_professors_count = active_professors.count()
     
-    # Calculate percentage change
-    last_week_start = start_of_week - timedelta(weeks=1)
-    last_week_end = end_of_week - timedelta(weeks=1)
+    # Calculate stats
+    current_week_count = len(current_week_appointments)
     
-    last_week_count = ScheduleRequest.objects.filter(
-        scheduled_date__range=[last_week_start, last_week_end],
-        status='approved'
+    # Previous week for comparison
+    prev_week_start = start_of_week - timedelta(weeks=1)
+    prev_week_end = prev_week_start + timedelta(days=4)
+    prev_week_count = ScheduleRequest.objects.filter(
+        scheduled_date__range=[prev_week_start, prev_week_end]
     ).count()
     
-    current_count = len([apt for apt in current_week_appointments if apt.status == 'approved'])
-    
-    if last_week_count > 0:
-        percentage_change = ((current_count - last_week_count) / last_week_count) * 100
+    # Calculate percentage change
+    if prev_week_count > 0:
+        percentage_change = ((current_week_count - prev_week_count) / prev_week_count) * 100
     else:
-        percentage_change = 100 if current_count > 0 else 0
+        percentage_change = 100 if current_week_count > 0 else 0
     
-    # Stats
-    stats = {
-        'pending_requests': sum(1 for apt in current_week_appointments if apt.status == 'pending'),
-        'approved_requests': sum(1 for apt in current_week_appointments if apt.status == 'approved'),
-        'total_requests': len(current_week_appointments),
-    }
-    
+    # Materials stats
     materials_stats = Material.objects.aggregate(
         total_materials=Count('id'),
-        materials_in_alert_count=Count('id', filter=Q(quantity__lte=F('minimum_stock'))),
         total_laboratories=Count('laboratory', distinct=True)
     )
+    
+    stats = {
+        'total_appointments': current_week_count,
+        'pending_appointments': pending_appointments_count,
+        'total_materials': materials_stats['total_materials'],
+        'total_laboratories': materials_stats['total_laboratories']
+    }
     
     stats.update(materials_stats)
     
@@ -148,7 +170,7 @@ def technician_dashboard(request):
         'professor', 'laboratory'
     ).order_by('-request_date')[:10]
     
-    # Get departments
+    # 🔧 BUSCAR DEPARTAMENTOS CORRIGIDO
     if Department.objects.exists():
         departments = Department.objects.filter(is_active=True).values_list('code', flat=True)
     else:
@@ -174,7 +196,7 @@ def technician_dashboard(request):
         'materials_in_alert_count': materials_in_alert_count,
         'active_professors': active_professors,
         'active_professors_count': active_professors_count,
-        'current_count': current_count,
+        'current_count': current_week_count,
         'percentage_change': percentage_change,
         
         # Compatibility
@@ -190,6 +212,8 @@ def technician_dashboard(request):
 @login_required
 @user_passes_test(is_professor)
 def professor_dashboard(request):
+    """Dashboard para professores com calendário semanal filtrado"""
+    
     import logging
     logger = logging.getLogger('dashboard')
     
@@ -204,7 +228,7 @@ def professor_dashboard(request):
     department_filter = request.GET.get('department', 'all')
     logger.info(f"🏢 FILTRO DEPARTAMENTO: '{department_filter}'")
     
-    # Buscar departamentos únicos dos laboratórios ativos
+    # 🔧 BUSCAR DEPARTAMENTOS CORRIGIDO
     if Department.objects.exists():
         departments = Department.objects.filter(is_active=True).values_list('code', flat=True)
     else:
@@ -226,7 +250,7 @@ def professor_dashboard(request):
     # BUSCA DE AGENDAMENTOS
     # ==========================================
     
-    # Query base
+    # Query base: apenas agendamentos do professor logado
     appointments_base = ScheduleRequest.objects.select_related(
         'professor', 
         'laboratory',
@@ -238,9 +262,8 @@ def professor_dashboard(request):
     
     logger.info(f"📊 AGENDAMENTOS BASE: {appointments_base.count()}")
     
-    # Aplicar filtro de departamento
+    # 🔧 APLICAR FILTRO DE DEPARTAMENTO CORRIGIDO
     if department_filter != 'all':
-        # Usar a função auxiliar para filtrar laboratórios
         filtered_labs = get_laboratories_by_department(department_filter)
         appointments_base = appointments_base.filter(laboratory__in=filtered_labs)
         logger.info(f"🔍 FILTRO APLICADO: department='{department_filter}'")
@@ -250,7 +273,8 @@ def professor_dashboard(request):
     
     # Debug dos agendamentos encontrados
     for apt in current_week_appointments:
-        logger.info(f"   ✅ {apt.scheduled_date} - {apt.laboratory.name} ({apt.laboratory.department}) - {apt.status}")
+        departments_display = apt.laboratory.get_departments_display()
+        logger.info(f"   ✅ {apt.scheduled_date} - {apt.laboratory.name} ({departments_display}) - {apt.status}")
     
     # ==========================================
     # CONSTRUIR DADOS DO CALENDÁRIO
@@ -287,13 +311,9 @@ def professor_dashboard(request):
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
     if is_ajax:
-        logger.info(f"📡 REQUISIÇÃO AJAX DETECTADA")
         try:
-            # 🔧 IMPORTANTE: Usar o template correto para o professor
-            from django.template.loader import render_to_string
-            
             calendar_html = render_to_string(
-                'partials/calendar_week.html',  # Template para professor
+                'partials/calendar_week_professor.html',
                 {
                     'calendar_data': calendar_data,
                     'today': today,
@@ -301,162 +321,62 @@ def professor_dashboard(request):
                 request=request
             )
             
-            response_data = {
+            return JsonResponse({
                 'success': True,
-                'calendar_html': calendar_html,
-                'calendar_data': [
-                    {
-                        'date': day['date'].strftime('%Y-%m-%d'),
-                        'appointments': [
-                            {
-                                'id': apt.id,
-                                'laboratory_name': apt.laboratory.name,
-                                'laboratory_department': apt.laboratory.department,
-                                'subject': apt.subject,
-                                'start_time': apt.start_time.strftime('%H:%M'),
-                                'end_time': apt.end_time.strftime('%H:%M'),
-                                'status': apt.status,
-                                'status_display': apt.get_status_display(),
-                            } for apt in day['appointments']
-                        ],
-                        'has_appointments': day['has_appointments'],
-                        'appointments_count': day['appointments_count']
-                    } for day in calendar_data
-                ],
+                'calendar_html': calendar_html,  # 🔧 O JavaScript espera 'calendar_html'
+                'html': calendar_html,           # 🔧 Fallback para compatibilidade
                 'week_start': start_of_week.strftime('%Y-%m-%d'),
                 'week_end': end_of_week.strftime('%Y-%m-%d'),
                 'week_offset': week_offset,
-                'prev_week_offset': week_offset - 1,
-                'next_week_offset': week_offset + 1,
                 'department_filter': department_filter,
-                'departments': list(departments),
-            }
-            
-            logger.info(f"📤 RESPOSTA AJAX ENVIADA COM SUCESSO")
-            logger.info(f"📊 Calendar HTML length: {len(calendar_html)} chars")
-            
-            return JsonResponse(response_data)
+                'start_of_week': start_of_week.strftime('%Y-%m-%d'),  # 🔧 Formato esperado pelo JS
+                'end_of_week': end_of_week.strftime('%Y-%m-%d'),      # 🔧 Formato esperado pelo JS
+            })
             
         except Exception as e:
-            logger.error(f"❌ ERRO AJAX: {str(e)}")
-            import traceback
-            logger.error(f"❌ TRACEBACK: {traceback.format_exc()}")
-            
+            logger.error(f"❌ PROF AJAX Error: {str(e)}")
             return JsonResponse({
                 'success': False,
-                'error': 'Erro ao carregar calendário',
-                'message': str(e)
+                'error': str(e)
             }, status=500)
     
     # ==========================================
-    # ESTATÍSTICAS PARA PÁGINA COMPLETA
+    # PREPARAR LABORATÓRIOS PARA AGENDAMENTO
     # ==========================================
     
-    pending_count = ScheduleRequest.objects.filter(
-        professor=professor,
-        status='pending'
-    ).count()
-    
-    approved_count = ScheduleRequest.objects.filter(
-        professor=professor,
-        status='approved'
-    ).count()
-    
-    this_week_count = ScheduleRequest.objects.filter(
-        professor=professor,
-        status='approved',
-        scheduled_date__range=[start_of_week, end_of_week]
-    ).count()
-    
-    total_schedules = ScheduleRequest.objects.filter(
-        professor=professor
-    ).count()
-    
-    # Calcular mudança percentual da semana
-    previous_week_start = start_of_week - timedelta(weeks=1)
-    previous_week_end = end_of_week - timedelta(weeks=1)
-    previous_week_count = ScheduleRequest.objects.filter(
-        professor=professor,
-        status='approved',
-        scheduled_date__range=[previous_week_start, previous_week_end]
-    ).count()
-    
-    if previous_week_count > 0:
-        week_change = ((this_week_count - previous_week_count) / previous_week_count) * 100
+    # Buscar todos os laboratórios disponíveis para agendamento
+    if department_filter != 'all':
+        available_laboratories = get_laboratories_by_department(department_filter)
     else:
-        week_change = 100 if this_week_count > 0 else 0
+        available_laboratories = Laboratory.objects.filter(is_active=True)
+    
+    logger.info(f"🏢 LABORATÓRIOS DISPONÍVEIS: {available_laboratories.count()}")
     
     # ==========================================
-    # DADOS ADICIONAIS
+    # PREPARAR CONTEXTO
     # ==========================================
     
-    # Próximas aulas
-    upcoming_classes = ScheduleRequest.objects.filter(
-        professor=professor,
-        status='approved',
-        scheduled_date__gte=today
-    ).order_by('scheduled_date', 'start_time')[:5]
-    
-    # Rascunhos
-    try:
-        from scheduling.models import DraftScheduleRequest
-        draft_requests = DraftScheduleRequest.objects.filter(
-            professor=professor
-        ).order_by('-created_at')[:3]
-    except:
-        draft_requests = []
-    
-    # Solicitações recentes
-    recent_requests = ScheduleRequest.objects.filter(
-        professor=professor
-    ).order_by('-request_date')[:5]
-    
-    # Verificar se é dia de agendamento
-    is_scheduling_day = today.weekday() in [3, 4]  # quinta=3, sexta=4
-    
-    # ==========================================
-    # LOG FINAL
-    # ==========================================
-    logger.info(f"📊 ESTATÍSTICAS FINAIS:")
-    logger.info(f"   Pendentes: {pending_count}")
-    logger.info(f"   Aprovados: {approved_count}")
-    logger.info(f"   Esta semana: {this_week_count}")
-    logger.info(f"   Total: {total_schedules}")
-    
-    # ==========================================
-    # CONTEXTO PARA TEMPLATE
-    # ==========================================
     context = {
         'calendar_data': calendar_data,
-        'week_start': start_of_week,
-        'week_end': end_of_week,
+        'current_week_start': start_of_week,
+        'current_week_end': end_of_week,
         'week_offset': week_offset,
         'prev_week_offset': week_offset - 1,
         'next_week_offset': week_offset + 1,
-        
-        # Filtro de departamento
         'department_filter': department_filter,
         'departments': departments,
-        'current_department': department_filter,
-        
-        # Estatísticas
-        'pending_count': pending_count,
-        'approved_count': approved_count,
-        'this_week_count': this_week_count,
-        'total_schedules': total_schedules,
-        'week_change': week_change,
-        'upcoming_classes': upcoming_classes,
-        'draft_requests': draft_requests,
-        'recent_requests': recent_requests,
-        
-        # Configurações
-        'is_scheduling_day': is_scheduling_day,
+        'laboratories': available_laboratories,
         'today': today,
+        
+        # Compatibility
+        'start_of_week': start_of_week,
+        'end_of_week': end_of_week,
+        'current_department': department_filter,
     }
     
-    logger.info(f"📄 RENDERIZANDO TEMPLATE professor.html")
+    logger.info(f"✅ DASHBOARD CARREGADO - {len(current_week_appointments)} agendamentos na semana")
+    
     return render(request, 'professor.html', context)
-
 
 # ==========================================
 # VIEWS AUXILIARES PARA AS APIs (IMPLEMENTAÇÃO COMPLETA)
@@ -937,18 +857,27 @@ def chart_data(request):
         }, status=500)
 
 @login_required
+@require_http_methods(["GET"])
 def lab_specific_availability_api(request, lab_id):
-    """API para disponibilidade específica de um laboratório"""
+    """API para verificar disponibilidade específica de um laboratório"""
     try:
-        date = request.GET.get('date')
+        from datetime import datetime
         
-        if not date:
+        date_str = request.GET.get('date')
+        if not date_str:
             return JsonResponse({
                 'success': False,
-                'error': 'Data não fornecida'
+                'error': 'Data é obrigatória'
             }, status=400)
         
-        from laboratories.models import Laboratory
+        try:
+            date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return JsonResponse({
+                'success': False,
+                'error': 'Formato de data inválido. Use YYYY-MM-DD'
+            }, status=400)
+        
         try:
             lab = Laboratory.objects.get(id=lab_id, is_active=True)
         except Laboratory.DoesNotExist:
@@ -992,9 +921,9 @@ def lab_specific_availability_api(request, lab_id):
             'laboratory': {
                 'id': lab.id,
                 'name': lab.name,
-                'department': lab.department
+                'departments': lab.get_departments_display()  # 🔧 CORRIGIDO
             },
-            'date': date,
+            'date': date.strftime('%Y-%m-%d'),
             'timeSlots': time_slots,
             'existingSchedules': list(existing_schedules.values(
                 'start_time', 'end_time', 'professor__first_name', 
@@ -1015,21 +944,42 @@ def lab_specific_availability_api(request, lab_id):
 def get_laboratories_by_department(department_filter):
     """
     Função auxiliar para filtrar laboratórios por departamento
-    Compatível com sistema antigo e novo
+    Suporta laboratórios multidisciplinares (novo sistema) e fallback para sistema antigo
+    
+    Args:
+        department_filter (str): Código do departamento ou 'all'
+    
+    Returns:
+        QuerySet: Laboratórios filtrados
     """
-    from laboratories.models import Laboratory
+    from laboratories.models import Laboratory, Department
     
-    laboratories = Laboratory.objects.filter(is_active=True)
-    
-    if department_filter != 'all':
-        # Tentar filtro novo primeiro (múltiplos departamentos)
-        new_filter = laboratories.filter(departments__code=department_filter).distinct()
+    try:
+        # Base: laboratórios ativos
+        laboratories = Laboratory.objects.filter(is_active=True)
         
-        if new_filter.exists():
-            return new_filter
-        else:
-            # Fallback para sistema antigo
-            return laboratories.filter(department=department_filter)
-    
-    return laboratories
-    
+        if department_filter == 'all':
+            return laboratories
+        
+        # 🔧 NOVO: Primeiro tenta filtrar pelo sistema novo (ManyToMany)
+        if Department.objects.exists():
+            # Verificar se o departamento existe
+            try:
+                dept = Department.objects.get(code=department_filter)
+                
+                # Filtrar laboratórios que pertencem a este departamento
+                new_filter = laboratories.filter(departments=dept).distinct()
+                
+                if new_filter.exists():
+                    return new_filter
+                    
+            except Department.DoesNotExist:
+                pass
+        
+        # 🔧 FALLBACK: Sistema antigo (CharField department)
+        return laboratories.filter(department=department_filter)
+        
+    except Exception as e:
+        # Em caso de erro, retornar todos os laboratórios
+        logging.getLogger(__name__).error(f"Erro em get_laboratories_by_department: {e}")
+        return Laboratory.objects.filter(is_active=True)
