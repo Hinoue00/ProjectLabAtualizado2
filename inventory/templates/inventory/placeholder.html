@@ -1,19 +1,21 @@
-<!-- templates/inventory/placeholder.html -->
+<!-- inventory/templates/inventory/placeholder.html -->
 {% extends 'base.html' %}
 
-{% block title %}{{ title }}{% endblock %}
+{% block title %}{{ title|default:"Funcionalidade em Desenvolvimento" }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body text-center py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card text-center">
+                <div class="card-body py-5">
                     <div class="mb-4">
-                        <i class="bi bi-gear-fill" style="font-size: 4rem; color: #6c757d;"></i>
+                        <i class="bi bi-gear-fill text-muted" style="font-size: 4rem;"></i>
                     </div>
                     
-                    <h3 class="text-muted mb-3">{{ title|default:"Funcionalidade em Desenvolvimento" }}</h3>
+                    <h3 class="text-muted mb-3">
+                        {{ title|default:"Funcionalidade em Desenvolvimento" }}
+                    </h3>
                     
                     <p class="text-muted mb-4">
                         {{ message|default:"Esta funcionalidade está sendo implementada e estará disponível em breve." }}

@@ -1,0 +1,505 @@
+<!-- templates/inventory/analyze_batch.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Análise Inteligente de Materiais{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        border-left: 4px solid #007bff;
+        transition: transform 0.2s;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .stats-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #007bff;
+    }
+    
+    .progress-ring {
+        transform: rotate(-90deg);
+    }
+    
+    .insight-card {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .insight-card:hover {
+        border-color: #007bff;
+        box-shadow: 0 2px 10px rgba(0,123,255,0.1);
+    }
+    
+    .action-btn {
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        border: none;
+        border-radius: 25px;
+        padding: 12px 24px;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,123,255,0.3);
+        color: white;
+    }
+    
+    .anomaly-item {
+        background: linear-gradient(90deg, #fff3cd, #ffffff);
+        border-left: 4px solid #ffc107;
+        margin-bottom: 8px;
+        padding: 12px;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="bi bi-robot text-primary"></i> Análise Inteligente de Materiais</h2>
+                    <p class="text-muted">Sistema de IA para otimização automática do inventário</p>
+                </div>
+                <div>
+                    {% if docling_enabled %}
+                        <span class="badge bg-success fs-6">
+                            <i class="bi bi-check-circle"></i> IA Ativa
+                        </span>
+                    {% else %}
+                        <span class="badge bg-warning fs-6">
+                            <i class="bi bi-exclamation-circle"></i> Modo Básico
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stats-card h-100">
+                <div class="card-body text-center">
+                    <div class="stats-number">{{ total_materials }}</div>
+                    <h6 class="card-title text-muted">Total de Materiais</h6>
+                    <small class="text-success">
+                        <i class="bi bi-arrow-up"></i> Inventário completo
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card stats-card h-100">
+                <div class="card-body text-center">
+                    <div class="stats-number text-success">{{ analyzed_materials }}</div>
+                    <h6 class="card-title text-muted">Analisados</h6>
+                    <small class="text-muted">
+                        {{ analysis_percentage|floatformat:1 }}% do total
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card stats-card h-100">
+                <div class="card-body text-center">
+                    <div class="stats-number text-warning">{{ unanalyzed_materials }}</div>
+                    <h6 class="card-title text-muted">Pendentes</h6>
+                    <small class="text-muted">
+                        Aguardando análise
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card stats-card h-100">
+                <div class="card-body text-center">
+                    <div class="stats-number text-danger">{{ poor_descriptions }}</div>
+                    <h6 class="card-title text-muted">Descrições Pobres</h6>
+                    <small class="text-muted">
+                        Precisam melhorar
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Progresso da Análise -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-graph-up"></i> Progresso da Análise Inteligente</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h6>Materiais Analisados</h6>
+                            <div class="progress mb-3" style="height: 20px;">
+                                <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" 
+                                     style="width: {{ analysis_percentage }}%">
+                                    {{ analysis_percentage|floatformat:1 }}%
+                                </div>
+                            </div>
+                            
+                            {% if insights.description_quality %}
+                                <h6>Qualidade das Descrições</h6>
+                                <div class="progress" style="height: 15px;">
+                                    <div class="progress-bar bg-info" 
+                                         role="progressbar" 
+                                         style="width: {{ insights.description_quality.average_score|floatformat:0 }}%">
+                                        {{ insights.description_quality.average_score|floatformat:1 }}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 text-center">
+                            <svg width="120" height="120" class="progress-ring">
+                                <circle cx="60" cy="60" r="50" 
+                                        stroke="#e9ecef" stroke-width="8" fill="transparent"/>
+                                <circle cx="60" cy="60" r="50" 
+                                        stroke="#28a745" stroke-width="8" fill="transparent"
+                                        stroke-dasharray="{{ analysis_percentage|floatformat:0 }} 100"
+                                        stroke-linecap="round"/>
+                            </svg>
+                            <p class="mt-2 mb-0"><strong>{{ analysis_percentage|floatformat:1 }}%</strong></p>
+                            <small class="text-muted">Completo</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Ações Rápidas -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-lightning"></i> Ações Inteligentes</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <form method="post" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="analyze_unanalyzed">
+                                <input type="hidden" name="batch_size" value="50">
+                                <button type="submit" class="action-btn w-100">
+                                    <i class="bi bi-cpu"></i> Analisar Pendentes
+                                </button>
+                            </form>
+                            <small class="text-muted d-block mt-2">
+                                Processa materiais não analisados usando IA
+                            </small>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <form method="post" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="recategorize_all">
+                                <button type="submit" class="action-btn w-100">
+                                    <i class="bi bi-tags"></i> Recategorizar Tudo
+                                </button>
+                            </form>
+                            <small class="text-muted d-block mt-2">
+                                Aplica IA para corrigir categorias incorretas
+                            </small>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <form method="post" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="improve_descriptions">
+                                <button type="submit" class="action-btn w-100">
+                                    <i class="bi bi-file-text"></i> Melhorar Descrições
+                                </button>
+                            </form>
+                            <small class="text-muted d-block mt-2">
+                                Enriquece descrições pobres automaticamente
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Insights e Anomalias -->
+    {% if insights and not insights.error %}
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card insight-card h-100">
+                <div class="card-header">
+                    <h6><i class="bi bi-pie-chart"></i> Distribuição por Categoria</h6>
+                </div>
+                <div class="card-body">
+                    {% for category, count in insights.category_distribution.items %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-capitalize">{{ category }}</span>
+                            <div class="d-flex align-items-center">
+                                <div class="progress me-2" style="width: 100px; height: 8px;">
+                                    <div class="progress-bar" 
+                                         style="width: {{ count }}%"></div>
+                                </div>
+                                <span class="badge bg-secondary">{{ count }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card insight-card h-100">
+                <div class="card-header d-flex justify-content-between">
+                    <h6><i class="bi bi-exclamation-triangle"></i> Anomalias Detectadas</h6>
+                    {% if insights.anomalies %}
+                        <span class="badge bg-warning">{{ insights.anomalies|length }}</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if insights.anomalies %}
+                        <p class="text-muted small mb-3">
+                            Materiais que podem estar na categoria incorreta:
+                        </p>
+                        {% for anomaly in insights.anomalies|slice:":5" %}
+                            <div class="anomaly-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>{{ anomaly.material_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            Atual: {{ anomaly.current_category }} → 
+                                            Sugerido: {{ anomaly.suggested_category }}
+                                        </small>
+                                    </div>
+                                    <span class="badge bg-warning">
+                                        {{ anomaly.confidence|floatformat:0 }}%
+                                    </span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        
+                        {% if insights.anomalies|length > 5 %}
+                            <div class="text-center mt-3">
+                                <a href="{% url 'material_trends' %}" class="btn btn-sm btn-outline-primary">
+                                    Ver Todas ({{ insights.anomalies|length }})
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2 text-success">Nenhuma Anomalia</h6>
+                            <small class="text-muted">Todas as categorizações parecem corretas</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Recomendações do Sistema -->
+    {% if insights.recommendations %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-lightbulb"></i> Recomendações Inteligentes</h5>
+                </div>
+                <div class="card-body">
+                    {% for rec in insights.recommendations %}
+                        <div class="alert alert-{{ rec.type }} d-flex align-items-center" role="alert">
+                            <div class="me-3">
+                                {% if rec.type == 'warning' %}
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                {% elif rec.type == 'info' %}
+                                    <i class="bi bi-info-circle-fill"></i>
+                                {% else %}
+                                    <i class="bi bi-check-circle-fill"></i>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="alert-heading mb-1">{{ rec.title }}</h6>
+                                <p class="mb-0">{{ rec.message }}</p>
+                            </div>
+                            <div>
+                                <a href="{{ rec.action_url }}" class="btn btn-sm btn-outline-{{ rec.type }}">
+                                    Resolver
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Navegação Rápida -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-compass"></i> Ferramentas Avançadas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'material_trends' %}" class="card text-decoration-none h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-graph-up text-primary" style="font-size: 2rem;"></i>
+                                    <h6 class="mt-2">Tendências</h6>
+                                    <small class="text-muted">Análise de padrões e insights</small>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'material_list' %}?filter=unanalyzed" class="card text-decoration-none h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-search text-info" style="font-size: 2rem;"></i>
+                                    <h6 class="mt-2">Materiais Pendentes</h6>
+                                    <small class="text-muted">Ver lista de não analisados</small>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'import_materials' %}" class="card text-decoration-none h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-upload text-success" style="font-size: 2rem;"></i>
+                                    <h6 class="mt-2">Importação Inteligente</h6>
+                                    <small class="text-muted">Upload com IA automática</small>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'category_list' %}" class="card text-decoration-none h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-tags text-warning" style="font-size: 2rem;"></i>
+                                    <h6 class="mt-2">Gerenciar Categorias</h6>
+                                    <small class="text-muted">Configurar classificações</small>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Progresso -->
+<div class="modal fade" id="progressModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5 id="progressText">Processando análise inteligente...</h5>
+                <p class="text-muted" id="progressSubtext">Isso pode levar alguns momentos</p>
+                <div class="progress mt-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" style="width: 100%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mostrar modal de progresso ao submeter formulários
+    const actionForms = document.querySelectorAll('form');
+    const progressModal = new bootstrap.Modal(document.getElementById('progressModal'));
+    
+    actionForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const action = this.querySelector('input[name="action"]')?.value;
+            
+            if (action) {
+                progressModal.show();
+                
+                // Personalizar mensagem baseada na ação
+                const progressText = document.getElementById('progressText');
+                const progressSubtext = document.getElementById('progressSubtext');
+                
+                switch(action) {
+                    case 'analyze_unanalyzed':
+                        progressText.textContent = 'Analisando materiais com IA...';
+                        progressSubtext.textContent = 'Extraindo características e categorizando';
+                        break;
+                    case 'recategorize_all':
+                        progressText.textContent = 'Recategorizando inventário...';
+                        progressSubtext.textContent = 'Aplicando algoritmos de classificação';
+                        break;
+                    case 'improve_descriptions':
+                        progressText.textContent = 'Melhorando descrições...';
+                        progressSubtext.textContent = 'Gerando textos mais detalhados';
+                        break;
+                }
+            }
+        });
+    });
+    
+    // Animação dos cards de estatísticas
+    const statsCards = document.querySelectorAll('.stats-card');
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '0';
+                entry.target.style.transform = 'translateY(20px)';
+                entry.target.style.transition = 'all 0.6s ease';
+                
+                setTimeout(() => {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }, 100);
+            }
+        });
+    });
+    
+    statsCards.forEach(card => observer.observe(card));
+    
+    // Tooltip para badges de confiança
+    const confidenceBadges = document.querySelectorAll('.badge');
+    confidenceBadges.forEach(badge => {
+        if (badge.textContent.includes('%')) {
+            badge.setAttribute('data-bs-toggle', 'tooltip');
+            badge.setAttribute('title', 'Nível de confiança da IA');
+        }
+    });
+    
+    // Inicializar tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}
