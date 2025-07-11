@@ -90,31 +90,20 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Logging para automação
+# Logging para IA
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,
     'handlers': {
-        'file': {
+        'ai_file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'inventory_automation.log'),
-        },
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
+            'filename': 'logs/ai_analysis.log',
         },
     },
     'loggers': {
-        'inventory.automation_service': {
-            'handlers': ['file', 'console'],
-            'level': 'INFO',
-            'propagate': True,
-        },
         'inventory.services': {
-            'handlers': ['file', 'console'],
+            'handlers': ['ai_file'],
             'level': 'INFO',
-            'propagate': True,
         },
     },
 }
@@ -178,6 +167,8 @@ DOCLING_ENABLED = os.environ.get('DOCLING_ENABLED', 'True') == 'True'
 DOCLING_MODEL = os.environ.get('DOCLING_MODEL', "pt_core_news_sm")
 DOCLING_CACHE_DIR = os.path.join(BASE_DIR, 'docling_cache')
 
+SPACY_MODEL = 'pt_core_news_sm'
+
 # Configurações de automação de inventário
 INVENTORY_AUTOMATION = {
     'ENABLED': os.environ.get('INVENTORY_AUTOMATION_ENABLED', 'True') == 'True',
@@ -194,3 +185,8 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = INVENTORY_AUTOMATION['MAX_FILE_SIZE']
 # Scheduling configuration
 ALLOW_SCHEDULING_ANY_DAY = os.environ.get('ALLOW_SCHEDULING_ANY_DAY', 'True') == 'True'
 
+
+# Configurações de análise
+ANALYSIS_BATCH_SIZE = 50
+MAX_SIMILAR_MATERIALS = 10
+MIN_CONFIDENCE_THRESHOLD = 0.6

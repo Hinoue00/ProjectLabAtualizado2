@@ -694,17 +694,262 @@ def material_trends(request):
 
     return render(request, 'material_trends.html', context)
 
+def _generate_csv_template(request):
+    """
+    Gera template CSV como fallback quando openpyxl não está disponível
+    """
+    import csv
+    from datetime import datetime
+    
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+    filename = f"LabConnect_Template_Materiais_{timestamp}.csv"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    # Adicionar BOM para Excel reconhecer UTF-8
+    response.write('\ufeff')
+    
+    writer = csv.writer(response)
+    
+    # Cabeçalho
+    writer.writerow(['name', 'description', 'quantity', 'minimum_stock', 'category', 'laboratory'])
+    
+    # Exemplos
+    examples = [
+        ['Papel A4', 'Papel branco para impressão, tamanho A4', '500', '100', 'Material de Escritório', 'Laboratório Geral'],
+        ['Microscópio Binocular', 'Microscópio para visualização de amostras', '3', '1', 'Equipamentos', 'Laboratório de Biologia'],
+        ['Reagente Químico', 'Reagente para análises químicas', '25', '5', 'Reagentes', 'Laboratório de Química'],
+        ['Computador Desktop', 'Computador para atividades administrativas', '10', '2', 'Informática', 'Laboratório de Informática'],
+        ['Luvas Descartáveis', 'Luvas de proteção individual', '50', '10', 'Proteção', 'Laboratório Geral']
+    ]
+    
+    for example in examples:
+        writer.writerow(example)
+    
+    return response
+
 @login_required
 @user_passes_test(is_technician)
-def download_template(request):
+def download_template_excel(request):
     """
-    Download do template Excel para importação
-    Por enquanto, usa o template existente
+    Gera e faz download de template Excel para importação de materiais
     """
-    # Você pode implementar a geração de template aqui
-    # Por enquanto, retorna uma mensagem
-    messages.info(request, 'Template em desenvolvimento. Use a funcionalidade padrão.')
-    return redirect('import_materials')
+    try:
+        import openpyxl
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+        import io
+        
+        # Criar workbook
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = 'Template_Materiais'
+        
+        # Definir estilo de borda
+        thin_border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+        
+        # Cabeçalhos principais
+        headers = [
+            'name', 'description', 'quantity', 'minimum_stock', 
+            'category', 'laboratory'
+        ]
+        
+        # Descrições dos cabeçalhos
+        header_descriptions = [
+            'Nome do Material',
+            'Descrição Detalhada', 
+            'Quantidade Atual',
+            'Estoque Mínimo',
+            'Categoria do Material',
+            'Laboratório de Destino'
+        ]
+        
+        # Aplicar cabeçalhos com formatação avançada
+        for col, (header, description) in enumerate(zip(headers, header_descriptions), 1):
+            # Cabeçalho principal (linha 1)
+            cell = ws.cell(row=1, column=col, value=header.upper())
+            cell.font = Font(bold=True, color="FFFFFF", size=12)
+            cell.fill = PatternFill(start_color="2F5597", end_color="2F5597", fill_type="solid")
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+            cell.border = thin_border
+            
+            # Descrição (linha 2)
+            desc_cell = ws.cell(row=2, column=col, value=description)
+            desc_cell.font = Font(italic=True, size=10, color="444444")
+            desc_cell.fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
+            desc_cell.alignment = Alignment(horizontal="center", vertical="center")
+            desc_cell.border = thin_border
+        
+        # Dados de exemplo com diferentes tipos de materiais
+        examples = [
+            # [nome, descrição, quantidade, estoque_min, categoria, laboratório]
+            [
+                'Papel A4 Sulfite',
+                'Papel branco para impressão e documentos, tamanho A4, 75g/m²',
+                500, 100,
+                'Material de Escritório',
+                'Laboratório Geral'
+            ],
+            [
+                'Microscópio Binocular Zeiss',
+                'Microscópio binocular para visualização de amostras microscópicas, objetivas 10x, 40x, 100x',
+                3, 1,
+                'Equipamentos de Laboratório',
+                'Laboratório de Biologia'
+            ],
+            [
+                'Ácido Clorídrico 37%',
+                'Reagente químico para análises qualitativas e quantitativas, pureza analítica',
+                25, 5,
+                'Reagentes Químicos',
+                'Laboratório de Química'
+            ],
+            [
+                'Computador Desktop Dell',
+                'Computador para atividades administrativas e ensino, Intel i5, 8GB RAM, SSD 256GB',
+                10, 2,
+                'Equipamentos de Informática',
+                'Laboratório de Informática'
+            ],
+            [
+                'Luvas Nitrilo Descartáveis',
+                'Luvas de proteção individual, sem talco, tamanho M, caixa com 100 unidades',
+                50, 10,
+                'Equipamentos de Proteção',
+                'Laboratório Geral'
+            ],
+            [
+                'Pipeta Automática 100-1000μL',
+                'Pipeta de volume variável para medições precisas, certificada e calibrada',
+                8, 2,
+                'Instrumentos de Medição',
+                'Laboratório de Análises'
+            ]
+        ]
+        
+        # Adicionar exemplos com formatação
+        for row_idx, example in enumerate(examples, 3):  # Começar na linha 3
+            for col_idx, value in enumerate(example, 1):
+                cell = ws.cell(row=row_idx, column=col_idx, value=value)
+                cell.border = thin_border
+                
+                # Formatação específica por tipo de dado
+                if col_idx in [3, 4]:  # Colunas de quantidade
+                    cell.alignment = Alignment(horizontal="center")
+                    cell.font = Font(bold=True)
+                else:
+                    cell.alignment = Alignment(horizontal="left", vertical="center")
+        
+        # Ajustar largura das colunas automaticamente
+        column_widths = [25, 50, 12, 15, 30, 25]
+        for col, width in enumerate(column_widths, 1):
+            ws.column_dimensions[get_column_letter(col)].width = width
+        
+        # Ajustar altura das linhas
+        ws.row_dimensions[1].height = 25  # Cabeçalho
+        ws.row_dimensions[2].height = 20  # Descrição
+        
+        # Adicionar seção de instruções
+        instructions_start_row = len(examples) + 5
+        
+        # Título das instruções
+        title_cell = ws.cell(row=instructions_start_row, column=1, value="📋 INSTRUÇÕES DE USO")
+        title_cell.font = Font(bold=True, size=14, color="2F5597")
+        title_cell.fill = PatternFill(start_color="E8F1FF", end_color="E8F1FF", fill_type="solid")
+        
+        # Mesclar células para o título
+        ws.merge_cells(f'A{instructions_start_row}:F{instructions_start_row}')
+        
+        # Instruções detalhadas
+        instructions = [
+            "",  # Linha em branco
+            "✅ COLUNAS OBRIGATÓRIAS:",
+            "   • name: Nome do material (único e descritivo)",
+            "   • quantity: Quantidade atual em estoque (número)",
+            "   • minimum_stock: Estoque mínimo para alerta (número)",
+            "",
+            "📝 COLUNAS OPCIONAIS:",
+            "   • description: Descrição detalhada (recomendado para IA)",
+            "   • category: Categoria do material (será sugerida automaticamente)",
+            "   • laboratory: Laboratório de destino (será atribuído automaticamente)",
+            "",
+            "🤖 RECURSOS INTELIGENTES:",
+            "   • O sistema LabConnect usa IA para categorizar materiais automaticamente",
+            "   • Descrições detalhadas melhoram a precisão da categorização",
+            "   • Materiais similares são detectados para evitar duplicatas",
+            "",
+            "📊 DICAS DE PREENCHIMENTO:",
+            "   • Use nomes claros e específicos (ex: 'Papel A4' em vez de 'Papel')",
+            "   • Inclua marca/modelo quando relevante",
+            "   • Especifique unidades de medida na descrição",
+            "   • Defina estoques mínimos realistas para cada material",
+            "",
+            "🚀 APÓS PREENCHER:",
+            "   1. Salve o arquivo Excel",
+            "   2. Acesse LabConnect > Inventário > Importar Materiais",
+            "   3. Faça upload do arquivo preenchido",
+            "   4. Aguarde o processamento automático"
+        ]
+        
+        # Adicionar instruções
+        for i, instruction in enumerate(instructions, 1):
+            instruction_cell = ws.cell(row=instructions_start_row + i, column=1, value=instruction)
+            
+            if instruction.startswith("✅") or instruction.startswith("📝") or instruction.startswith("🤖") or instruction.startswith("📊") or instruction.startswith("🚀"):
+                instruction_cell.font = Font(bold=True, size=11, color="2F5597")
+            elif instruction.startswith("   •") or instruction.startswith("   "):
+                instruction_cell.font = Font(size=10, color="555555")
+            else:
+                instruction_cell.font = Font(size=10)
+            
+            # Mesclar células para instruções
+            if instruction:
+                ws.merge_cells(f'A{instructions_start_row + i}:F{instructions_start_row + i}')
+        
+        # Adicionar informações do sistema no rodapé
+        footer_row = instructions_start_row + len(instructions) + 2
+        footer_cell = ws.cell(row=footer_row, column=1, value="📱 LabConnect - Sistema de Gestão Laboratorial | Template gerado automaticamente")
+        footer_cell.font = Font(size=9, italic=True, color="888888")
+        footer_cell.alignment = Alignment(horizontal="center")
+        ws.merge_cells(f'A{footer_row}:F{footer_row}')
+        
+        # Salvar em BytesIO
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        # Criar resposta HTTP com nome de arquivo personalizado
+        from datetime import datetime
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+        filename = f"LabConnect_Template_Materiais_{timestamp}.xlsx"
+        
+        response = HttpResponse(
+            output.read(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        # Log da ação
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Template Excel gerado por {request.user.username}")
+        
+        return response
+        
+    except ImportError:
+        # Fallback para CSV se openpyxl não estiver disponível
+        messages.warning(request, 'Excel não disponível. Gerando template CSV.')
+        return _generate_csv_template(request)
+        
+    except Exception as e:
+        messages.error(request, f'Erro ao gerar template: {str(e)}')
+        return redirect('import_materials')
 
 @login_required
 @user_passes_test(is_technician)
