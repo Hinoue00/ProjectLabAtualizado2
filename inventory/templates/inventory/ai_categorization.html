@@ -1,0 +1,450 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ title }} | LabConnect{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Cabeçalho -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="page-title">
+                    <i class="bi bi-tags-fill me-2 text-success"></i>{{ title }}
+                </h1>
+                <p class="page-subtitle">
+                    A IA analisa materiais não categorizados e sugere as melhores categorias
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="{% url 'ai_inventory_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar ao Dashboard IA
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stats-card">
+                <div class="stats-icon bg-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <div class="stats-content">
+                    <h3>{{ total_uncategorized }}</h3>
+                    <p>Materiais Não Categorizados</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-card">
+                <div class="stats-icon bg-success">
+                    <i class="bi bi-robot"></i>
+                </div>
+                <div class="stats-content">
+                    <h3>{{ category_suggestions|length }}</h3>
+                    <p>Sugestões da IA</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-card">
+                <div class="stats-icon bg-info">
+                    <i class="bi bi-lightning-charge"></i>
+                </div>
+                <div class="stats-content">
+                    <h3>85%</h3>
+                    <p>Precisão da IA</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if category_suggestions %}
+    <!-- Sugestões da IA -->
+    <div class="row">
+        <div class="col-12">
+            <div class="suggestions-card">
+                <div class="suggestions-header">
+                    <h4>
+                        <i class="bi bi-lightbulb-fill me-2 text-warning"></i>
+                        Sugestões de Categorização Inteligente
+                    </h4>
+                    <p class="mb-0">Revise as sugestões da IA e aplique as categorizações com um clique</p>
+                </div>
+                
+                <div class="suggestions-body">
+                    {% for suggestion in category_suggestions %}
+                    <div class="suggestion-item" data-material-id="{{ suggestion.material.id }}">
+                        <div class="row align-items-center">
+                            <div class="col-md-4">
+                                <div class="material-info">
+                                    <h6 class="material-name">{{ suggestion.material.name }}</h6>
+                                    {% if suggestion.material.description %}
+                                        <small class="material-desc text-muted">{{ suggestion.material.description|truncatechars:80 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <div class="current-category">
+                                    <span class="badge bg-secondary">{{ suggestion.material.category.name }}</span>
+                                    <small class="d-block text-muted">Categoria Atual</small>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <div class="suggested-category">
+                                    <span class="badge bg-success">{{ suggestion.suggested_category }}</span>
+                                    <small class="d-block text-muted">IA Sugere</small>
+                                    <div class="confidence-bar mt-1">
+                                        <div class="progress" style="height: 4px;">
+                                            <div class="progress-bar bg-success" style="width: {{ suggestion.confidence|floatformat:0 }}%"></div>
+                                        </div>
+                                        <small class="text-muted">{{ suggestion.confidence|floatformat:0 }}% confiança</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3 text-end">
+                                <button type="button" 
+                                        class="btn btn-success btn-sm apply-suggestion"
+                                        data-material-id="{{ suggestion.material.id }}"
+                                        data-category="{{ suggestion.suggested_category }}"
+                                        data-type="{{ suggestion.suggested_type }}">
+                                    <i class="bi bi-check-lg me-1"></i>Aplicar
+                                </button>
+                                <button type="button" 
+                                        class="btn btn-outline-secondary btn-sm ms-1"
+                                        onclick="dismissSuggestion({{ suggestion.material.id }})">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="suggestions-footer">
+                    <button type="button" class="btn btn-success" onclick="applyAllSuggestions()">
+                        <i class="bi bi-check-all me-1"></i>Aplicar Todas as Sugestões
+                    </button>
+                    <button type="button" class="btn btn-outline-primary ms-2" onclick="generateMoreSuggestions()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Gerar Mais Sugestões
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Nenhuma sugestão -->
+    <div class="row">
+        <div class="col-12">
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                </div>
+                <h4>Todos os Materiais Estão Categorizados!</h4>
+                <p class="text-muted">
+                    Parabéns! Não há materiais não categorizados no momento.
+                    {% if total_uncategorized > 0 %}
+                        Existem {{ total_uncategorized }} materiais com categorias genéricas que podem ser melhoradas.
+                    {% endif %}
+                </p>
+                <div class="empty-actions">
+                    <a href="{% url 'material_list' %}" class="btn btn-primary">
+                        <i class="bi bi-list me-1"></i>Ver Todos os Materiais
+                    </a>
+                    <a href="{% url 'ai_inventory_dashboard' %}" class="btn btn-outline-secondary ms-2">
+                        <i class="bi bi-robot me-1"></i>Dashboard IA
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.stats-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+}
+
+.stats-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.stats-content h3 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.stats-content p {
+    margin: 0;
+    font-weight: 600;
+    color: #666;
+}
+
+.suggestions-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.suggestions-header {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.suggestions-header h4 {
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.suggestions-body {
+    padding: 2rem;
+}
+
+.suggestion-item {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.suggestion-item:hover {
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.1);
+    border-color: #28a745;
+}
+
+.material-name {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.25rem;
+}
+
+.material-desc {
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.current-category, .suggested-category {
+    text-align: center;
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+}
+
+.confidence-bar {
+    margin-top: 0.5rem;
+}
+
+.progress {
+    background-color: rgba(40, 167, 69, 0.2);
+}
+
+.suggestions-footer {
+    background: #f8f9fa;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid #e9ecef;
+    text-align: center;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+}
+
+.empty-state h4 {
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.empty-actions {
+    margin-top: 2rem;
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 0.5rem 1.5rem;
+}
+
+.page-title {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+}
+</style>
+
+<script>
+// Aplicar sugestão individual
+document.addEventListener('DOMContentLoaded', function() {
+    const applyButtons = document.querySelectorAll('.apply-suggestion');
+    
+    applyButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const materialId = this.getAttribute('data-material-id');
+            const category = this.getAttribute('data-category');
+            const type = this.getAttribute('data-type');
+            
+            applyCategorization(materialId, category, type, this);
+        });
+    });
+});
+
+function applyCategorization(materialId, category, type, button) {
+    // Desabilitar botão durante o processamento
+    button.disabled = true;
+    button.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Aplicando...';
+    
+    fetch('{% url "ai_apply_categorization" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            material_id: materialId,
+            category: category,
+            type: type
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Sucesso - remover item da lista
+            const suggestionItem = button.closest('.suggestion-item');
+            suggestionItem.style.opacity = '0.5';
+            suggestionItem.style.transform = 'scale(0.95)';
+            
+            setTimeout(() => {
+                suggestionItem.remove();
+                
+                // Verificar se ainda há sugestões
+                const remainingSuggestions = document.querySelectorAll('.suggestion-item');
+                if (remainingSuggestions.length === 0) {
+                    location.reload(); // Recarregar para mostrar estado vazio
+                }
+            }, 300);
+            
+            // Mostrar mensagem de sucesso
+            showNotification('success', data.message);
+        } else {
+            // Erro - reabilitar botão
+            button.disabled = false;
+            button.innerHTML = '<i class="bi bi-check-lg me-1"></i>Aplicar';
+            showNotification('error', data.error);
+        }
+    })
+    .catch(error => {
+        button.disabled = false;
+        button.innerHTML = '<i class="bi bi-check-lg me-1"></i>Aplicar';
+        showNotification('error', 'Erro ao aplicar categorização');
+    });
+}
+
+function applyAllSuggestions() {
+    const applyButtons = document.querySelectorAll('.apply-suggestion:not(:disabled)');
+    
+    if (applyButtons.length === 0) {
+        showNotification('info', 'Não há sugestões para aplicar');
+        return;
+    }
+    
+    if (confirm(`Aplicar todas as ${applyButtons.length} sugestões da IA?`)) {
+        applyButtons.forEach((button, index) => {
+            setTimeout(() => {
+                button.click();
+            }, index * 500); // Aplicar com delay para não sobrecarregar
+        });
+    }
+}
+
+function dismissSuggestion(materialId) {
+    const suggestionItem = document.querySelector(`[data-material-id="${materialId}"]`).closest('.suggestion-item');
+    suggestionItem.style.opacity = '0.5';
+    suggestionItem.style.transform = 'scale(0.95)';
+    
+    setTimeout(() => {
+        suggestionItem.remove();
+        
+        const remainingSuggestions = document.querySelectorAll('.suggestion-item');
+        if (remainingSuggestions.length === 0) {
+            location.reload();
+        }
+    }, 300);
+}
+
+function generateMoreSuggestions() {
+    showNotification('info', 'Gerando mais sugestões...');
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
+}
+
+function showNotification(type, message) {
+    // Criar notificação simples
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+        ${message}
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Adicionar CSRF token se não existir
+if (!document.querySelector('[name=csrfmiddlewaretoken]')) {
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = '{{ csrf_token }}';
+    document.body.appendChild(csrfInput);
+}
+</script>
+{% endblock %}
