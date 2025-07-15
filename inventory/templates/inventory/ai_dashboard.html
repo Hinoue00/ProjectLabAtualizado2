@@ -1,0 +1,402 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ title }} | LabConnect{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Cabeçalho -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="page-title">
+                    <i class="bi bi-robot me-2 text-primary"></i>{{ title }}
+                </h1>
+                <p class="page-subtitle">
+                    Inteligência artificial para organização automática do seu inventário
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="{% url 'material_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar ao Inventário
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas de Automação -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card ai-processed">
+                <div class="stats-icon">
+                    <i class="bi bi-cpu"></i>
+                </div>
+                <div class="stats-content">
+                    <h3>{{ automation_stats.ai_processed }}</h3>
+                    <p>Materiais Processados pela IA</p>
+                    <small>{{ automation_stats.automation_percentage }}% do total</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card total-materials">
+                <div class="stats-icon">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+                <div class="stats-content">
+                    <h3>{{ automation_stats.total_materials }}</h3>
+                    <p>Total de Materiais</p>
+                    <small>{{ automation_stats.manual_entry }} inseridos manualmente</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card categories">
+                <div class="stats-icon">
+                    <i class="bi bi-tags"></i>
+                </div>
+                <div class="stats-content">
+                    <h3>{{ automation_stats.categories_count }}</h3>
+                    <p>Categorias Criadas</p>
+                    <small>Organizadas automaticamente</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card laboratories">
+                <div class="stats-icon">
+                    <i class="bi bi-building"></i>
+                </div>
+                <div class="stats-content">
+                    <h3>{{ automation_stats.labs_count }}</h3>
+                    <p>Laboratórios Ativos</p>
+                    <small>Atribuições inteligentes</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Funcionalidades da IA -->
+    <div class="row mb-4">
+        <div class="col-lg-4 col-md-6 mb-3">
+            <div class="feature-card organize">
+                <div class="feature-icon">
+                    <i class="bi bi-magic"></i>
+                </div>
+                <div class="feature-content">
+                    <h4>Organização Automática</h4>
+                    <p>Envie uma planilha e deixe a IA organizar automaticamente todo o seu inventário com categorização inteligente.</p>
+                    <a href="{% url 'ai_organize_inventory' %}" class="btn btn-primary">
+                        <i class="bi bi-upload me-1"></i> Organizar com IA
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-3">
+            <div class="feature-card categorize">
+                <div class="feature-icon">
+                    <i class="bi bi-tags-fill"></i>
+                </div>
+                <div class="feature-content">
+                    <h4>Assistente de Categorização</h4>
+                    <p>A IA analisa materiais não categorizados e sugere as melhores categorias baseado no contexto.</p>
+                    <a href="{% url 'ai_categorization_assistant' %}" class="btn btn-success">
+                        <i class="bi bi-brain me-1"></i> Categorizar
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-3">
+            <div class="feature-card duplicates">
+                <div class="feature-icon">
+                    <i class="bi bi-arrow-down-up"></i>
+                </div>
+                <div class="feature-content">
+                    <h4>Detector de Duplicatas</h4>
+                    <p>Identifica automaticamente materiais duplicados e oferece opções inteligentes de mesclagem.</p>
+                    <a href="{% url 'ai_duplicate_detector' %}" class="btn btn-warning">
+                        <i class="bi bi-search me-1"></i> Detectar
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-3">
+            <div class="feature-card suggestions">
+                <div class="feature-icon">
+                    <i class="bi bi-lightbulb-fill"></i>
+                </div>
+                <div class="feature-content">
+                    <h4>Sugestões Inteligentes</h4>
+                    <p>Receba sugestões da IA para otimizar distribuição de materiais e melhorar a eficiência.</p>
+                    <a href="{% url 'ai_smart_suggestions' %}" class="btn btn-info">
+                        <i class="bi bi-lightbulb me-1"></i> Ver Sugestões
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-3">
+            <div class="feature-card batch">
+                <div class="feature-icon">
+                    <i class="bi bi-gear-wide-connected"></i>
+                </div>
+                <div class="feature-content">
+                    <h4>Processamento em Lote</h4>
+                    <p>Aplique análise de IA em todos os materiais existentes para categorização e descrições automáticas.</p>
+                    <a href="{% url 'ai_batch_processor' %}" class="btn btn-secondary">
+                        <i class="bi bi-cpu me-1"></i> Processar
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-3">
+            <div class="feature-card analytics">
+                <div class="feature-icon">
+                    <i class="bi bi-graph-up"></i>
+                </div>
+                <div class="feature-content">
+                    <h4>Análise Inteligente</h4>
+                    <p>Visualize relatórios gerados pela IA sobre padrões de uso e otimizações do inventário.</p>
+                    <a href="#" class="btn btn-dark">
+                        <i class="bi bi-chart-bar me-1"></i> Em Breve
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Materiais Recentemente Processados -->
+    {% if recent_ai_materials %}
+    <div class="row">
+        <div class="col-12">
+            <div class="recent-materials-card">
+                <h5 class="card-title">
+                    <i class="bi bi-clock-history me-2"></i>Materiais Recentemente Processados pela IA
+                </h5>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Material</th>
+                                <th>Categoria</th>
+                                <th>Laboratório</th>
+                                <th>Processamento IA</th>
+                                <th>Data</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for material in recent_ai_materials %}
+                            <tr>
+                                <td>
+                                    <strong>{{ material.name }}</strong>
+                                    {% if material.description %}
+                                        <br><small class="text-muted">{{ material.description|truncatechars:50 }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ material.category.name }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ material.laboratory.name }}</span>
+                                </td>
+                                <td>
+                                    {% if material.analyzed_data.ai_processed %}
+                                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>IA Processado</span>
+                                    {% endif %}
+                                    {% if material.analyzed_data.ai_categorized %}
+                                        <span class="badge bg-primary"><i class="bi bi-tags me-1"></i>Auto-Categorizado</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ material.updated_at|date:"d/m/Y H:i" }}</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.stats-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.stats-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.ai-processed .stats-icon {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+}
+
+.total-materials .stats-icon {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.categories .stats-icon {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+}
+
+.laboratories .stats-icon {
+    background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+}
+
+.stats-content h3 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.stats-content p {
+    margin: 0;
+    font-weight: 600;
+    color: #666;
+}
+
+.stats-content small {
+    color: #999;
+    font-size: 0.85rem;
+}
+
+.feature-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    height: 100%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.organize {
+    border-left-color: #007bff;
+}
+
+.categorize {
+    border-left-color: #28a745;
+}
+
+.duplicates {
+    border-left-color: #ffc107;
+}
+
+.suggestions {
+    border-left-color: #17a2b8;
+}
+
+.batch {
+    border-left-color: #6c757d;
+}
+
+.analytics {
+    border-left-color: #343a40;
+}
+
+.feature-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: white;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.feature-content h4 {
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.feature-content p {
+    color: #666;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.feature-content .btn {
+    width: 100%;
+    border-radius: 25px;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+}
+
+.recent-materials-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.card-title {
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #666;
+    background-color: #f8f9fa;
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+}
+
+.page-title {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+}
+</style>
+{% endblock %}

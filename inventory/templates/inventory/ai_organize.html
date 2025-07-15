@@ -1,0 +1,482 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ title }} | LabConnect{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Cabeçalho -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="page-title">
+                    <i class="bi bi-robot me-2 text-primary"></i>{{ title }}
+                </h1>
+                <p class="page-subtitle">
+                    Use inteligência artificial para organizar automaticamente seu inventário
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="{% url 'ai_inventory_dashboard' %}" class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar
+                </a>
+                <a href="{% url 'download_template_excel' %}" class="btn btn-success">
+                    <i class="bi bi-download me-1"></i> Template
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Área de Upload com IA -->
+            <div class="ai-upload-card">
+                <div class="ai-upload-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-brain me-2 text-primary"></i>
+                        Organização Automática com IA
+                    </h4>
+                    <p class="mb-0 text-muted">A IA irá analisar e organizar automaticamente seus materiais</p>
+                </div>
+                
+                <form method="post" enctype="multipart/form-data" id="aiOrganizeForm">
+                    {% csrf_token %}
+                    
+                    <div class="ai-upload-body">
+                        <!-- Área de upload -->
+                        <div class="upload-zone" onclick="document.getElementById('id_file').click()">
+                            <div class="upload-icon">
+                                <i class="bi bi-cloud-upload display-1 text-primary"></i>
+                            </div>
+                            <h5>Envie sua planilha para organização automática</h5>
+                            <p class="text-muted">A IA irá categorizar, atribuir laboratórios e organizar automaticamente</p>
+                            
+                            <input type="file" 
+                                   name="file" 
+                                   id="id_file" 
+                                   class="form-control file-input" 
+                                   accept=".csv,.xlsx,.xls"
+                                   required
+                                   style="display: none;">
+                        </div>
+                        
+                        <div class="file-info mt-3" id="fileInfo" style="display: none;">
+                            <div class="alert alert-info">
+                                <i class="bi bi-file-check me-2"></i>
+                                <span id="fileName"></span>
+                                <button type="button" class="btn btn-sm btn-outline-primary ms-2" onclick="generatePreview()">
+                                    <i class="bi bi-eye me-1"></i>Preview IA
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Preview da IA -->
+                        <div class="ai-preview mt-3" id="aiPreview" style="display: none;">
+                            <h6><i class="bi bi-magic me-2"></i>Preview da Organização Automática</h6>
+                            <div class="preview-content" id="previewContent">
+                                <!-- Conteúdo do preview será inserido aqui -->
+                            </div>
+                        </div>
+                        
+                        <!-- Opções de IA -->
+                        <div class="ai-options mt-4">
+                            <h6><i class="bi bi-gear-fill me-2 text-primary"></i>Configurações da IA</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               id="auto_categorize" 
+                                               name="auto_categorize" 
+                                               checked>
+                                        <label class="form-check-label" for="auto_categorize">
+                                            <i class="bi bi-tags me-1 text-primary"></i>
+                                            Categorização Automática
+                                        </label>
+                                        <small class="form-text text-muted">
+                                            IA irá categorizar materiais automaticamente
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               id="auto_assign_labs" 
+                                               name="auto_assign_labs" 
+                                               checked>
+                                        <label class="form-check-label" for="auto_assign_labs">
+                                            <i class="bi bi-building me-1 text-success"></i>
+                                            Atribuição de Laboratórios
+                                        </label>
+                                        <small class="form-text text-muted">
+                                            IA irá escolher laboratórios apropriados
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               id="generate_descriptions" 
+                                               name="generate_descriptions" 
+                                               checked>
+                                        <label class="form-check-label" for="generate_descriptions">
+                                            <i class="bi bi-card-text me-1 text-info"></i>
+                                            Gerar Descrições
+                                        </label>
+                                        <small class="form-text text-muted">
+                                            IA irá criar descrições automáticas
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               id="merge_duplicates" 
+                                               name="merge_duplicates" 
+                                               checked>
+                                        <label class="form-check-label" for="merge_duplicates">
+                                            <i class="bi bi-arrow-down-up me-1 text-warning"></i>
+                                            Detectar Duplicatas
+                                        </label>
+                                        <small class="form-text text-muted">
+                                            IA irá encontrar e mesclar duplicatas
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               id="create_missing_categories" 
+                                               name="create_missing_categories" 
+                                               checked>
+                                        <label class="form-check-label" for="create_missing_categories">
+                                            Criar categorias não existentes
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               id="create_missing_labs" 
+                                               name="create_missing_labs">
+                                        <label class="form-check-label" for="create_missing_labs">
+                                            Criar laboratórios não existentes
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="ai-upload-footer">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                            <i class="bi bi-magic me-2"></i>Organizar com IA
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Informações da IA -->
+            <div class="ai-info-card mb-4">
+                <h5 class="ai-info-title">
+                    <i class="bi bi-lightbulb me-2"></i>Como a IA Funciona
+                </h5>
+                
+                <div class="ai-step">
+                    <div class="ai-step-number">1</div>
+                    <div class="ai-step-content">
+                        <h6>Análise Inteligente</h6>
+                        <p>A IA analisa o nome e contexto de cada material</p>
+                    </div>
+                </div>
+                
+                <div class="ai-step">
+                    <div class="ai-step-number">2</div>
+                    <div class="ai-step-content">
+                        <h6>Categorização Automática</h6>
+                        <p>Classifica materiais em categorias apropriadas</p>
+                    </div>
+                </div>
+                
+                <div class="ai-step">
+                    <div class="ai-step-number">3</div>
+                    <div class="ai-step-content">
+                        <h6>Atribuição de Laboratórios</h6>
+                        <p>Escolhe o laboratório mais adequado para cada material</p>
+                    </div>
+                </div>
+                
+                <div class="ai-step">
+                    <div class="ai-step-number">4</div>
+                    <div class="ai-step-content">
+                        <h6>Organização Final</h6>
+                        <p>Remove duplicatas e otimiza o inventário</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Categorias Existentes -->
+            <div class="existing-data-card">
+                <h6><i class="bi bi-tags me-2 text-success"></i>Categorias Existentes</h6>
+                <div class="existing-list">
+                    {% for category in existing_categories %}
+                        <span class="badge bg-light text-dark me-1 mb-1">{{ category.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Laboratórios Existentes -->
+            <div class="existing-data-card mt-3">
+                <h6><i class="bi bi-building me-2 text-info"></i>Laboratórios Existentes</h6>
+                <div class="existing-list">
+                    {% for lab in existing_labs %}
+                        <span class="badge bg-light text-dark me-1 mb-1">{{ lab.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.ai-upload-card {
+    background: linear-gradient(135deg, #f8f9ff 0%, #f0f8ff 100%);
+    border: 2px solid #e3f2fd;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,123,255,0.1);
+}
+
+.ai-upload-header {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.ai-upload-body {
+    padding: 2rem;
+}
+
+.upload-zone {
+    border: 3px dashed #007bff;
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(0,123,255,0.02);
+}
+
+.upload-zone:hover {
+    border-color: #0056b3;
+    background: rgba(0,123,255,0.05);
+    transform: translateY(-2px);
+}
+
+.ai-options {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #e9ecef;
+}
+
+.ai-upload-footer {
+    padding: 2rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    text-align: center;
+}
+
+.ai-info-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    border-left: 4px solid #28a745;
+}
+
+.ai-info-title {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.ai-step {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.ai-step-number {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.ai-step-content h6 {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.ai-step-content p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.ai-preview {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.existing-data-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.existing-list {
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.btn-lg {
+    padding: 0.875rem 2.5rem;
+    font-size: 1.125rem;
+    border-radius: 50px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-check-label {
+    font-weight: 500;
+}
+
+.form-text {
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('id_file');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const submitBtn = document.getElementById('submitBtn');
+    const form = document.getElementById('aiOrganizeForm');
+    
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            fileName.textContent = file.name;
+            fileInfo.style.display = 'block';
+            
+            // Validar arquivo
+            if (!file.name.match(/\.(xlsx|xls|csv)$/i)) {
+                alert('Por favor, selecione um arquivo Excel (.xlsx, .xls) ou CSV (.csv)');
+                fileInput.value = '';
+                fileInfo.style.display = 'none';
+                return;
+            }
+        } else {
+            fileInfo.style.display = 'none';
+        }
+    });
+    
+    // Prevenir múltiplos submits
+    form.addEventListener('submit', function() {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Processando com IA...';
+    });
+});
+
+function generatePreview() {
+    const fileInput = document.getElementById('id_file');
+    const aiPreview = document.getElementById('aiPreview');
+    const previewContent = document.getElementById('previewContent');
+    
+    if (!fileInput.files[0]) {
+        alert('Selecione um arquivo primeiro');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    
+    previewContent.innerHTML = '<div class="text-center"><i class="bi bi-hourglass-split"></i> IA analisando arquivo...</div>';
+    aiPreview.style.display = 'block';
+    
+    fetch('{% url "ai_preview_organization" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            let previewHtml = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Total de linhas:</strong> ${data.total_rows}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Colunas detectadas:</strong> ${Object.keys(data.column_mapping).length}
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <strong>Preview dos primeiros materiais:</strong>
+                    <ul class="list-unstyled mt-2">
+            `;
+            
+            data.preview.slice(0, 5).forEach(item => {
+                previewHtml += `
+                    <li class="mb-1">
+                        <span class="badge bg-primary">${item.nome || 'N/A'}</span>
+                        <span class="badge bg-success">${item.categoria || 'IA irá categorizar'}</span>
+                        <span class="badge bg-info">${item.laboratorio || 'IA irá atribuir'}</span>
+                    </li>
+                `;
+            });
+            
+            previewHtml += `
+                    </ul>
+                    <small class="text-muted">A IA irá processar todos os ${data.total_rows} materiais automaticamente</small>
+                </div>
+            `;
+            
+            previewContent.innerHTML = previewHtml;
+        } else {
+            previewContent.innerHTML = `<div class="text-danger">Erro: ${data.error}</div>`;
+        }
+    })
+    .catch(error => {
+        previewContent.innerHTML = `<div class="text-danger">Erro ao gerar preview: ${error.message}</div>`;
+    });
+}
+</script>
+{% endblock %}

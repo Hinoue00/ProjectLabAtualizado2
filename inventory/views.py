@@ -232,27 +232,281 @@ def category_delete(request, pk):
 @login_required
 @user_passes_test(is_technician)
 def import_materials(request):
-    """Importar materiais em lote"""
+    """Importar materiais em lote - VERSÃO FINAL CORRIGIDA"""
+    
     if request.method == 'POST':
         form = ImportMaterialsForm(request.POST, request.FILES)
         if form.is_valid():
-            # Processar arquivo de importação
+            file = request.FILES['file']
+            
+            # Opções de importação
+            create_missing_categories = request.POST.get('create_missing_categories', False)
+            create_missing_labs = request.POST.get('create_missing_labs', False)
+            update_existing = request.POST.get('update_existing', False)
+            skip_errors = request.POST.get('skip_errors', False)
+            
             try:
-                file = request.FILES['file']
-                # Lógica de importação aqui
-                messages.success(request, 'Materiais importados com sucesso.')
+                # Ler arquivo baseado na extensão
+                if file.name.endswith('.csv'):
+                    import pandas as pd
+                    df = pd.read_csv(file)
+                elif file.name.endswith(('.xlsx', '.xls')):
+                    import pandas as pd
+                    df = pd.read_excel(file)
+                else:
+                    messages.error(request, 'Formato de arquivo não suportado.')
+                    return redirect('import_materials')
+                
+                # Debug: mostrar estrutura inicial
+                print(f"DEBUG: Arquivo carregado com {len(df)} linhas")
+                print(f"DEBUG: Colunas encontradas: {list(df.columns)}")
+                if len(df) > 0:
+                    print(f"DEBUG: Primeira linha: {df.iloc[0].tolist()}")
+                if len(df) > 1:
+                    print(f"DEBUG: Segunda linha: {df.iloc[1].tolist()}")
+                
+                # Verificar se a segunda linha contém cabeçalhos em português (linha de exemplo)
+                if len(df) > 1:
+                    second_row = df.iloc[1]
+                    # Verificar se a segunda linha parece ser uma linha de exemplo/cabeçalho
+                    if (pd.notna(second_row.iloc[0]) and 
+                        isinstance(second_row.iloc[0], str) and 
+                        ('Nome do Material' in str(second_row.iloc[0]) or 
+                         'Descrição' in str(second_row.iloc[1]) if len(second_row) > 1 else False)):
+                        print("DEBUG: Removendo linha de exemplo (linha 2)")
+                        df = df.drop(df.index[1]).reset_index(drop=True)
+                
+                # Mapeamento de colunas (suporte a inglês e português)
+                column_mapping = {
+                    'nome': ['nome', 'name', 'material', 'NAME'],
+                    'categoria': ['categoria', 'category', 'CATEGORY'],
+                    'laboratorio': ['laboratorio', 'laboratório', 'laboratory', 'lab', 'LABORATORY'],
+                    'quantidade': ['quantidade', 'quantity', 'qty', 'QUANTITY'],
+                    'estoque_minimo': ['estoque_minimo', 'estoque_mínimo', 'minimum_stock', 'min_stock', 'MINIMUM_STOCK'],
+                    'descricao': ['descricao', 'descrição', 'description', 'DESCRIPTION']
+                }
+                
+                # Mapear colunas do arquivo
+                df_columns = list(df.columns)
+                mapped_columns = {}
+                
+                for standard_col, variations in column_mapping.items():
+                    for variation in variations:
+                        if variation in df_columns:
+                            mapped_columns[standard_col] = variation
+                            break
+                
+                print(f"DEBUG: Mapeamento de colunas: {mapped_columns}")
+                
+                # Verificar colunas obrigatórias
+                required_columns = ['nome', 'categoria', 'laboratorio', 'quantidade', 'estoque_minimo']
+                missing_cols = [col for col in required_columns if col not in mapped_columns]
+                
+                if missing_cols:
+                    messages.error(request, f'Colunas obrigatórias não encontradas: {", ".join(missing_cols)}')
+                    messages.error(request, f'Colunas disponíveis: {", ".join(df_columns)}')
+                    return redirect('import_materials')
+                
+                # Renomear colunas para padronizar
+                rename_dict = {v: k for k, v in mapped_columns.items()}
+                df = df.rename(columns=rename_dict)
+                
+                print(f"DEBUG: Dados após renomeação: {df.columns.tolist()}")
+                
+                # Estatísticas
+                imported_count = 0
+                updated_count = 0
+                skipped_count = 0
+                errors = []
+                
+                # Processar cada linha
+                for idx, row in df.iterrows():
+                    try:
+                        # Pular linhas vazias
+                        if pd.isna(row.get('nome')) or str(row.get('nome')).strip() == '':
+                            print(f"DEBUG: Pulando linha {idx + 1} - nome vazio")
+                            skipped_count += 1
+                            continue
+                        
+                        # Extrair dados
+                        nome = str(row['nome']).strip()
+                        categoria_nome = str(row['categoria']).strip()
+                        laboratorio_nome = str(row['laboratorio']).strip()
+                        
+                        print(f"DEBUG: Processando linha {idx + 1} - {nome}")
+                        
+                        # Validar quantidade
+                        try:
+                            quantidade = int(float(row['quantidade']))
+                            if quantidade < 0:
+                                raise ValueError("Quantidade não pode ser negativa")
+                        except (ValueError, TypeError):
+                            error_msg = f"Linha {idx + 1}: Quantidade inválida - {row['quantidade']}"
+                            errors.append(error_msg)
+                            print(f"DEBUG: {error_msg}")
+                            if not skip_errors:
+                                continue
+                            quantidade = 0
+                        
+                        # Validar estoque mínimo
+                        try:
+                            estoque_minimo = int(float(row['estoque_minimo']))
+                            if estoque_minimo < 1:
+                                estoque_minimo = 1
+                        except (ValueError, TypeError):
+                            error_msg = f"Linha {idx + 1}: Estoque mínimo inválido - {row['estoque_minimo']}"
+                            errors.append(error_msg)
+                            print(f"DEBUG: {error_msg}")
+                            if not skip_errors:
+                                continue
+                            estoque_minimo = 1
+                        
+                        # Descrição opcional
+                        descricao = ''
+                        if 'descricao' in row and pd.notna(row['descricao']):
+                            descricao = str(row['descricao']).strip()
+                        
+                        # Buscar ou criar categoria
+                        categoria = None
+                        try:
+                            categoria = MaterialCategory.objects.get(name__iexact=categoria_nome)
+                            print(f"DEBUG: Categoria encontrada: {categoria.name}")
+                        except MaterialCategory.DoesNotExist:
+                            if create_missing_categories:
+                                categoria = MaterialCategory.objects.create(
+                                    name=categoria_nome,
+                                    material_type='consumable'
+                                )
+                                print(f"DEBUG: Categoria criada: {categoria.name}")
+                            else:
+                                error_msg = f"Linha {idx + 1}: Categoria '{categoria_nome}' não encontrada"
+                                errors.append(error_msg)
+                                print(f"DEBUG: {error_msg}")
+                                if not skip_errors:
+                                    continue
+                        
+                        # Buscar ou criar laboratório
+                        laboratorio = None
+                        try:
+                            laboratorio = Laboratory.objects.get(name__iexact=laboratorio_nome)
+                            print(f"DEBUG: Laboratório encontrado: {laboratorio.name}")
+                        except Laboratory.DoesNotExist:
+                            if create_missing_labs:
+                                laboratorio = Laboratory.objects.create(
+                                    name=laboratorio_nome,
+                                    location=f"Localização {laboratorio_nome}",
+                                    capacity=30,
+                                    is_active=True
+                                )
+                                print(f"DEBUG: Laboratório criado: {laboratorio.name}")
+                            else:
+                                error_msg = f"Linha {idx + 1}: Laboratório '{laboratorio_nome}' não encontrado"
+                                errors.append(error_msg)
+                                print(f"DEBUG: {error_msg}")
+                                if not skip_errors:
+                                    continue
+                        
+                        # Pular se não temos categoria ou laboratório
+                        if not categoria or not laboratorio:
+                            skipped_count += 1
+                            continue
+                        
+                        # Criar ou atualizar material
+                        if update_existing:
+                            material, created = Material.objects.update_or_create(
+                                name=nome,
+                                laboratory=laboratorio,
+                                defaults={
+                                    'category': categoria,
+                                    'description': descricao,
+                                    'quantity': quantidade,
+                                    'minimum_stock': estoque_minimo,
+                                }
+                            )
+                            if created:
+                                imported_count += 1
+                                print(f"DEBUG: Material criado: {material.name}")
+                            else:
+                                updated_count += 1
+                                print(f"DEBUG: Material atualizado: {material.name}")
+                        else:
+                            # Verificar se já existe
+                            if Material.objects.filter(name=nome, laboratory=laboratorio).exists():
+                                error_msg = f"Linha {idx + 1}: Material '{nome}' já existe no laboratório '{laboratorio_nome}'"
+                                errors.append(error_msg)
+                                print(f"DEBUG: {error_msg}")
+                                if not skip_errors:
+                                    continue
+                                skipped_count += 1
+                                continue
+                            
+                            # Criar novo material
+                            material = Material.objects.create(
+                                name=nome,
+                                category=categoria,
+                                description=descricao,
+                                quantity=quantidade,
+                                minimum_stock=estoque_minimo,
+                                laboratory=laboratorio,
+                            )
+                            imported_count += 1
+                            print(f"DEBUG: Material criado: {material.name}")
+                    
+                    except Exception as e:
+                        error_msg = f"Linha {idx + 1}: Erro ao processar - {str(e)}"
+                        errors.append(error_msg)
+                        print(f"DEBUG: {error_msg}")
+                        if not skip_errors:
+                            continue
+                        skipped_count += 1
+                
+                # Mostrar resultados
+                print(f"DEBUG: Resultado final - Importados: {imported_count}, Atualizados: {updated_count}, Pulados: {skipped_count}, Erros: {len(errors)}")
+                
+                success_messages = []
+                if imported_count > 0:
+                    success_messages.append(f"{imported_count} materiais importados")
+                if updated_count > 0:
+                    success_messages.append(f"{updated_count} materiais atualizados")
+                
+                if success_messages:
+                    messages.success(request, f"Importação concluída: {', '.join(success_messages)}.")
+                
+                if skipped_count > 0:
+                    messages.warning(request, f"{skipped_count} linhas foram ignoradas.")
+                
+                if errors:
+                    messages.error(request, f"Encontrados {len(errors)} erros:")
+                    for error in errors[:5]:  # Mostrar apenas os primeiros 5 erros
+                        messages.error(request, error)
+                    if len(errors) > 5:
+                        messages.error(request, f"... e mais {len(errors) - 5} erros.")
+                
                 return redirect('material_list')
+                
             except Exception as e:
-                messages.error(request, f'Erro ao importar materiais: {str(e)}')
-        else:
-            messages.error(request, 'Por favor, corrija os erros abaixo.')
+                error_msg = f'Erro ao processar arquivo: {str(e)}'
+                messages.error(request, error_msg)
+                print(f"DEBUG: {error_msg}")
+                import traceback
+                traceback.print_exc()
+                return redirect('import_materials')
+    
     else:
         form = ImportMaterialsForm()
     
-    return render(request, 'import_materials.html', {
+    # Contexto para o template
+    existing_labs = Laboratory.objects.filter(is_active=True).values('name').distinct()
+    existing_categories = MaterialCategory.objects.values('name').distinct()
+    
+    context = {
         'form': form,
-        'title': 'Importar Materiais'
-    })
+        'title': 'Importar Materiais',
+        'existing_labs': existing_labs,
+        'existing_categories': existing_categories,
+    }
+    
+    return render(request, 'import_materials.html', context)
 
 @login_required
 @user_passes_test(is_technician)

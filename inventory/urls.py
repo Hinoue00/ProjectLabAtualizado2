@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from . import views
+from . import ai_views
 import json
 
 # View placeholder para funcionalidades não implementadas
@@ -53,6 +54,8 @@ def suggest_material_details_placeholder(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
 
+
+
 urlpatterns = [
     # URLs principais (CRUD básico) - FUNCIONAM PERFEITAMENTE
     path('', views.material_list, name='material_list'),
@@ -72,7 +75,7 @@ urlpatterns = [
     path('export/', views.export_materials, name='export_materials'),
     
     # ✅ FUNCIONALIDADE REAL: Download de Template Excel
-    path('download-template/', views.download_template_excel, name='download_template'),
+    path('download-template/', views.download_template_excel, name='download_template_excel'),
     
     # APIs básicas (placeholders funcionais)
     path('api/analyze-description/', analyze_material_description_placeholder, name='analyze_material_description'),
@@ -83,4 +86,18 @@ urlpatterns = [
     path('trends/', placeholder_view, name='material_trends'),
     path('api/suggest-improvements/', placeholder_view, name='suggest_improvements_api'),
     path('api/find-similar/', placeholder_view, name='find_similar_api'),
+
+    # URLs para funcionalidades de IA
+    path('ai/', ai_views.ai_inventory_dashboard, name='ai_inventory_dashboard'),
+    path('ai/organize/', ai_views.ai_organize_inventory, name='ai_organize_inventory'),
+    path('ai/categorization/', ai_views.ai_categorization_assistant, name='ai_categorization_assistant'),
+    path('ai/duplicates/', ai_views.ai_duplicate_detector, name='ai_duplicate_detector'),
+    path('ai/suggestions/', ai_views.ai_smart_suggestions, name='ai_smart_suggestions'),
+    path('ai/batch/', ai_views.ai_batch_processor, name='ai_batch_processor'),
+
+    # APIs para IA
+    path('ai/api/preview/', ai_views.ai_preview_organization, name='ai_preview_organization'),
+    path('ai/api/categorize/', ai_views.ai_apply_categorization, name='ai_apply_categorization'),
+    path('ai/api/merge/', ai_views.ai_merge_duplicates, name='ai_merge_duplicates'),
 ]
+

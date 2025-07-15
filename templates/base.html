@@ -1181,6 +1181,10 @@ html {
                             <a href="{% url 'import_materials' %}" class="sidebar-dropdown-link {% if '/inventory/import/' in request.path %}active{% endif %}">
                                 <i class="bi bi-upload"></i> Importar Materiais
                             </a>
+                            <a href="{% url 'ai_inventory_dashboard' %}" class="sidebar-dropdown-link {% if '/inventory/ai/' in request.path %}active{% endif %}">
+                                <i class="bi bi-robot me-2"></i>IA Inventário
+                            </a>
+                        
                             
                             <!-- Links temporariamente removidos (podem ser readicionados quando as views existirem) -->
                             <!--
