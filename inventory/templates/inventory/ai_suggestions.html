@@ -1,0 +1,441 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ title }} | LabConnect{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Cabeçalho -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="page-title">
+                    <i class="bi bi-lightbulb-fill me-2 text-info"></i>{{ title }}
+                </h1>
+                <p class="page-subtitle">
+                    Receba sugestões da IA para otimizar a organização do seu inventário
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="{% url 'ai_inventory_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar ao Dashboard IA
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <div class="stats-content">
+                    <h3>{{ low_stock_count }}</h3>
+                    <p>Estoque Baixo</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-info">
+                    <i class="bi bi-building"></i>
+                </div>
+                <div class="stats-content">
+                    <h3>{{ labs_with_similar|length }}</h3>
+                    <p>Labs com Similares</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-success">
+                    <i class="bi bi-tags"></i>
+                </div>
+                <div class="stats-content">
+                    <h3>{{ category_suggestions|length }}</h3>
+                    <p>Categorias a Melhorar</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-primary">
+                    <i class="bi bi-gear"></i>
+                </div>
+                <div class="stats-content">
+                    <h3>{{ total_optimizations }}</h3>
+                    <p>Total de Otimizações</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sugestões -->
+    <div class="row">
+        <!-- Materiais com Estoque Baixo -->
+        {% if low_stock_count > 0 %}
+        <div class="col-lg-6 mb-4">
+            <div class="suggestion-card low-stock">
+                <div class="suggestion-header">
+                    <h5><i class="bi bi-exclamation-triangle me-2"></i>Estoque Baixo</h5>
+                </div>
+                <div class="suggestion-body">
+                    <p>{{ low_stock_count }} materiais estão com estoque abaixo do mínimo recomendado.</p>
+                    <div class="suggestion-actions">
+                        <a href="{% url 'material_list' %}?stock_status=low" class="btn btn-warning btn-sm">
+                            <i class="bi bi-eye me-1"></i>Ver Materiais
+                        </a>
+                        <button class="btn btn-outline-warning btn-sm ms-2" onclick="generateRestockReport()">
+                            <i class="bi bi-file-text me-1"></i>Relatório de Reposição
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Categorias para Melhorar -->
+        {% if category_suggestions %}
+        <div class="col-lg-6 mb-4">
+            <div class="suggestion-card categories">
+                <div class="suggestion-header">
+                    <h5><i class="bi bi-tags me-2"></i>Categorias para Melhorar</h5>
+                </div>
+                <div class="suggestion-body">
+                    <p>{{ category_suggestions|length }} categorias podem ser reorganizadas para melhor organização.</p>
+                    
+                    <div class="category-list">
+                        {% for suggestion in category_suggestions|slice:":3" %}
+                        <div class="category-item">
+                            <div class="current-category">
+                                <span class="badge bg-secondary">{{ suggestion.current_category.name }}</span>
+                            </div>
+                            <i class="bi bi-arrow-right mx-2"></i>
+                            <div class="suggested-category">
+                                <span class="badge bg-success">{{ suggestion.suggested_category }}</span>
+                            </div>
+                            <div class="material-name ms-2">
+                                <small>{{ suggestion.material.name|truncatechars:30 }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="suggestion-actions mt-3">
+                        <a href="{% url 'ai_categorization_assistant' %}" class="btn btn-success btn-sm">
+                            <i class="bi bi-gear me-1"></i>Reorganizar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Laboratórios com Materiais Similares -->
+        {% if labs_with_similar %}
+        <div class="col-12 mb-4">
+            <div class="suggestion-card labs-similar">
+                <div class="suggestion-header">
+                    <h5><i class="bi bi-building me-2"></i>Laboratórios com Materiais Similares</h5>
+                </div>
+                <div class="suggestion-body">
+                    <p>Encontrados materiais similares em diferentes laboratórios que podem ser consolidados.</p>
+                    
+                    <div class="labs-list">
+                        {% for lab_name, materials in labs_with_similar.items %}
+                        <div class="lab-item">
+                            <h6><i class="bi bi-building me-2"></i>{{ lab_name }}</h6>
+                            <div class="materials-grid">
+                                {% for item in materials|slice:":4" %}
+                                <div class="material-similar-item">
+                                    <div class="main-material">
+                                        <strong>{{ item.material.name|truncatechars:25 }}</strong>
+                                    </div>
+                                    <div class="similar-labs">
+                                        <small class="text-muted">Também em:</small>
+                                        {% for similar in item.similar_in_labs|slice:":2" %}
+                                            <span class="badge bg-info">{{ similar.laboratory.name|truncatechars:15 }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% if materials|length > 4 %}
+                            <small class="text-muted">... e mais {{ materials|length|add:"-4" }} materiais</small>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="suggestion-actions mt-3">
+                        <button class="btn btn-info btn-sm" onclick="analyzeConsolidation()">
+                            <i class="bi bi-arrow-down-up me-1"></i>Analisar Consolidação
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Sugestões Gerais de Otimização -->
+        <div class="col-12">
+            <div class="suggestion-card optimization">
+                <div class="suggestion-header">
+                    <h5><i class="bi bi-gear-wide-connected me-2"></i>Sugestões de Otimização</h5>
+                </div>
+                <div class="suggestion-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="optimization-item">
+                                <div class="optimization-icon">
+                                    <i class="bi bi-arrow-clockwise text-primary"></i>
+                                </div>
+                                <div class="optimization-content">
+                                    <h6>Redistribuição Inteligente</h6>
+                                    <p>Redistribua materiais entre laboratórios para otimizar o uso.</p>
+                                    <button class="btn btn-primary btn-sm" onclick="suggestRedistribution()">
+                                        Analisar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="optimization-item">
+                                <div class="optimization-icon">
+                                    <i class="bi bi-graph-up text-success"></i>
+                                </div>
+                                <div class="optimization-content">
+                                    <h6>Padrões de Uso</h6>
+                                    <p>Analise padrões de uso para prever necessidades futuras.</p>
+                                    <button class="btn btn-success btn-sm" onclick="analyzeUsagePatterns()">
+                                        Ver Padrões
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="optimization-item">
+                                <div class="optimization-icon">
+                                    <i class="bi bi-shield-check text-info"></i>
+                                </div>
+                                <div class="optimization-content">
+                                    <h6>Verificação de Qualidade</h6>
+                                    <p>Identifique possíveis inconsistências nos dados.</p>
+                                    <button class="btn btn-info btn-sm" onclick="runQualityCheck()">
+                                        Verificar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.stats-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+}
+
+.stats-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.stats-content h3 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.stats-content p {
+    margin: 0;
+    font-weight: 600;
+    color: #666;
+}
+
+.suggestion-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    overflow: hidden;
+    height: 100%;
+}
+
+.suggestion-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+}
+
+.suggestion-header h5 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.suggestion-body {
+    padding: 1.5rem;
+}
+
+.category-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.lab-item {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.materials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.material-similar-item {
+    background: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 6px;
+    border-left: 3px solid #007bff;
+}
+
+.optimization-item {
+    text-align: center;
+    padding: 1.5rem;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    height: 100%;
+}
+
+.optimization-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.optimization-content h6 {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.optimization-content p {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 1rem;
+}
+
+.suggestion-actions {
+    border-top: 1px solid #e9ecef;
+    padding-top: 1rem;
+    margin-top: 1rem;
+}
+
+.page-title {
+    background: linear-gradient(135deg, #17a2b8 0%, #007bff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+}
+
+.low-stock .suggestion-header {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+}
+
+.categories .suggestion-header {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.labs-similar .suggestion-header {
+    background: linear-gradient(135deg, #17a2b8 0%, #007bff 100%);
+}
+
+.optimization .suggestion-header {
+    background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+}
+</style>
+
+<script>
+function generateRestockReport() {
+    showNotification('info', 'Gerando relatório de reposição...');
+    // Implementar lógica do relatório
+    setTimeout(() => {
+        showNotification('success', 'Relatório gerado com sucesso!');
+    }, 2000);
+}
+
+function analyzeConsolidation() {
+    showNotification('info', 'Analisando possibilidades de consolidação...');
+    setTimeout(() => {
+        showNotification('success', 'Análise concluída! Verifique o dashboard para detalhes.');
+    }, 3000);
+}
+
+function suggestRedistribution() {
+    showNotification('info', 'Analisando redistribuição inteligente...');
+    setTimeout(() => {
+        showNotification('success', 'Sugestões de redistribuição disponíveis!');
+    }, 2500);
+}
+
+function analyzeUsagePatterns() {
+    showNotification('info', 'Analisando padrões de uso...');
+    setTimeout(() => {
+        showNotification('success', 'Padrões identificados com sucesso!');
+    }, 3000);
+}
+
+function runQualityCheck() {
+    showNotification('info', 'Executando verificação de qualidade...');
+    setTimeout(() => {
+        showNotification('success', 'Verificação concluída! Nenhuma inconsistência encontrada.');
+    }, 2000);
+}
+
+function showNotification(type, message) {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+        ${message}
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}

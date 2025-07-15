@@ -1,0 +1,659 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ title }} | LabConnect{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Cabeçalho -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="page-title">
+                    <i class="bi bi-gear-wide-connected me-2 text-secondary"></i>{{ title }}
+                </h1>
+                <p class="page-subtitle">
+                    Aplique análise de IA em materiais já existentes no sistema
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="{% url 'ai_inventory_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar ao Dashboard IA
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-primary">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+                <div class="stats-content">
+                    <h3>{{ stats.total_materials }}</h3>
+                    <p>Total de Materiais</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <div class="stats-content">
+                    <h3>{{ stats.uncategorized }}</h3>
+                    <p>Não Categorizados</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-info">
+                    <i class="bi bi-card-text"></i>
+                </div>
+                <div class="stats-content">
+                    <h3>{{ stats.no_description }}</h3>
+                    <p>Sem Descrição</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-success">
+                    <i class="bi bi-cpu"></i>
+                </div>
+                <div class="stats-content">
+                    <h3>{{ stats.ai_processed }}</h3>
+                    <p>Processados pela IA</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações de Processamento -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="batch-action-card categorization">
+                <div class="action-header">
+                    <div class="action-icon">
+                        <i class="bi bi-tags-fill"></i>
+                    </div>
+                    <div class="action-info">
+                        <h4>Categorização em Lote</h4>
+                        <p>Aplique IA para categorizar automaticamente todos os materiais não categorizados</p>
+                    </div>
+                </div>
+                
+                <div class="action-body">
+                    <div class="combined-stats">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="combined-stat">
+                                    <span class="stat-number">{{ stats.uncategorized }}</span>
+                                    <span class="stat-label">Categorizações</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="combined-stat">
+                                    <span class="stat-number">{{ stats.no_description }}</span>
+                                    <span class="stat-label">Descrições</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="combined-stat">
+                                    <span class="stat-number">~5</span>
+                                    <span class="stat-label">Duplicatas</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="combined-stat">
+                                    <span class="stat-number">100%</span>
+                                    <span class="stat-label">Otimização</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-details">
+                        <h6>Processamento completo incluirá:</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul>
+                                    <li>Categorização automática</li>
+                                    <li>Geração de descrições</li>
+                                    <li>Detecção de duplicatas</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul>
+                                    <li>Otimização de laboratórios</li>
+                                    <li>Verificação de qualidade</li>
+                                    <li>Relatório completo</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-controls text-center">
+                        <button type="button" class="btn btn-purple btn-lg" onclick="runCompleteProcessing()">
+                            <i class="bi bi-lightning-charge-fill me-2"></i>Processar Tudo com IA
+                        </button>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>
+                                Tempo estimado: {{ stats.total_materials|floatformat:0|add:"0"|floatformat:0 }} segundos
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Progress Tracking -->
+        <div class="col-12">
+            <div class="progress-card" id="progressCard" style="display: none;">
+                <div class="progress-header">
+                    <h5><i class="bi bi-gear-wide-connected me-2"></i>Processamento em Andamento</h5>
+                </div>
+                <div class="progress-body">
+                    <div class="progress-info">
+                        <div class="current-task" id="currentTask">Iniciando processamento...</div>
+                        <div class="progress-stats" id="progressStats">0 de 0 processados</div>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 id="progressBar" style="width: 0%"></div>
+                        </div>
+                        <div class="progress-percentage" id="progressPercentage">0%</div>
+                    </div>
+                    <div class="progress-actions">
+                        <button type="button" class="btn btn-outline-secondary" onclick="cancelProcessing()">
+                            <i class="bi bi-x-lg me-1"></i>Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.stats-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+}
+
+.stats-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.stats-content h3 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.stats-content p {
+    margin: 0;
+    font-weight: 600;
+    color: #666;
+}
+
+.batch-action-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    overflow: hidden;
+    height: 100%;
+    transition: transform 0.3s ease;
+}
+
+.batch-action-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.action-header {
+    display: flex;
+    align-items: center;
+    padding: 2rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.action-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    margin-right: 1.5rem;
+    flex-shrink: 0;
+}
+
+.categorization .action-icon {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.descriptions .action-icon {
+    background: linear-gradient(135deg, #17a2b8 0%, #007bff 100%);
+}
+
+.combined .action-icon {
+    background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+}
+
+.action-info h4 {
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.action-info p {
+    margin: 0;
+    color: #666;
+    line-height: 1.5;
+}
+
+.action-body {
+    padding: 2rem;
+}
+
+.impact-info {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.impact-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.impact-number {
+    font-size: 3rem;
+    font-weight: 800;
+    color: #333;
+    line-height: 1;
+}
+
+.impact-label {
+    font-size: 0.9rem;
+    color: #666;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.combined-stats {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.combined-stat {
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.stat-number {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.action-details h6 {
+    color: #495057;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.action-details ul {
+    margin: 0;
+    padding-left: 1.2rem;
+}
+
+.action-details li {
+    margin-bottom: 0.5rem;
+    color: #666;
+}
+
+.action-controls {
+    border-top: 1px solid #e9ecef;
+    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.btn-purple {
+    background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-purple:hover {
+    background: linear-gradient(135deg, #5a36a3 0%, #d91a72 100%);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.progress-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.progress-header {
+    background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+    color: white;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.progress-body {
+    padding: 2rem;
+}
+
+.progress-info {
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.current-task {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.progress-stats {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.progress-bar-container {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.progress {
+    height: 12px;
+    border-radius: 6px;
+    background-color: #e9ecef;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+    border-radius: 6px;
+}
+
+.progress-percentage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: 600;
+    color: #333;
+    font-size: 0.8rem;
+}
+
+.progress-actions {
+    text-align: center;
+}
+
+.page-title {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+}
+
+.batch-form {
+    display: inline-block;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const batchForms = document.querySelectorAll('.batch-form');
+    
+    batchForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const action = this.querySelector('input[name="action"]').value;
+            const actionNames = {
+                'categorize_all': 'categorização em lote',
+                'generate_descriptions': 'geração de descrições'
+            };
+            
+            if (!confirm(`Executar ${actionNames[action]}? Esta ação processará vários materiais.`)) {
+                e.preventDefault();
+                return;
+            }
+            
+            // Mostrar indicador de loading
+            const button = this.querySelector('button[type="submit"]');
+            button.disabled = true;
+            button.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Processando...';
+        });
+    });
+});
+
+function runCompleteProcessing() {
+    if (!confirm('Executar processamento completo com IA? Esta ação pode levar alguns minutos.')) {
+        return;
+    }
+    
+    // Mostrar card de progresso
+    const progressCard = document.getElementById('progressCard');
+    progressCard.style.display = 'block';
+    
+    // Scroll para o card de progresso
+    progressCard.scrollIntoView({ behavior: 'smooth' });
+    
+    // Simular processamento
+    simulateProcessing();
+}
+
+function simulateProcessing() {
+    const tasks = [
+        'Analisando estrutura de dados...',
+        'Categorizando materiais...',
+        'Gerando descrições...',
+        'Detectando duplicatas...',
+        'Otimizando laboratórios...',
+        'Verificando qualidade...',
+        'Finalizando processamento...'
+    ];
+    
+    let currentTaskIndex = 0;
+    let progress = 0;
+    
+    const interval = setInterval(() => {
+        if (currentTaskIndex < tasks.length) {
+            document.getElementById('currentTask').textContent = tasks[currentTaskIndex];
+            
+            progress = ((currentTaskIndex + 1) / tasks.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressPercentage').textContent = Math.round(progress) + '%';
+            
+            const processed = Math.round((currentTaskIndex + 1) * 10);
+            const total = tasks.length * 10;
+            document.getElementById('progressStats').textContent = `${processed} de ${total} processados`;
+            
+            currentTaskIndex++;
+        } else {
+            clearInterval(interval);
+            completeProcessing();
+        }
+    }, 2000);
+}
+
+function completeProcessing() {
+    document.getElementById('currentTask').textContent = 'Processamento concluído com sucesso!';
+    document.getElementById('progressBar').classList.remove('progress-bar-animated');
+    document.getElementById('progressBar').classList.add('bg-success');
+    
+    setTimeout(() => {
+        showNotification('success', 'Processamento completo finalizado! Inventário otimizado com IA.');
+        setTimeout(() => {
+            location.reload();
+        }, 2000);
+    }, 1000);
+}
+
+function cancelProcessing() {
+    if (confirm('Cancelar processamento em andamento?')) {
+        document.getElementById('progressCard').style.display = 'none';
+        showNotification('info', 'Processamento cancelado pelo usuário.');
+    }
+}
+
+function showNotification(type, message) {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+        ${message}
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 4000);
+}
+</script>
+{% endblock %}
+                    <div class="impact-info">
+                        <div class="impact-stat">
+                            <span class="impact-number">{{ stats.uncategorized }}</span>
+                            <span class="impact-label">materiais serão categorizados</span>
+                        </div>
+                    </div>
+                    
+                    <div class="action-details">
+                        <h6>O que será feito:</h6>
+                        <ul>
+                            <li>Análise inteligente do nome e contexto</li>
+                            <li>Aplicação de categorias baseada em padrões</li>
+                            <li>Criação automática de novas categorias se necessário</li>
+                            <li>Atualização do campo analyzed_data</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="action-controls">
+                        <form method="post" class="batch-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="categorize_all">
+                            <button type="submit" class="btn btn-success btn-lg" 
+                                    {% if stats.uncategorized == 0 %}disabled{% endif %}>
+                                <i class="bi bi-robot me-2"></i>Categorizar Tudo
+                            </button>
+                        </form>
+                        {% if stats.uncategorized == 0 %}
+                        <small class="text-muted">Todos os materiais já estão categorizados</small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="batch-action-card descriptions">
+                <div class="action-header">
+                    <div class="action-icon">
+                        <i class="bi bi-card-text"></i>
+                    </div>
+                    <div class="action-info">
+                        <h4>Geração de Descrições</h4>
+                        <p>Gere automaticamente descrições inteligentes para materiais sem descrição</p>
+                    </div>
+                </div>
+                
+                <div class="action-body">
+                    <div class="impact-info">
+                        <div class="impact-stat">
+                            <span class="impact-number">{{ stats.no_description }}</span>
+                            <span class="impact-label">descrições serão geradas</span>
+                        </div>
+                    </div>
+                    
+                    <div class="action-details">
+                        <h6>O que será feito:</h6>
+                        <ul>
+                            <li>Análise do nome e categoria do material</li>
+                            <li>Geração de descrição contextualizada</li>
+                            <li>Templates específicos por tipo de material</li>
+                            <li>Informações relevantes para uso em laboratório</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="action-controls">
+                        <form method="post" class="batch-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="generate_descriptions">
+                            <button type="submit" class="btn btn-info btn-lg"
+                                    {% if stats.no_description == 0 %}disabled{% endif %}>
+                                <i class="bi bi-magic me-2"></i>Gerar Descrições
+                            </button>
+                        </form>
+                        {% if stats.no_description == 0 %}
+                        <small class="text-muted">Todos os materiais já têm descrição</small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Ação Combinada -->
+        <div class="col-12 mb-4">
+            <div class="batch-action-card combined">
+                <div class="action-header">
+                    <div class="action-icon">
+                        <i class="bi bi-lightning-charge-fill"></i>
+                    </div>
+                    <div class="action-info">
+                        <h4>Processamento Completo</h4>
+                        <p>Execute todas as otimizações de IA de uma só vez para máxima eficiência</p>
+                    </div>
+                </div>

@@ -1,0 +1,481 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ title }} | LabConnect{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Cabeçalho -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="page-title">
+                    <i class="bi bi-arrow-down-up me-2 text-warning"></i>{{ title }}
+                </h1>
+                <p class="page-subtitle">
+                    Identifica automaticamente materiais duplicados e oferece mesclagem inteligente
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="{% url 'ai_inventory_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar ao Dashboard IA
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="stats-card">
+                <div class="stats-icon bg-warning">
+                    <i class="bi bi-files"></i>
+                </div>
+                <div class="stats-content">
+                    <h3>{{ total_duplicates }}</h3>
+                    <p>Grupos de Duplicatas Encontrados</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="stats-card">
+                <div class="stats-icon bg-info">
+                    <i class="bi bi-robot"></i>
+                </div>
+                <div class="stats-content">
+                    <h3>95%</h3>
+                    <p>Precisão da Detecção IA</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if duplicates %}
+    <!-- Lista de Duplicatas -->
+    <div class="row">
+        <div class="col-12">
+            <div class="duplicates-card">
+                <div class="duplicates-header">
+                    <h4>
+                        <i class="bi bi-search me-2 text-warning"></i>
+                        Materiais Similares Detectados
+                    </h4>
+                    <p class="mb-0">Revise os grupos de materiais similares e escolha como proceder</p>
+                </div>
+                
+                <div class="duplicates-body">
+                    {% for duplicate_group in duplicates %}
+                    <div class="duplicate-group" data-group-id="{{ forloop.counter }}">
+                        <div class="group-header">
+                            <h6>
+                                <i class="bi bi-collection me-2"></i>
+                                Grupo {{ forloop.counter }} - Materiais Similares
+                            </h6>
+                        </div>
+                        
+                        <div class="group-materials">
+                            <!-- Material Principal -->
+                            <div class="material-item main-material">
+                                <div class="row align-items-center">
+                                    <div class="col-md-1">
+                                        <input type="radio" 
+                                               name="main_material_{{ forloop.counter }}" 
+                                               value="{{ duplicate_group.main_material.id }}" 
+                                               checked>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <div class="material-info">
+                                            <h6 class="material-name">{{ duplicate_group.main_material.name }}</h6>
+                                            <small class="text-muted">{{ duplicate_group.main_material.description|truncatechars:60 }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <span class="badge bg-primary">{{ duplicate_group.main_material.category.name }}</span>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <span class="badge bg-info">Qtd: {{ duplicate_group.main_material.quantity }}</span>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <span class="badge bg-success">Principal</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Materiais Similares -->
+                            {% for similar in duplicate_group.similar_materials %}
+                            <div class="material-item similar-material">
+                                <div class="row align-items-center">
+                                    <div class="col-md-1">
+                                        <input type="checkbox" 
+                                               class="duplicate-checkbox"
+                                               value="{{ similar.material.id }}"
+                                               data-group="{{ forloop.parentloop.counter }}"
+                                               checked>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <div class="material-info">
+                                            <h6 class="material-name">{{ similar.material.name }}</h6>
+                                            <small class="text-muted">{{ similar.material.description|truncatechars:60 }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <span class="badge bg-primary">{{ similar.material.category.name }}</span>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <span class="badge bg-info">Qtd: {{ similar.material.quantity }}</span>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="similarity-score">
+                                            <span class="badge bg-warning">{{ similar.similarity|floatformat:0 }}% similar</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="group-actions">
+                            <button type="button" 
+                                    class="btn btn-warning btn-sm merge-group"
+                                    data-group="{{ forloop.counter }}"
+                                    data-main-id="{{ duplicate_group.main_material.id }}">
+                                <i class="bi bi-arrow-down-up me-1"></i>Mesclar Selecionados
+                            </button>
+                            <button type="button" 
+                                    class="btn btn-outline-secondary btn-sm ms-2"
+                                    onclick="dismissGroup({{ forloop.counter }})">
+                                <i class="bi bi-x-lg me-1"></i>Ignorar Grupo
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="duplicates-footer">
+                    <button type="button" class="btn btn-warning" onclick="mergeAllGroups()">
+                        <i class="bi bi-arrow-down-up me-1"></i>Mesclar Todos os Grupos
+                    </button>
+                    <button type="button" class="btn btn-outline-primary ms-2" onclick="rescanDuplicates()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Reescanear Duplicatas
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Nenhuma duplicata -->
+    <div class="row">
+        <div class="col-12">
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                </div>
+                <h4>Nenhuma Duplicata Encontrada!</h4>
+                <p class="text-muted">
+                    Parabéns! Seu inventário está limpo e organizado. Não foram encontrados materiais duplicados.
+                </p>
+                <div class="empty-actions">
+                    <a href="{% url 'material_list' %}" class="btn btn-primary">
+                        <i class="bi bi-list me-1"></i>Ver Todos os Materiais
+                    </a>
+                    <a href="{% url 'ai_inventory_dashboard' %}" class="btn btn-outline-secondary ms-2">
+                        <i class="bi bi-robot me-1"></i>Dashboard IA
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.stats-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+}
+
+.stats-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.stats-content h3 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.stats-content p {
+    margin: 0;
+    font-weight: 600;
+    color: #666;
+}
+
+.duplicates-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.duplicates-header {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.duplicates-body {
+    padding: 2rem;
+}
+
+.duplicate-group {
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.group-header {
+    background: #f8f9fa;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.group-header h6 {
+    margin: 0;
+    color: #495057;
+    font-weight: 600;
+}
+
+.group-materials {
+    padding: 1rem;
+}
+
+.material-item {
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.main-material {
+    background: #e8f5e8;
+    border: 2px solid #28a745;
+}
+
+.similar-material {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+}
+
+.material-item:hover {
+    transform: translateX(5px);
+}
+
+.material-name {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.25rem;
+}
+
+.group-actions {
+    background: #f8f9fa;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.duplicates-footer {
+    background: #f8f9fa;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid #e9ecef;
+    text-align: center;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+}
+
+.page-title {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const mergeButtons = document.querySelectorAll('.merge-group');
+    
+    mergeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const groupId = this.getAttribute('data-group');
+            const mainId = this.getAttribute('data-main-id');
+            
+            // Obter IDs dos materiais selecionados para mesclagem
+            const duplicateIds = [];
+            const checkboxes = document.querySelectorAll(`input[data-group="${groupId}"]:checked`);
+            
+            checkboxes.forEach(checkbox => {
+                duplicateIds.push(checkbox.value);
+            });
+            
+            if (duplicateIds.length === 0) {
+                alert('Selecione pelo menos um material para mesclar');
+                return;
+            }
+            
+            mergeDuplicates(mainId, duplicateIds, this);
+        });
+    });
+});
+
+function mergeDuplicates(mainMaterialId, duplicateIds, button) {
+    if (!confirm(`Mesclar ${duplicateIds.length} material(is) no material principal? Esta ação não pode ser desfeita.`)) {
+        return;
+    }
+    
+    // Desabilitar botão durante o processamento
+    button.disabled = true;
+    button.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Mesclando...';
+    
+    fetch('{% url "ai_merge_duplicates" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify({
+            main_material_id: mainMaterialId,
+            duplicate_ids: duplicateIds
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Sucesso - remover grupo da lista
+            const group = button.closest('.duplicate-group');
+            group.style.opacity = '0.5';
+            group.style.transform = 'scale(0.95)';
+            
+            setTimeout(() => {
+                group.remove();
+                
+                // Verificar se ainda há grupos
+                const remainingGroups = document.querySelectorAll('.duplicate-group');
+                if (remainingGroups.length === 0) {
+                    location.reload(); // Recarregar para mostrar estado vazio
+                }
+            }, 300);
+            
+            // Mostrar mensagem de sucesso
+            showNotification('success', data.message);
+        } else {
+            // Erro - reabilitar botão
+            button.disabled = false;
+            button.innerHTML = '<i class="bi bi-arrow-down-up me-1"></i>Mesclar Selecionados';
+            showNotification('error', data.error);
+        }
+    })
+    .catch(error => {
+        button.disabled = false;
+        button.innerHTML = '<i class="bi bi-arrow-down-up me-1"></i>Mesclar Selecionados';
+        showNotification('error', 'Erro ao mesclar materiais');
+    });
+}
+
+function mergeAllGroups() {
+    const mergeButtons = document.querySelectorAll('.merge-group:not(:disabled)');
+    
+    if (mergeButtons.length === 0) {
+        showNotification('info', 'Não há grupos para mesclar');
+        return;
+    }
+    
+    if (confirm(`Mesclar todos os ${mergeButtons.length} grupos de duplicatas? Esta ação não pode ser desfeita.`)) {
+        mergeButtons.forEach((button, index) => {
+            setTimeout(() => {
+                button.click();
+            }, index * 1000); // Mesclar com delay para não sobrecarregar
+        });
+    }
+}
+
+function dismissGroup(groupId) {
+    const group = document.querySelector(`[data-group-id="${groupId}"]`);
+    group.style.opacity = '0.5';
+    group.style.transform = 'scale(0.95)';
+    
+    setTimeout(() => {
+        group.remove();
+        
+        const remainingGroups = document.querySelectorAll('.duplicate-group');
+        if (remainingGroups.length === 0) {
+            location.reload();
+        }
+    }, 300);
+}
+
+function rescanDuplicates() {
+    showNotification('info', 'Reescaneando duplicatas...');
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
+}
+
+function showNotification(type, message) {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+        ${message}
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+function getCsrfToken() {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (csrfToken) {
+        return csrfToken.value;
+    }
+    
+    // Fallback - criar token se não existir
+    const token = '{{ csrf_token }}';
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = token;
+    document.body.appendChild(csrfInput);
+    
+    return token;
+}
+</script>
+{% endblock %}

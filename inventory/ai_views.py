@@ -1,7 +1,7 @@
-# inventory/ai_views.py - Views para funcionalidades de IA do inventário
+# inventory/ai_views.py - Views para funcionalidades de IA - CORRIGIDA
 
 from datetime import timezone
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse
@@ -9,7 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-from accounts import models
+from django.db.models import F
 from accounts.views import is_technician
 from .ai_inventory_organizer import AIInventoryOrganizer
 from .models import Material, MaterialCategory
@@ -17,6 +17,7 @@ from laboratories.models import Laboratory
 import json
 import os
 import tempfile
+import re
 
 @login_required
 @user_passes_test(is_technician)
@@ -241,17 +242,16 @@ def ai_apply_categorization(request):
 @login_required
 @user_passes_test(is_technician)
 def ai_duplicate_detector(request):
-    """Detector de duplicatas usando IA"""
+    """Detector de duplicatas usando IA - VERSÃO CORRIGIDA"""
     
     # Buscar possíveis duplicatas
     materials = Material.objects.all().order_by('name')
     duplicates = []
     processed_names = set()
     
-    organizer = AIInventoryOrganizer()
-    
     for material in materials:
-        normalized_name = organizer._normalize_name_for_comparison(material.name)
+        # Normalizar nome para comparação
+        normalized_name = normalize_name_for_comparison(material.name)
         
         if normalized_name in processed_names:
             continue
@@ -262,15 +262,15 @@ def ai_duplicate_detector(request):
             if other_material.id == material.id:
                 continue
             
-            other_normalized = organizer._normalize_name_for_comparison(other_material.name)
+            other_normalized = normalize_name_for_comparison(other_material.name)
             
             # Calcular similaridade simples
-            similarity = _calculate_similarity(normalized_name, other_normalized)
+            similarity = calculate_similarity(normalized_name, other_normalized)
             
             if similarity > 0.8:  # 80% de similaridade
                 similar_materials.append({
                     'material': other_material,
-                    'similarity': similarity
+                    'similarity': similarity * 100  # Converter para porcentagem
                 })
         
         if similar_materials:
@@ -280,7 +280,7 @@ def ai_duplicate_detector(request):
             })
             processed_names.add(normalized_name)
             for sim in similar_materials:
-                processed_names.add(organizer._normalize_name_for_comparison(sim['material'].name))
+                processed_names.add(normalize_name_for_comparison(sim['material'].name))
     
     context = {
         'title': 'Detector de Duplicatas IA',
@@ -350,7 +350,7 @@ def ai_smart_suggestions(request):
     suggestions = []
     
     # 1. Materiais com estoque baixo que podem ser agrupados
-    low_stock_materials = Material.objects.filter(is_low_stock=True)
+    low_stock_materials = Material.objects.filter(quantity__lte=F('minimum_stock'))
     
     # 2. Laboratórios com materiais similares que podem ser consolidados
     labs_with_similar = {}
@@ -446,6 +446,7 @@ def ai_batch_processor(request):
         
         elif action == 'generate_descriptions':
             # Gerar descrições para materiais sem descrição
+            from django.db import models
             no_description = Material.objects.filter(
                 models.Q(description__isnull=True) | models.Q(description='')
             )
@@ -477,6 +478,7 @@ def ai_batch_processor(request):
         return redirect('ai_batch_processor')
     
     # Estatísticas para exibição
+    from django.db import models
     stats = {
         'total_materials': Material.objects.count(),
         'uncategorized': Material.objects.filter(
@@ -495,8 +497,19 @@ def ai_batch_processor(request):
     
     return render(request, 'inventory/ai_batch_processor.html', context)
 
-# Função auxiliar para cálculo de similaridade
-def _calculate_similarity(str1: str, str2: str) -> float:
+# Funções auxiliares para cálculo de similaridade
+def normalize_name_for_comparison(nome: str) -> str:
+    """Normaliza nome para comparação de duplicatas"""
+    try:
+        # Remove acentos, espaços extras, converte para minúsculo
+        nome_clean = str(nome).lower().strip()
+        nome_clean = re.sub(r'\s+', ' ', nome_clean)
+        nome_clean = re.sub(r'[^\w\s]', '', nome_clean)
+        return nome_clean
+    except Exception as e:
+        return str(nome).lower()
+
+def calculate_similarity(str1: str, str2: str) -> float:
     """Calcula similaridade simples entre duas strings"""
     if not str1 or not str2:
         return 0.0
