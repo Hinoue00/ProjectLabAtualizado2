@@ -23,7 +23,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="{% static 'css/floating_chat.css' %}">
+    <!-- ícones do Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     
     <!-- Base CSS -->
@@ -1184,23 +1185,7 @@ html {
                             <a href="{% url 'ai_inventory_dashboard' %}" class="sidebar-dropdown-link {% if '/inventory/ai/' in request.path %}active{% endif %}">
                                 <i class="bi bi-robot me-2"></i>IA Inventário
                             </a>
-                        
-                            
-                            <!-- Links temporariamente removidos (podem ser readicionados quando as views existirem) -->
-                            <!--
-                            <a href="{% url 'analyze_materials_batch' %}" class="sidebar-dropdown-link {% if '/inventory/analyze-batch/' in request.path %}active{% endif %}">
-                                <i class="bi bi-robot"></i> Análise Inteligente
-                            </a>
-                            <a href="{% url 'material_trends' %}" class="sidebar-dropdown-link {% if '/inventory/trends/' in request.path %}active{% endif %}">
-                                <i class="bi bi-graph-up"></i> Tendências
-                            </a>
-                            -->
-                            
-                            <!-- Placeholder para funcionalidades futuras -->
-                            <div class="sidebar-dropdown-divider"></div>
-                            <span class="sidebar-dropdown-text">
-                                <i class="bi bi-gear"></i> Funcionalidades em desenvolvimento
-                            </span>
+
                         </div>
                     </div>
                     
@@ -1379,7 +1364,11 @@ html {
                 {% endif %}
                 <!-- Page Content -->
                 {% block content %}{% endblock %}
-                {% include 'floating_chat.html' %}  
+
+                {% if user.is_authenticated %}
+                    {% include 'components/chatbot_global.html' %}
+                {% endif %}
+ 
             </div>
                
             <!-- Footer -->
@@ -1406,7 +1395,7 @@ html {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/llama-assistant.js' %}"></script>
     <script src="{% static 'js/docling-helper.js' %}"></script>
-    <script src="{% static 'js/floating_chat.js' %}"></script>
+    <script src="{% static 'js/chatbot-global.js' %}"></script>
     <script src="{% static 'js/calendar-mobile.js' %}"></script>
     
     <!-- Custom JS -->
