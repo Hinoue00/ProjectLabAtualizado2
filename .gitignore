@@ -1,4 +1,4 @@
-3  # Arquivos de ambiente
+# Arquivos de ambiente
 .env
 .env.local
 .env.*.local
