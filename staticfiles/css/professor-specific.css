@@ -13,7 +13,6 @@
 
 /* Dashboard específico do professor */
 .professor-dashboard {
-    --primary-color: var(--professor-primary);
     --accent-color: var(--professor-accent);
 }
 
@@ -87,36 +86,28 @@
 
 /* Botão primário - estilo Bootstrap original */
 .btn-schedule-improved.btn-primary {
-    background-color: #0d6efd !important;
-    border-color: #0d6efd !important;
-    color: #fff !important;
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--text-color) !important;
 }
 
 .btn-schedule-improved.btn-primary:hover {
-    background-color: #0b5ed7 !important;
-    border-color: #0a58ca !important;
+    background-color: var(--primary-color-dark) !important;
+    border-color: var(--primary-color-dark) !important;
     transform: none;
     box-shadow: none !important;
 }
 
 .btn-schedule-improved.btn-primary:focus {
-    background-color: #0b5ed7 !important;
-    border-color: #0a58ca !important;
+    background-color: var(--primary-color-dark) !important;
+    border-color: var(--primary-color-dark) !important;
     box-shadow: 0 0 0 0.25rem rgba(49, 132, 253, 0.5) !important;
 }
 
 /* Botão secundário - estilo Bootstrap original */
-.btn-schedule-improved.btn-secondary {
-    background-color: #6c757d !important;
-    border-color: #6c757d !important;
-    color: #fff !important;
+.btn-schedule-improved.btn-disabled {
+    color: var(--text-muted-dark) !important;
     cursor: not-allowed;
-}
-
-.btn-schedule-improved.btn-secondary:disabled {
-    background-color: #6c757d !important;
-    border-color: #6c757d !important;
-    opacity: 0.65;
 }
 
 /* Ícone do botão */

@@ -10,6 +10,7 @@ class WhatsAppClient:
     
     def __init__(self):
         self.base_url = getattr(settings, 'WHATSAPP_SERVICE_URL', 'http://localhost:3000/api')
+        self.api_key = getattr(settings, 'WHATSAPP_API_KEY', '')
 
     def _format_phone(self, phone):
         """
@@ -58,38 +59,38 @@ class WhatsAppClient:
         # Formatar número de telefone (verificar formato brasileiro)
         formatted_phone = self._format_phone(phone)
         
+        # Headers com a API Key
+        headers = {
+            'Content-Type': 'application/json',
+            'x-api-key': self.api_key
+        }
+        
+        # Dados da requisição
+        payload = {
+            'phone': formatted_phone,
+            'message': message
+        }
+        
         try:
+            logger.info(f"Enviando mensagem WhatsApp para {formatted_phone}")
+            
             response = requests.post(
                 url,
-                json={
-                    'phone': formatted_phone,
-                    'message': message
-                },
-                timeout=10
+                json=payload,
+                headers=headers,
+                timeout=30
             )
             
             if response.status_code == 200:
-                logger.info(f"Mensagem WhatsApp enviada para {formatted_phone}")
+                logger.info("Mensagem WhatsApp enviada com sucesso")
                 return True
             else:
                 logger.error(f"Erro ao enviar mensagem WhatsApp: {response.text}")
                 return False
                 
-        except Exception as e:
-            logger.error(f"Exceção ao enviar mensagem WhatsApp: {str(e)}")
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Erro de rede ao enviar mensagem WhatsApp: {e}")
             return False
-    
-    def check_status(self):
-        """
-        Verifica se o serviço WhatsApp está conectado
-        
-        Returns:
-            bool: True se o serviço está conectado, False caso contrário
-        """
-        try:
-            response = requests.get(f"{self.base_url}/status", timeout=5)
-            data = response.json()
-            return data.get('connected', False)
         except Exception as e:
-            logger.error(f"Erro ao verificar status do WhatsApp: {str(e)}")
+            logger.error(f"Erro inesperado ao enviar mensagem WhatsApp: {e}")
             return False

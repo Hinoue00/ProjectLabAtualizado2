@@ -15,15 +15,6 @@
     min-height: 60px; /* Altura mínima fixa */
 }
 
-.calendar-title {
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin: 0;
-    color: var(--text-color);
-    flex: 1 1 300px; /* Flex grow, shrink, basis */
-    min-width: 250px;
-}
-
 /* === Department Filter === */
 .department-filter-form {
     display: flex;

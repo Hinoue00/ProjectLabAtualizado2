@@ -16,40 +16,6 @@
 }
 
 /* Usar os mesmos estilos de cards do técnico */
-.professor-dashboard .stats-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    transition: all 0.2s ease;
-}
-
-.professor-dashboard .stats-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
-
-/* Stats icon igual ao técnico */
-.professor-dashboard .stats-icon {
-    width: 48px;
-    height: 48px;
-    background: rgba(74, 111, 165, 0.1);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--primary-color);
-    font-size: 1.5rem;
-}
-
-/* Stats values igual ao técnico */
-.professor-dashboard .stats-value {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0;
-    line-height: 1;
-}
 
 /* Stats labels igual ao técnico */
 .professor-dashboard .stats-label {
@@ -217,15 +183,6 @@
     padding: 1rem 1.25rem;
 }
 
-.professor-dashboard .card-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
 .professor-dashboard .card-title i {
     color: var(--primary-color);
     font-size: 1.125rem;
@@ -298,16 +255,6 @@
         padding: 0.5rem 0.75rem;
     }
     
-    .professor-dashboard .stats-value {
-        font-size: 1.75rem;
-    }
-    
-    .professor-dashboard .stats-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 1.25rem;
-    }
-    
     .professor-dashboard .professor-list-item {
         padding: 1rem 0;
     }
@@ -320,14 +267,6 @@
 }
 
 /* Dark mode support igual ao técnico */
-[data-theme="dark"] .professor-dashboard .stats-card {
-    background-color: var(--card-bg-dark);
-    border-color: var(--border-color-dark);
-}
-
-[data-theme="dark"] .professor-dashboard .stats-icon {
-    background: rgba(74, 111, 165, 0.2);
-}
 
 [data-theme="dark"] .professor-dashboard .professor-list-item:hover {
     background-color: rgba(74, 111, 165, 0.05);
@@ -339,13 +278,6 @@
 }
 
 /* Animations igual ao técnico */
-.professor-dashboard .stats-value {
-    transition: all 0.3s ease;
-}
-
-.professor-dashboard .stats-card:hover .stats-value {
-    transform: scale(1.05);
-}
 
 .professor-dashboard .professor-list-item {
     animation: fadeInUp 0.3s ease-out;
@@ -389,11 +321,6 @@
 /* Hover effects igual ao técnico */
 .professor-dashboard .card {
     transition: all 0.2s ease;
-}
-
-.professor-dashboard .card:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
 }
 
 /* Text truncation igual ao técnico */
