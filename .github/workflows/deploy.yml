@@ -1,0 +1,93 @@
+name: LabConnect CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_labconnect
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Create test environment
+      run: |
+        echo "SECRET_KEY=test-secret-key-for-github-actions" > .env
+        echo "DEBUG=True" >> .env
+        echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/test_labconnect" >> .env
+        
+    - name: Run migrations
+      run: |
+        python manage.py migrate --settings=LabConnect.settings.development
+        
+    - name: Run tests
+      run: |
+        python manage.py test --settings=LabConnect.settings.development
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Deploy to Production Server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.PROD_HOST }}
+        port: ${{ secrets.PROD_PORT }}
+        username: ${{ secrets.PROD_USER }}
+        key: ${{ secrets.PROD_SSH_KEY }}
+        script: |
+          cd /home/labadm
+          echo "🚀 Iniciando deploy automático..."
+          
+          # Executar o script de deploy existente
+          ./git-deploy.sh
+          
+          echo "✅ Deploy concluído!"
+          
+          # Verificar se o serviço está rodando
+          if sudo systemctl is-active --quiet labconnect; then
+            echo "✅ Serviço LabConnect está ativo"
+          else
+            echo "⚠️ Reiniciando serviços..."
+            sudo systemctl start labconnect
+            ./start-labconnect-ngrok.sh start
+          fi
+          
+          # Status final
+          echo "📊 Status final:"
+          sudo systemctl status labconnect --no-pager -l
