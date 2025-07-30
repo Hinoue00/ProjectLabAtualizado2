@@ -1,0 +1,261 @@
+/*
+ * LabConnect - Import Materials Optimized CSS
+ * Estilos para importação de materiais com suporte completo ao tema escuro
+ */
+
+/* Card principal de upload */
+.upload-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.upload-header {
+    background: linear-gradient(135deg, rgba(248, 249, 250, 0.8) 0%, rgba(233, 236, 239, 0.8) 100%);
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .upload-header {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+}
+
+.upload-header h4 {
+    color: var(--text-color);
+}
+
+.upload-body {
+    padding: 2rem;
+}
+
+/* Zona de upload */
+.upload-zone {
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+    background: transparent;
+}
+
+.upload-zone:hover {
+    border-color: var(--primary-color);
+    background-color: rgba(74, 111, 165, 0.05);
+}
+
+[data-theme="dark"] .upload-zone:hover {
+    background-color: rgba(74, 111, 165, 0.1);
+}
+
+.upload-zone h5 {
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.upload-zone p {
+    color: var(--text-muted);
+}
+
+.upload-icon {
+    margin-bottom: 1rem;
+}
+
+.upload-icon i {
+    color: var(--text-muted);
+}
+
+/* Opções de importação */
+.import-options {
+    background: rgba(248, 249, 250, 0.8);
+    border-radius: 8px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .import-options {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.import-options h6 {
+    color: var(--text-color);
+    margin-bottom: 1rem;
+}
+
+/* Footer do upload */
+.upload-footer {
+    padding: 1.5rem 2rem;
+    background: rgba(248, 249, 250, 0.8);
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+}
+
+[data-theme="dark"] .upload-footer {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* Cards informativos */
+.info-card, 
+.requirements-card, 
+.existing-data-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--box-shadow);
+    border: 1px solid var(--border-color);
+}
+
+.info-title {
+    color: var(--text-color);
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.existing-data-card h6 {
+    color: var(--text-color);
+    margin-bottom: 1rem;
+}
+
+/* Steps */
+.step {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.step-number {
+    background: var(--primary-color);
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.step-content h6 {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.step-content p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Listas de requisitos */
+.requirements-list {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin: 0;
+    padding-left: 1rem;
+}
+
+.requirements-list li {
+    margin-bottom: 0.5rem;
+}
+
+/* Lista de existentes com scroll */
+.existing-list {
+    max-height: 120px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--text-muted) var(--border-color);
+}
+
+.existing-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.existing-list::-webkit-scrollbar-track {
+    background: var(--card-bg);
+    border-radius: 3px;
+}
+
+.existing-list::-webkit-scrollbar-thumb {
+    background: var(--text-muted);
+    border-radius: 3px;
+}
+
+.existing-list::-webkit-scrollbar-thumb:hover {
+    background: var(--text-color);
+}
+
+/* Form elements */
+[data-theme="dark"] .form-check-label {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .form-text {
+    color: var(--text-muted);
+}
+
+.form-check-label {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.form-text {
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    color: var(--text-muted);
+}
+
+/* Botões */
+.btn-lg {
+    padding: 0.75rem 2rem;
+    font-size: 1.1rem;
+}
+
+#submitBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Alertas */
+[data-theme="dark"] .alert-info {
+    background-color: rgba(13, 202, 240, 0.1);
+    border-color: rgba(13, 202, 240, 0.2);
+    color: #0dcaf0;
+}
+
+/* Badges em listas existentes */
+[data-theme="dark"] .badge.bg-light {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .badge.text-dark {
+    color: var(--text-color) !important;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .upload-zone {
+        padding: 2rem 1rem;
+    }
+    
+    .upload-body {
+        padding: 1.5rem;
+    }
+    
+    .info-card, 
+    .requirements-card, 
+    .existing-data-card {
+        padding: 1rem;
+    }
+    
+    .import-options {
+        padding: 1rem;
+    }
+}

@@ -1,0 +1,241 @@
+/*
+ * LabConnect - AI Inventory Optimized CSS
+ * Estilos para IA Inventário com suporte completo ao tema escuro
+ */
+
+/* Cards de estatísticas */
+.stats-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--box-shadow);
+    display: flex;
+    align-items: center;
+    transition: all var(--transition-speed);
+    border: 1px solid var(--border-color);
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--box-shadow-medium);
+}
+
+.stats-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.ai-processed .stats-icon {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+}
+
+.total-materials .stats-icon {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.categories .stats-icon {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+}
+
+.laboratories .stats-icon {
+    background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+}
+
+.stats-content h3 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.stats-content p {
+    margin: 0;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.stats-content small {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+/* Cards de funcionalidades */
+.feature-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 2rem;
+    height: 100%;
+    box-shadow: var(--box-shadow);
+    transition: all var(--transition-speed);
+    border-left: 4px solid transparent;
+    border: 1px solid var(--border-color);
+    border-left-width: 4px;
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--box-shadow-large);
+}
+
+.organize {
+    border-left-color: #007bff;
+}
+
+.categorize {
+    border-left-color: #28a745;
+}
+
+.duplicates {
+    border-left-color: #ffc107;
+}
+
+.suggestions {
+    border-left-color: #17a2b8;
+}
+
+.batch {
+    border-left-color: #6c757d;
+}
+
+.analytics {
+    border-left-color: #343a40;
+}
+
+.feature-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: white;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.feature-content h4 {
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.feature-content p {
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.feature-content .btn {
+    width: 100%;
+    border-radius: 25px;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+}
+
+/* Card de materiais recentes */
+.recent-materials-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: var(--box-shadow);
+    border: 1px solid var(--border-color);
+}
+
+.card-title {
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+/* Tabela */
+[data-theme="dark"] .table {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--text-color);
+    --bs-table-border-color: var(--border-color);
+    --bs-table-hover-bg: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .table th {
+    background-color: rgba(255, 255, 255, 0.03);
+    color: var(--text-color);
+    border-top: none;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: var(--text-muted);
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="dark"] .table th {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Badges */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+}
+
+[data-theme="dark"] .badge.bg-light {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-color) !important;
+}
+
+/* Título da página com gradiente */
+.page-title {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+}
+
+/* Tema escuro específico para título */
+[data-theme="dark"] .page-title {
+    background: linear-gradient(135deg, #87ceeb 0%, #dda0dd 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .stats-card {
+        padding: 1rem;
+    }
+    
+    .stats-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
+    }
+    
+    .stats-content h3 {
+        font-size: 1.5rem;
+    }
+    
+    .feature-card {
+        padding: 1.5rem;
+    }
+    
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+}

@@ -2,6 +2,10 @@
 {% load static %}
 {% block title %}{{ title }} | LabConnect{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/import-materials-optimized.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="content-container">
     <!-- Cabeçalho -->
@@ -211,137 +215,6 @@
         </div>
     </div>
 </div>
-
-<style>
-.upload-card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    overflow: hidden;
-}
-
-.upload-header {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    padding: 1.5rem;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.upload-body {
-    padding: 2rem;
-}
-
-.upload-zone {
-    border: 2px dashed #dee2e6;
-    border-radius: 12px;
-    padding: 3rem 2rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.upload-zone:hover {
-    border-color: #007bff;
-    background-color: #f8f9ff;
-}
-
-.upload-icon {
-    margin-bottom: 1rem;
-}
-
-.import-options {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 1.5rem;
-}
-
-.upload-footer {
-    padding: 1.5rem 2rem;
-    background: #f8f9fa;
-    border-top: 1px solid #dee2e6;
-    text-align: center;
-}
-
-.info-card, .requirements-card, .existing-data-card {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.info-title {
-    color: #495057;
-    font-weight: 600;
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid #e9ecef;
-}
-
-.step {
-    display: flex;
-    align-items: flex-start;
-    margin-bottom: 1.5rem;
-}
-
-.step-number {
-    background: #007bff;
-    color: white;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    margin-right: 1rem;
-    flex-shrink: 0;
-}
-
-.step-content h6 {
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-}
-
-.step-content p {
-    margin: 0;
-    color: #6c757d;
-    font-size: 0.9rem;
-}
-
-.requirements-list {
-    font-size: 0.9rem;
-    color: #6c757d;
-    margin: 0;
-    padding-left: 1rem;
-}
-
-.requirements-list li {
-    margin-bottom: 0.5rem;
-}
-
-.existing-list {
-    max-height: 120px;
-    overflow-y: auto;
-}
-
-.form-check-label {
-    font-weight: 500;
-}
-
-.form-text {
-    font-size: 0.8rem;
-    margin-top: 0.25rem;
-}
-
-.btn-lg {
-    padding: 0.75rem 2rem;
-    font-size: 1.1rem;
-}
-
-#submitBtn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
