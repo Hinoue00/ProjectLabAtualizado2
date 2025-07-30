@@ -16,13 +16,22 @@
     --calendar-muted: #6c757d;
 }
 
+/* Variáveis para tema escuro */
+[data-theme="dark"] {
+    --calendar-light: rgba(255, 255, 255, 0.05);
+    --calendar-border: rgba(255, 255, 255, 0.1);
+    --calendar-text: #e0e0e0;
+    --calendar-muted: #adb5bd;
+}
+
 /* Container principal */
 .calendar-container {
-    background: white;
+    background: var(--card-bg);
     border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    box-shadow: var(--box-shadow-medium);
     overflow: hidden;
     margin-bottom: 2rem;
+    border: 1px solid var(--border-color);
 }
 
 /* Header do calendário */
@@ -496,4 +505,153 @@
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* Correções específicas para tema escuro */
+[data-theme="dark"] .calendar-grid {
+    background: var(--card-bg);
+}
+
+[data-theme="dark"] .calendar-weekday {
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .calendar-day {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .calendar-day:hover {
+    background: rgba(74, 111, 165, 0.1);
+}
+
+[data-theme="dark"] .calendar-day.other-month {
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="dark"] .calendar-day.today {
+    background: rgba(74, 111, 165, 0.2);
+    color: #87ceeb;
+    border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .calendar-day.has-events {
+    background: rgba(40, 167, 69, 0.1);
+}
+
+[data-theme="dark"] .calendar-day.has-events.today {
+    background: rgba(74, 111, 165, 0.3);
+}
+
+[data-theme="dark"] .day-number {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .event-dot {
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .event-summary {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .filter-select {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .filter-select:focus {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(74, 111, 165, 0.25);
+}
+
+[data-theme="dark"] .filter-label {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .modal-content {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .modal-header {
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .modal-title {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .modal-body {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .modal-footer {
+    background: rgba(255, 255, 255, 0.03);
+    border-top-color: var(--border-color);
+}
+
+[data-theme="dark"] .event-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .event-time {
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .event-title {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .event-location {
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .mobile-day-header {
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-color);
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .mini-calendar {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .mini-day {
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .mini-day:hover {
+    background: rgba(74, 111, 165, 0.1);
+}
+
+[data-theme="dark"] .mini-day.selected {
+    background: var(--primary-color);
+    color: white;
+}
+
+[data-theme="dark"] .mini-day.has-events {
+    background: rgba(40, 167, 69, 0.1);
+}
+
+[data-theme="dark"] .loading-overlay {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="dark"] .loading-spinner {
+    border-color: var(--border-color);
+    border-top-color: var(--primary-color);
 }
