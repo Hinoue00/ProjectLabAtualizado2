@@ -655,3 +655,112 @@
     border-color: var(--border-color);
     border-top-color: var(--primary-color);
 }
+
+/* Correções específicas para cards de eventos no tema escuro */
+[data-theme="dark"] .mobile-event-card {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .mobile-event-card:hover {
+    border-color: var(--primary-color);
+    background: rgba(74, 111, 165, 0.05);
+    box-shadow: var(--box-shadow-medium);
+}
+
+[data-theme="dark"] .mobile-event-time {
+    color: #87ceeb;
+    font-weight: 700;
+}
+
+[data-theme="dark"] .mobile-event-title {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+[data-theme="dark"] .mobile-event-details {
+    color: var(--text-color);
+    opacity: 0.9;
+}
+
+[data-theme="dark"] .mobile-event-detail {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .mobile-event-detail i {
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .mobile-event-status {
+    color: var(--text-color);
+}
+
+/* Correções para badges de status no tema escuro */
+[data-theme="dark"] .badge.bg-success {
+    background-color: #198754 !important;
+    color: #fff !important;
+}
+
+[data-theme="dark"] .badge.bg-warning {
+    background-color: #fd7e14 !important;
+    color: #000 !important;
+}
+
+[data-theme="dark"] .badge.bg-danger {
+    background-color: #dc3545 !important;
+    color: #fff !important;
+}
+
+[data-theme="dark"] .badge.bg-primary {
+    background-color: var(--primary-color) !important;
+    color: #fff !important;
+}
+
+[data-theme="dark"] .badge.bg-info {
+    background-color: #0dcaf0 !important;
+    color: #000 !important;
+}
+
+/* Correções para eventos do calendário desktop no tema escuro */
+[data-theme="dark"] .calendar-event {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .calendar-event:hover {
+    background: rgba(74, 111, 165, 0.1);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .calendar-event.status-approved {
+    background: rgba(40, 167, 69, 0.2);
+    border-color: var(--success-color);
+}
+
+[data-theme="dark"] .calendar-event.status-pending {
+    background: rgba(255, 193, 7, 0.2);
+    border-color: var(--warning-color);
+}
+
+[data-theme="dark"] .calendar-event.status-rejected {
+    background: rgba(220, 53, 69, 0.2);
+    border-color: var(--danger-color);
+}
+
+/* Melhorar textos pequenos nos eventos do calendário */
+[data-theme="dark"] .calendar-event .event-text {
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+[data-theme="dark"] .calendar-event .event-time {
+    color: #87ceeb;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .calendar-event .event-lab {
+    color: var(--text-color);
+    opacity: 0.9;
+}
