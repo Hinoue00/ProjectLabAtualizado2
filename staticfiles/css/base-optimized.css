@@ -72,6 +72,24 @@
     --box-shadow-large: 0 1rem 3rem rgba(0, 0, 0, 0.75);
 }
 
+/* Correções globais para tema escuro */
+[data-theme="dark"] .text-muted {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .text-secondary {
+    color: #adb5bd !important;
+}
+
+[data-theme="dark"] .card-text {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .small,
+[data-theme="dark"] small {
+    color: var(--text-muted);
+}
+
 /* Base Elements */
 html, body {
     height: 100%;

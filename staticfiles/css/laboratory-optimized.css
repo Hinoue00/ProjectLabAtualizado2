@@ -1,0 +1,142 @@
+/*
+ * LabConnect - Laboratory Optimized CSS
+ * Estilos específicos para páginas de laboratórios com suporte ao tema escuro
+ */
+
+/* Correções para tema escuro - Texto e descrições */
+[data-theme="dark"] .text-muted {
+    color: #adb5bd !important;
+}
+
+[data-theme="dark"] .card-body p {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .card-body p:last-of-type {
+    color: var(--text-muted);
+}
+
+/* Melhorias específicas para lista de laboratórios */
+.laboratory-card {
+    transition: all var(--transition-speed);
+    border: 1px solid var(--border-color);
+}
+
+.laboratory-card:hover {
+    box-shadow: var(--box-shadow-medium);
+    transform: translateY(-2px);
+}
+
+.laboratory-description {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+[data-theme="dark"] .laboratory-description {
+    color: #adb5bd;
+}
+
+/* Tabela de disponibilidade */
+[data-theme="dark"] .table {
+    --bs-table-bg: var(--card-bg);
+    --bs-table-color: var(--text-color);
+    --bs-table-border-color: var(--border-color);
+}
+
+[data-theme="dark"] .table th {
+    color: var(--text-color);
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .table td {
+    color: var(--text-color);
+    border-top-color: var(--border-color);
+}
+
+/* Badges para status */
+[data-theme="dark"] .badge.bg-warning {
+    background-color: #fd7e14 !important;
+    color: #000 !important;
+}
+
+[data-theme="dark"] .badge.bg-success {
+    background-color: #198754 !important;
+    color: #fff !important;
+}
+
+/* Alertas */
+[data-theme="dark"] .alert-info {
+    background-color: rgba(13, 202, 240, 0.1);
+    border-color: rgba(13, 202, 240, 0.2);
+    color: #0dcaf0;
+}
+
+[data-theme="dark"] .alert-light {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+}
+
+/* Cards com melhor contraste */
+[data-theme="dark"] .card {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .card-header {
+    background-color: rgba(255, 255, 255, 0.03);
+    border-bottom-color: var(--border-color);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .card-title {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .card-footer {
+    background-color: rgba(255, 255, 255, 0.03);
+    border-top-color: var(--border-color);
+}
+
+/* Botões com melhor visibilidade */
+[data-theme="dark"] .btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+[data-theme="dark"] .btn-outline-secondary {
+    color: #adb5bd;
+    border-color: #6c757d;
+}
+
+[data-theme="dark"] .btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: #fff;
+}
+
+[data-theme="dark"] .btn-outline-danger {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+[data-theme="dark"] .btn-outline-danger:hover {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .laboratory-card {
+        margin-bottom: 1rem;
+    }
+    
+    .laboratory-description {
+        font-size: 0.85rem;
+    }
+}
