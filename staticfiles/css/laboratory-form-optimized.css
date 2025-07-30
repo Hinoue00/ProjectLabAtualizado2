@@ -1,0 +1,308 @@
+/*
+ * LabConnect - Laboratory Form Optimized CSS
+ * Estilos para formulário de laboratórios com suporte completo ao tema escuro
+ */
+
+/* Container principal responsivo */
+.form-container {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* Estilos para containers de checkboxes - Tema Claro */
+.checkbox-container {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    background-color: var(--card-bg);
+    margin-top: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    transition: all var(--transition-speed);
+}
+
+.checkbox-container.is-invalid {
+    border-color: var(--danger-color);
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+/* Correções para tema escuro */
+[data-theme="dark"] .checkbox-container {
+    background-color: rgba(255, 255, 255, 0.03);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .checkbox-container.is-invalid {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-color: var(--danger-color);
+}
+
+/* Grid responsivo para checkboxes */
+.checkbox-grid {
+    display: grid;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+/* Layout responsivo - 1 coluna em mobile, 2 em tablet, 3 em desktop */
+@media (max-width: 767px) {
+    .checkbox-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+    .checkbox-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1200px) {
+    .checkbox-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Item individual do checkbox - Tema Claro */
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: calc(var(--border-radius) * 0.75);
+    transition: all var(--transition-speed);
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 60px;
+    color: var(--text-color);
+}
+
+/* Hover states - Tema Claro */
+.checkbox-item:hover {
+    background-color: rgba(74, 111, 165, 0.05);
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: var(--box-shadow);
+}
+
+/* Estados selecionados */
+.checkbox-item.checked {
+    background-color: rgba(74, 111, 165, 0.1);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.checkbox-item.checked-technician {
+    background-color: rgba(40, 167, 69, 0.1);
+    border-color: var(--success-color);
+    color: var(--success-color);
+}
+
+/* Correções para tema escuro */
+[data-theme="dark"] .checkbox-item {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .checkbox-item:hover {
+    background-color: rgba(74, 111, 165, 0.15);
+    border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .checkbox-item.checked {
+    background-color: rgba(74, 111, 165, 0.2);
+    border-color: var(--primary-color);
+    color: #87ceeb;
+}
+
+[data-theme="dark"] .checkbox-item.checked-technician {
+    background-color: rgba(40, 167, 69, 0.2);
+    border-color: var(--success-color);
+    color: #90ee90;
+}
+
+/* Input checkbox customizado */
+.checkbox-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 0.75rem;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* Label do checkbox */
+.checkbox-item label {
+    margin: 0;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    line-height: 1.4;
+    color: inherit;
+}
+
+.checkbox-item label i {
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+}
+
+/* Container para técnicos com scroll */
+.technicians-container {
+    max-height: 300px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--text-muted) var(--border-color);
+}
+
+.technicians-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.technicians-container::-webkit-scrollbar-track {
+    background: var(--card-bg);
+    border-radius: 4px;
+}
+
+.technicians-container::-webkit-scrollbar-thumb {
+    background: var(--text-muted);
+    border-radius: 4px;
+}
+
+.technicians-container::-webkit-scrollbar-thumb:hover {
+    background: var(--text-color);
+}
+
+/* Mensagens de ajuda e erro */
+.help-text {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    display: block;
+}
+
+.error-text {
+    color: var(--danger-color);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+/* Placeholder quando não há itens */
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+    background-color: var(--card-bg);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--border-radius);
+    transition: all var(--transition-speed);
+}
+
+.empty-state i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+}
+
+[data-theme="dark"] .empty-state {
+    background-color: rgba(255, 255, 255, 0.02);
+    color: var(--text-muted);
+}
+
+/* Formulário geral */
+[data-theme="dark"] .form-label {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .form-control {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .form-control:focus {
+    background-color: var(--card-bg);
+    border-color: var(--primary-color);
+    color: var(--text-color);
+    box-shadow: 0 0 0 0.25rem rgba(74, 111, 165, 0.25);
+}
+
+[data-theme="dark"] .form-control::placeholder {
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .form-check-label {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .invalid-feedback {
+    color: var(--danger-color);
+}
+
+/* Cards */
+[data-theme="dark"] .card {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .card-body {
+    color: var(--text-color);
+}
+
+/* Responsividade do card principal */
+@media (max-width: 767px) {
+    .card {
+        margin: 0 0.5rem;
+    }
+    
+    .form-container {
+        padding: 0.5rem;
+    }
+}
+
+/* Botões responsivos */
+.button-group {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 576px) {
+    .button-group {
+        flex-direction: column-reverse;
+    }
+    
+    .button-group .btn {
+        width: 100%;
+    }
+}
+
+/* Animações suaves */
+.checkbox-item {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Melhorias para ícones no tema escuro */
+[data-theme="dark"] .text-primary {
+    color: #87ceeb !important;
+}
+
+[data-theme="dark"] .text-success {
+    color: #90ee90 !important;
+}
