@@ -426,10 +426,10 @@ window.professorConfig = {
         end: '{{ week_end|date:"Y-m-d" }}'
     },
     stats: {
-        pending: {{ pending_count }},
-        approved: {{ approved_count }},
-        thisWeek: {{ this_week_count }},
-        total: {{ total_schedules }}
+        pending: {{ pending_count|default:"0" }},
+        approved: {{ approved_count|default:"0" }},
+        thisWeek: {{ this_week_count|default:"0" }},
+        total: {{ total_schedules|default:"0" }}
     }
 };
 
