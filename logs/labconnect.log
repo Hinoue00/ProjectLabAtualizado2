@@ -814,3 +814,47 @@ INFO 2025-07-30 12:20:03,162 views 18512 6004    Dataset 3 (Laboratório de Infor
 INFO 2025-07-30 12:20:03,162 views 18512 6004    Dataset 4 (Laboratório Geral): Total=0
 INFO 2025-07-30 12:20:03,162 views 18512 6004    Dataset 5 (Laboratório Multidisciplinar): Total=0
 INFO 2025-07-30 12:20:03,162 views 18512 6004    Dataset 6 (Laboratório Solos e Sementes): Total=3
+INFO 2025-07-31 18:56:03,714 views 20300 4740    Labels: 9
+INFO 2025-07-31 18:56:03,715 views 20300 4740    Datasets: 7
+INFO 2025-07-31 18:56:03,715 views 20300 4740    Dataset 0 (Laboratório de Anatomia): Total=2
+INFO 2025-07-31 18:56:03,715 views 20300 4740    Dataset 1 (Laboratório de Física): Total=0
+INFO 2025-07-31 18:56:03,715 views 20300 4740    Dataset 2 (Laboratório de Informática 1): Total=0
+INFO 2025-07-31 18:56:03,716 views 20300 4740    Dataset 3 (Laboratório de Informática 2): Total=0
+INFO 2025-07-31 18:56:03,716 views 20300 4740    Dataset 4 (Laboratório Geral): Total=0
+INFO 2025-07-31 18:56:03,716 views 20300 4740    Dataset 5 (Laboratório Multidisciplinar): Total=0
+INFO 2025-07-31 18:56:03,716 views 20300 4740    Dataset 6 (Laboratório Solos e Sementes): Total=3
+INFO 2025-07-31 19:00:06,300 views 11000 20736    Labels: 9
+INFO 2025-07-31 19:00:06,300 views 11000 20736    Datasets: 7
+INFO 2025-07-31 19:00:06,300 views 11000 20736    Dataset 0 (Laboratório de Anatomia): Total=2
+INFO 2025-07-31 19:00:06,301 views 11000 20736    Dataset 1 (Laboratório de Física): Total=0
+INFO 2025-07-31 19:00:06,301 views 11000 20736    Dataset 2 (Laboratório de Informática 1): Total=0
+INFO 2025-07-31 19:00:06,301 views 11000 20736    Dataset 3 (Laboratório de Informática 2): Total=0
+INFO 2025-07-31 19:00:06,301 views 11000 20736    Dataset 4 (Laboratório Geral): Total=0
+INFO 2025-07-31 19:00:06,301 views 11000 20736    Dataset 5 (Laboratório Multidisciplinar): Total=0
+INFO 2025-07-31 19:00:06,301 views 11000 20736    Dataset 6 (Laboratório Solos e Sementes): Total=3
+INFO 2025-07-31 19:04:42,328 views 7324 7500    Labels: 9
+INFO 2025-07-31 19:04:42,328 views 7324 7500    Datasets: 7
+INFO 2025-07-31 19:04:42,328 views 7324 7500    Dataset 0 (Laboratório de Anatomia): Total=2
+INFO 2025-07-31 19:04:42,328 views 7324 7500    Dataset 1 (Laboratório de Física): Total=0
+INFO 2025-07-31 19:04:42,328 views 7324 7500    Dataset 2 (Laboratório de Informática 1): Total=0
+INFO 2025-07-31 19:04:42,329 views 7324 7500    Dataset 3 (Laboratório de Informática 2): Total=0
+INFO 2025-07-31 19:04:42,329 views 7324 7500    Dataset 4 (Laboratório Geral): Total=0
+INFO 2025-07-31 19:04:42,329 views 7324 7500    Dataset 5 (Laboratório Multidisciplinar): Total=0
+INFO 2025-07-31 19:04:42,329 views 7324 7500    Dataset 6 (Laboratório Solos e Sementes): Total=3
+INFO 2025-07-31 19:12:41,470 views 11204 1352    Labels: 9
+INFO 2025-07-31 19:12:41,470 views 11204 1352    Datasets: 7
+INFO 2025-07-31 19:12:41,470 views 11204 1352    Dataset 0 (Laboratório de Anatomia): Total=2
+INFO 2025-07-31 19:12:41,471 views 11204 1352    Dataset 1 (Laboratório de Física): Total=0
+INFO 2025-07-31 19:12:41,471 views 11204 1352    Dataset 2 (Laboratório de Informática 1): Total=0
+INFO 2025-07-31 19:12:41,471 views 11204 1352    Dataset 3 (Laboratório de Informática 2): Total=0
+INFO 2025-07-31 19:12:41,471 views 11204 1352    Dataset 4 (Laboratório Geral): Total=0
+INFO 2025-07-31 19:12:41,471 views 11204 1352    Dataset 5 (Laboratório Multidisciplinar): Total=0
+INFO 2025-07-31 19:12:41,471 views 11204 1352    Dataset 6 (Laboratório Solos e Sementes): Total=3
+ERROR 2025-07-31 19:30:23,758 views 20652 13232 Error in notifications_check_api: ERRO:  coluna scheduling_schedulerequest.class_semester não existe
+LINE 1: ...scheduling_schedulerequest"."number_of_students", "schedulin...
+                                                             ^
+
+ERROR 2025-07-31 19:30:23,940 views 20652 21084 Error in notifications_check_api: ERRO:  coluna scheduling_schedulerequest.class_semester não existe
+LINE 1: ...scheduling_schedulerequest"."number_of_students", "schedulin...
+                                                             ^
+

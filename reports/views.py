@@ -44,7 +44,7 @@ def reports_dashboard(request):
             # Material stats  
             'total_materials': Material.objects.count(),
             'materials_in_alert': Material.objects.filter(
-                quantity__lte=F('minimum_stock')
+                quantity__lt=F('minimum_stock')
             ).count(),
             
             # Appointment stats for this month
@@ -369,7 +369,7 @@ def inventory_report(request, report_id, format='pdf'):
     
     # Prepare statistics
     total_materials = materials.count()
-    low_stock_materials = materials.filter(quantity__lte=F('minimum_stock')).count()
+    low_stock_materials = materials.filter(quantity__lt=F('minimum_stock')).count()
     
     # Category distribution
     category_distribution = materials.values('category__name', 'category__material_type').annotate(

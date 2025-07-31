@@ -150,6 +150,27 @@
                         </div>
                     </div>
                 
+                {% if user.user_type == 'professor' %}
+                    <!-- Seção de Materiais para Professores -->
+                    <div class="sidebar-item">
+                        <a href="#" class="sidebar-link sidebar-dropdown-toggle {% if '/inventory/professor/' in request.path %}active{% endif %}" 
+                        data-dropdown-target="materialsSubmenu" 
+                        aria-expanded="{% if '/inventory/professor/' in request.path %}true{% else %}false{% endif %}">
+                            <span class="sidebar-icon"><i class="bi bi-box-seam"></i></span>
+                            <span>Materiais</span>
+                        </a>
+                        <div class="sidebar-dropdown-menu {% if '/inventory/professor/' in request.path %}show{% endif %}" 
+                            id="materialsSubmenu">
+                            <a href="{% url 'professor_material_list' %}" class="sidebar-dropdown-link {% if '/inventory/professor/materials/' in request.path %}active{% endif %}">
+                                Todos os Materiais
+                            </a>
+                            <a href="{% url 'professor_laboratory_list' %}" class="sidebar-dropdown-link {% if '/inventory/professor/laboratories/' in request.path %}active{% endif %}">
+                                Por Laboratório
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+                
                 <div class="sidebar-divider"></div>
                 
                 <div class="sidebar-heading">Conta</div>

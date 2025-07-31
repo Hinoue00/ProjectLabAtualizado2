@@ -45,7 +45,7 @@ class Material(models.Model):
     
     @property
     def is_low_stock(self):
-        return self.quantity <= self.minimum_stock
+        return self.quantity < self.minimum_stock
     
     @property
     def stock_percentage(self):

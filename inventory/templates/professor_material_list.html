@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Materiais dos Laboratórios | LabConnect{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/material-list-optimized.css' %}">
+<link rel="stylesheet" href="{% static 'css/materials-dark-mode.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Cabeçalho da página -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="page-title">Materiais dos Laboratórios</h1>
+                <p class="page-subtitle">Consulte os materiais disponíveis nos laboratórios</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="{% url 'professor_laboratory_list' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-building me-1"></i> Ver por Laboratório
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filter-box">
+        <form method="get" action="{% url 'professor_material_list' %}">
+            <div class="row">
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-search custom-icon-muted"></i>
+                        </span>
+                        <input type="text" class="form-control" placeholder="Buscar materiais..." name="search" value="{{ search_query }}">
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <select class="form-select" name="category">
+                        <option value="">Todas as Categorias</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}" {% if category_filter == category.id|stringformat:"i" %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <select class="form-select" name="laboratory">
+                        <option value="">Todos os Laboratórios</option>
+                        {% for laboratory in laboratories %}
+                            <option value="{{ laboratory.id }}" {% if laboratory_filter == laboratory.id|stringformat:"i" %}selected{% endif %}>
+                                {{ laboratory.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-grow-1">
+                            <i class="bi bi-funnel"></i> Filtrar
+                        </button>
+                        {% if search_query or category_filter or laboratory_filter %}
+                            <a href="{% url 'professor_material_list' %}" class="btn btn-clear-filter">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Contador de resultados -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <span>{{ page_obj.paginator.count }} materiais encontrados (página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }})</span>
+        </div>
+    </div>
+
+    {% if page_obj %}
+        <!-- Visualização em Tabela (read-only) -->
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Material</th>
+                        <th>Categoria</th>
+                        <th>Laboratório</th>
+                        <th>Quantidade</th>
+                        <th>Mínimo</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for material in page_obj %}
+                        <tr {% if material.is_low_stock %}class="table-danger"{% endif %}>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        {% if material.category.material_type == 'consumable' %}
+                                            <i class="bi bi-box-seam text-success"></i>
+                                        {% elif material.category.material_type == 'permanent' %}
+                                            <i class="bi bi-tools text-primary"></i>
+                                        {% else %}
+                                            <i class="bi bi-hourglass-split text-danger"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">{{ material.name }}</h6>
+                                        <small class="text-muted">{{ material.description|truncatechars:40 }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ material.category.name }}</td>
+                            <td>
+                                <span class="badge" style="background-color: {{ material.laboratory.color }}; color: white;">
+                                    {{ material.laboratory.name }}
+                                </span>
+                            </td>
+                            <td>{{ material.quantity }}</td>
+                            <td>{{ material.minimum_stock }}</td>
+                            <td>
+                                {% if material.is_low_stock %}
+                                    <span class="badge bg-danger">Baixo</span>
+                                {% else %}
+                                    <span class="badge bg-success">OK</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Paginação -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Material pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if laboratory_filter %}&laboratory={{ laboratory_filter }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if laboratory_filter %}&laboratory={{ laboratory_filter }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if laboratory_filter %}&laboratory={{ laboratory_filter }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if laboratory_filter %}&laboratory={{ laboratory_filter }}{% endif %}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if laboratory_filter %}&laboratory={{ laboratory_filter }}{% endif %}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    {% else %}
+        <!-- Estado vazio -->
+        <div class="card">
+            <div class="card-body">
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <h4>Nenhum material encontrado</h4>
+                    <p>Não foram encontrados materiais para os filtros aplicados.</p>
+                    <a href="{% url 'professor_material_list' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-repeat me-1"></i> Limpar Filtros
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

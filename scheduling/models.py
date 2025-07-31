@@ -21,6 +21,7 @@ class ScheduleRequest(models.Model):
     start_time = models.TimeField(verbose_name="Hora de início")
     end_time = models.TimeField(verbose_name="Hora de término")
     number_of_students = models.IntegerField(verbose_name="Número de alunos", null=True, blank=True)
+    class_semester = models.CharField(max_length=50, verbose_name="Semestre/Turma", blank=True, null=True)
     materials = models.TextField(verbose_name="Materiais necessários", blank=True, null=True)
     
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
@@ -179,6 +180,12 @@ class DraftScheduleRequest(models.Model):
         verbose_name="Número de alunos", 
         null=True, 
         blank=True
+    )
+    class_semester = models.CharField(
+        max_length=50, 
+        verbose_name="Semestre/Turma", 
+        blank=True, 
+        null=True
     )
     materials = models.TextField(
         verbose_name="Materiais necessários", 

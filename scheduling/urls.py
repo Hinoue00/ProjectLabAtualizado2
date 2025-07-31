@@ -18,4 +18,5 @@ urlpatterns = [
     path('api/calendar-data/', views.calendar_data_api, name='calendar_data_api'),
     path('api/calendar-data/', views.calendar_data_api, name='calendar_data_api'),
     path('api/schedule-detail/<int:schedule_id>/', views.schedule_detail_api, name='schedule_detail_api'),
+    path('api/laboratory-materials/<int:laboratory_id>/', views.get_laboratory_materials, name='get_laboratory_materials'),
 ]

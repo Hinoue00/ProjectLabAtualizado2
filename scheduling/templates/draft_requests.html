@@ -222,31 +222,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Bloqueio de seleção para fins de semana
         const dateInput = document.getElementById('id_scheduled_date');
         
-        if (dateInput) {
-            dateInput.addEventListener('input', function() {
-                const selectedDate = new Date(this.value);
-                const dayOfWeek = selectedDate.getDay();
-                
-                // 0 = domingo, 6 = sábado
-                if (dayOfWeek === 0 || dayOfWeek === 6) {
-                    this.setCustomValidity('Por favor, selecione apenas dias úteis (segunda a sexta).');
-                    
-                    // Visual feedback
-                    this.classList.add('is-invalid');
-                    
-                    // Adicionar mensagem de erro
-                    let errorDiv = this.nextElementSibling;
-                    if (!errorDiv || !errorDiv.classList.contains('invalid-feedback')) {
-                        errorDiv = document.createElement('div');
-                        errorDiv.className = 'invalid-feedback';
-                        errorDiv.textContent = 'Por favor, selecione apenas dias úteis (segunda a sexta).';
-                        this.parentNode.appendChild(errorDiv);
-                    }
-                } else {
-                    this.setCustomValidity('');
-                    this.classList.remove('is-invalid');
-                    
-                    // Remover mensagem de erro se existir
+        // Validação de data removida - feita apenas no backend
                     const errorDiv = this.nextElementSibling;
                     if (errorDiv && errorDiv.classList.contains('invalid-feedback')) {
                         errorDiv.remove();

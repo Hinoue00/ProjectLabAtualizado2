@@ -74,6 +74,14 @@ urlpatterns = [
     path('import/', views.import_materials, name='import_materials'),
     path('export/', views.export_materials, name='export_materials'),
     
+    # URLs de operações em lote
+    path('bulk-move/', views.bulk_move_materials, name='bulk_move_materials'),
+    
+    # URLs para professores (read-only)
+    path('professor/materials/', views.professor_material_list, name='professor_material_list'),
+    path('professor/laboratories/', views.professor_laboratory_list, name='professor_laboratory_list'),
+    path('professor/laboratories/<int:laboratory_id>/materials/', views.professor_laboratory_materials, name='professor_laboratory_materials'),
+    
     # ✅ FUNCIONALIDADE REAL: Download de Template Excel
     path('download-template/', views.download_template_excel, name='download_template_excel'),
     

@@ -12,6 +12,7 @@ from django.conf import settings
 from django.urls import reverse
 from django.http import JsonResponse
 from whatsapp.services import WhatsAppNotificationService
+from inventory.models import Material
 
 
 @login_required
@@ -114,9 +115,12 @@ def create_schedule_request(request):
         messages.warning(request, 'Agendamentos só podem ser feitos às quintas e sextas-feiras.')
         return redirect('professor_dashboard')
     
-    # Data da próxima semana
+    # Data da próxima semana (segunda a sábado)
     next_week_start = today + timedelta(days=(7 - today.weekday()))
-    next_week_end = next_week_start + timedelta(days=6)
+    next_week_end = next_week_start + timedelta(days=5)  # Segunda a sábado
+    
+    # Verificar se é dia de confirmação
+    is_confirmation_day = today.weekday() in [3, 4]  # Quinta = 3, Sexta = 4
     
     if request.method == 'POST':
         logger.info(f"📝 PROCESSANDO FORMULÁRIO DE AGENDAMENTO")
@@ -124,6 +128,31 @@ def create_schedule_request(request):
         
         if form.is_valid():
             logger.info(f"✅ FORMULÁRIO VÁLIDO")
+            
+            if not is_confirmation_day:
+                # Criar rascunho se não for quinta/sexta
+                draft = DraftScheduleRequest()
+                for field in form.cleaned_data:
+                    if hasattr(draft, field):
+                        setattr(draft, field, form.cleaned_data[field])
+                draft.professor = request.user
+                
+                # Processar materiais selecionados para rascunho
+                selected_materials = request.POST.getlist('selected_materials')
+                if selected_materials:
+                    materials = Material.objects.filter(id__in=selected_materials)
+                    materials_text = ', '.join([mat.name for mat in materials])
+                    if draft.materials:
+                        draft.materials += f"\n\nMateriais selecionados: {materials_text}"
+                    else:
+                        draft.materials = f"Materiais selecionados: {materials_text}"
+                
+                draft.save()
+                logger.info(f"💾 RASCUNHO SALVO COM SUCESSO - ID: {draft.pk}")
+                messages.success(request, 'Rascunho salvo com sucesso! Você poderá confirmá-lo na quinta ou sexta-feira.')
+                return redirect('professor_dashboard')
+            
+            # Continuar com agendamento normal se for quinta/sexta
             schedule_request = form.save(commit=False)
             schedule_request.professor = request.user
             
@@ -151,6 +180,19 @@ def create_schedule_request(request):
                 logger.info(f"💾 SALVANDO AGENDAMENTO...")
                 schedule_request.save()
                 logger.info(f"✅ AGENDAMENTO SALVO COM SUCESSO - ID: {schedule_request.pk}")
+                
+                # Processar materiais selecionados
+                selected_materials = request.POST.getlist('selected_materials')
+                if selected_materials:
+                    materials = Material.objects.filter(id__in=selected_materials)
+                    # Adicionar materiais selecionados ao campo de texto
+                    materials_text = ', '.join([mat.name for mat in materials])
+                    if schedule_request.materials:
+                        schedule_request.materials += f"\n\nMateriais selecionados: {materials_text}"
+                    else:
+                        schedule_request.materials = f"Materiais selecionados: {materials_text}"
+                    schedule_request.save(update_fields=['materials'])
+                    logger.info(f"📦 MATERIAIS SELECIONADOS SALVOS: {len(selected_materials)} itens")
                 
                 # Verificar se foi realmente salvo
                 verificacao = ScheduleRequest.objects.get(pk=schedule_request.pk)
@@ -186,7 +228,7 @@ def create_schedule_request(request):
         'form': form,
         'next_week_start': next_week_start,
         'next_week_end': next_week_end,
-        'is_confirmation_day': today.weekday() in [3, 4]
+        'is_confirmation_day': is_confirmation_day
     }
     
     return render(request, 'create_request.html', context)
@@ -611,4 +653,36 @@ def schedule_detail_api(request, schedule_id):
         return JsonResponse(data)
     except ScheduleRequest.DoesNotExist:
         return JsonResponse({'error': 'Agendamento não encontrado'}, status=404)
+
+
+@login_required
+def get_laboratory_materials(request, laboratory_id):
+    """API para buscar materiais de um laboratório"""
+    try:
+        laboratory = get_object_or_404(Laboratory, id=laboratory_id, is_active=True)
+        materials = Material.objects.filter(laboratory=laboratory).select_related('category')
+        
+        materials_data = []
+        for material in materials:
+            materials_data.append({
+                'id': material.id,
+                'name': material.name,
+                'description': material.description,
+                'quantity': material.quantity,
+                'minimum_stock': material.minimum_stock,
+                'is_low_stock': material.is_low_stock,
+                'category': material.category.name,
+                'category_type': material.category.material_type,
+            })
+        
+        return JsonResponse({
+            'materials': materials_data,
+            'laboratory_name': laboratory.name,
+            'total_materials': len(materials_data)
+        })
+        
+    except Laboratory.DoesNotExist:
+        return JsonResponse({'error': 'Laboratório não encontrado'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 

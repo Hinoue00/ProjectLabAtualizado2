@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db import models
 from django.db.models import Q
-from accounts.views import is_technician
+from accounts.views import is_technician, is_professor
 from .models import Material, MaterialCategory
 from .forms import MaterialForm, MaterialCategoryForm, ImportMaterialsForm
 from laboratories.models import Laboratory
@@ -71,12 +71,17 @@ def material_list(request):
         'laboratories': Laboratory.objects.filter(is_active=True).order_by('name')
     }
     
+    # Materiais em alerta de estoque
+    from django.db.models import F
+    materials_in_alert = Material.objects.filter(quantity__lt=F('minimum_stock'))
+    
     context = {
         'materials': page_obj,
         'search_query': search_query,
         'category_filter': category_filter,
         'laboratory_filter': laboratory_filter,
         'stock_status': stock_status,
+        'materials_in_alert': materials_in_alert,
         **filter_data,
         'page_obj': page_obj,
         'paginator': paginator,
@@ -597,6 +602,138 @@ def analyze_material_description(request):
         
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+
+
+@login_required
+@user_passes_test(is_technician)
+@require_POST
+def bulk_move_materials(request):
+    """Movimentar múltiplos materiais entre laboratórios"""
+    try:
+        material_ids = request.POST.get('material_ids', '').split(',')
+        target_laboratory_id = request.POST.get('target_laboratory')
+        
+        if not material_ids or not target_laboratory_id:
+            messages.error(request, 'Dados inválidos para movimentação.')
+            return redirect('material_list')
+        
+        # Validar laboratório de destino
+        target_laboratory = get_object_or_404(Laboratory, id=target_laboratory_id, is_active=True)
+        
+        # Buscar materiais válidos
+        materials = Material.objects.filter(id__in=material_ids)
+        
+        if not materials.exists():
+            messages.error(request, 'Nenhum material válido encontrado.')
+            return redirect('material_list')
+        
+        # Realizar movimentação
+        moved_count = 0
+        for material in materials:
+            if material.laboratory != target_laboratory:
+                old_lab = material.laboratory.name
+                material.laboratory = target_laboratory
+                material.save()
+                moved_count += 1
+        
+        if moved_count > 0:
+            messages.success(
+                request, 
+                f'{moved_count} materiais movidos com sucesso para {target_laboratory.name}.'
+            )
+        else:
+            messages.info(request, 'Nenhum material foi movido (já estavam no laboratório de destino).')
+        
+        return redirect('material_list')
+        
+    except Exception as e:
+        messages.error(request, f'Erro ao mover materiais: {str(e)}')
+        return redirect('material_list')
+
+
+# ==== VIEWS PARA PROFESSORES (READ-ONLY) ====
+
+@login_required
+@user_passes_test(is_professor)
+def professor_material_list(request):
+    """Lista de materiais para professores (apenas visualização)"""
+    search_query = request.GET.get('search', '').strip()
+    category_filter = request.GET.get('category', '')
+    laboratory_filter = request.GET.get('laboratory', '')
+    
+    # Query base otimizada
+    materials = Material.objects.select_related('category', 'laboratory').all()
+    
+    # Aplicar filtros
+    if search_query:
+        materials = materials.filter(
+            Q(name__icontains=search_query) |
+            Q(description__icontains=search_query)
+        )
+    
+    if category_filter:
+        materials = materials.filter(category_id=category_filter)
+    
+    if laboratory_filter:
+        materials = materials.filter(laboratory_id=laboratory_filter)
+    
+    # Paginação eficiente
+    paginator = Paginator(materials, 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Categories e Labs com uma query só
+    filter_data = {
+        'categories': MaterialCategory.objects.all().order_by('name'),
+        'laboratories': Laboratory.objects.filter(is_active=True).order_by('name')
+    }
+    
+    context = {
+        'materials': page_obj,
+        'search_query': search_query,
+        'category_filter': category_filter,
+        'laboratory_filter': laboratory_filter,
+        **filter_data,
+        'page_obj': page_obj,
+        'paginator': paginator,
+        'is_professor_view': True,
+    }
+    
+    return render(request, 'professor_material_list.html', context)
+
+
+@login_required
+@user_passes_test(is_professor)
+def professor_laboratory_list(request):
+    """Lista de laboratórios para professores com materiais"""
+    laboratories = Laboratory.objects.filter(is_active=True).prefetch_related('materials').order_by('name')
+    
+    # Adicionar contagem de materiais para cada laboratório
+    for lab in laboratories:
+        lab.material_count = lab.materials.count()
+        lab.low_stock_count = lab.materials.filter(quantity__lt=models.F('minimum_stock')).count()
+    
+    context = {
+        'laboratories': laboratories,
+    }
+    
+    return render(request, 'professor_laboratory_list.html', context)
+
+
+@login_required
+@user_passes_test(is_professor)
+def professor_laboratory_materials(request, laboratory_id):
+    """Materiais de um laboratório específico para professores"""
+    laboratory = get_object_or_404(Laboratory, id=laboratory_id, is_active=True)
+    materials = Material.objects.filter(laboratory=laboratory).select_related('category').order_by('name')
+    
+    context = {
+        'laboratory': laboratory,
+        'materials': materials,
+        'material_count': materials.count(),
+    }
+    
+    return render(request, 'professor_laboratory_materials.html', context)
     
 @login_required
 @user_passes_test(is_technician)

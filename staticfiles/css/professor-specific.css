@@ -270,3 +270,124 @@
         padding: 2rem;
     }
 }
+
+/* ===================================== */
+/* DARK THEME OVERRIDES - PROFESSOR */
+/* ===================================== */
+
+[data-theme="dark"] .professor-dashboard {
+    --text-primary: var(--text-color) !important;
+    --text-muted: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .content-container {
+    background-color: var(--body-bg) !important;
+    color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .page-header {
+    border-bottom-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .page-title {
+    color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .page-subtitle {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .page-header-improved {
+    background-color: transparent !important;
+}
+
+[data-theme="dark"] .professor-dashboard .header-text .page-title-improved {
+    color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .header-text .page-subtitle-improved {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .stats-card {
+    background-color: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .stats-value {
+    color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .stats-label {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .card {
+    background-color: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .card-header {
+    background-color: transparent !important;
+    border-bottom-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .card-title {
+    color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .card-body {
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .scheduling-warning {
+    background: linear-gradient(135deg, rgba(237, 137, 54, 0.15) 0%, rgba(237, 137, 54, 0.25) 100%) !important;
+    border-left-color: #ed8936 !important;
+    color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .professor-dashboard .alert {
+    background-color: #374151 !important;
+    border-color: #4a5568 !important;
+    color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .professor-dashboard .professor-list-item {
+    border-bottom-color: #4a5568 !important;
+}
+
+[data-theme="dark"] .professor-dashboard .professor-name {
+    color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .professor-dashboard .professor-contact {
+    color: #a0aec0 !important;
+}
+
+[data-theme="dark"] .professor-dashboard .empty-state {
+    color: #a0aec0 !important;
+}
+
+[data-theme="dark"] .professor-dashboard .empty-state h5 {
+    color: #e2e8f0 !important;
+}
+
+/* Override any lighter backgrounds */
+[data-theme="dark"] .professor-dashboard .bg-white,
+[data-theme="dark"] .professor-dashboard .bg-light {
+    background-color: #2d3748 !important;
+    color: #e2e8f0 !important;
+}
+
+/* Ensure calendar headers are dark */
+[data-theme="dark"] .professor-dashboard .calendar-header {
+    background-color: transparent !important;
+    border-bottom-color: #4a5568 !important;
+}
+
+[data-theme="dark"] .professor-dashboard .calendar-title {
+    color: #e2e8f0 !important;
+}

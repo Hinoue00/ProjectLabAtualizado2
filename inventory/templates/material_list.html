@@ -25,6 +25,9 @@
                     <a href="{% url 'export_materials' %}" class="btn btn-export">
                         <i class="bi bi-file-earmark-arrow-down me-1"></i> Exportar
                     </a>
+                    <button type="button" class="btn btn-warning" id="bulkMoveBtn" disabled>
+                        <i class="bi bi-arrow-right-circle me-1"></i> Mover Selecionados
+                    </button>
                 </div>
             </div>
         </div>
@@ -109,6 +112,11 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <span>{{ page_obj.paginator.count }} materiais encontrados (página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }})</span>
+        <div class="mt-2">
+            <input type="checkbox" id="selectAll" class="form-check-input me-2">
+            <label for="selectAll" class="form-check-label">Selecionar todos</label>
+            <span id="selectedCount" class="ms-3 text-muted">0 selecionados</span>
+        </div>
     </div>
     <div class="view-toggle">
         <div class="btn-group">
@@ -128,6 +136,9 @@
         {% for material in page_obj %}
             <div class="col">
                 <div class="card material-card h-100 position-relative">
+                    <div class="position-absolute top-0 start-0 p-2">
+                        <input type="checkbox" class="form-check-input material-checkbox" value="{{ material.id }}" data-name="{{ material.name }}">
+                    </div>
                     {% if material.is_low_stock %}
                         <div class="material-badge">
                             <span class="badge bg-danger stock-alert">Estoque Baixo</span>
@@ -206,6 +217,9 @@
         <table class="table table-hover align-middle">
             <thead>
                 <tr>
+                    <th width="50">
+                        <input type="checkbox" id="selectAllTable" class="form-check-input">
+                    </th>
                     <th>Material</th>
                     <th>Categoria</th>
                     <th>Laboratório</th>
@@ -218,6 +232,9 @@
             <tbody>
                 {% for material in page_obj %}
                     <tr {% if material.is_low_stock %}class="table-danger"{% endif %}>
+                        <td>
+                            <input type="checkbox" class="form-check-input material-checkbox" value="{{ material.id }}" data-name="{{ material.name }}">
+                        </td>
                         <td>
                             <div class="d-flex align-items-center">
                                 <div class="me-3">
@@ -415,6 +432,45 @@
         </div>
     </div>
 </div>
+
+<!-- Modal de Movimentação em Lote -->
+<div class="modal fade" id="bulkMoveModal" tabindex="-1" aria-labelledby="bulkMoveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bulkMoveModalLabel">Mover Materiais</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="bulkMoveForm" method="post" action="{% url 'bulk_move_materials' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="targetLaboratory" class="form-label">Laboratório de Destino:</label>
+                        <select class="form-select" id="targetLaboratory" name="target_laboratory" required>
+                            <option value="">Selecione um laboratório...</option>
+                            {% for laboratory in laboratories %}
+                                <option value="{{ laboratory.id }}">{{ laboratory.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Materiais selecionados:</label>
+                        <div id="selectedMaterialsList" class="border rounded p-2" style="max-height: 200px; overflow-y: auto;">
+                            <!-- Lista será preenchida via JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" id="selectedMaterialIds" name="material_ids">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning">Mover Materiais</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}
 {% block extra_js %}
 <script>
@@ -445,6 +501,80 @@
             listViewBtn.classList.add('active');
             gridViewBtn.classList.remove('active');
         }
+        
+        // Funcionalidade de seleção múltipla
+        const selectAllCheckbox = document.getElementById('selectAll');
+        const selectAllTableCheckbox = document.getElementById('selectAllTable');
+        const materialCheckboxes = document.querySelectorAll('.material-checkbox');
+        const selectedCountSpan = document.getElementById('selectedCount');
+        const bulkMoveBtn = document.getElementById('bulkMoveBtn');
+        
+        function updateSelectedCount() {
+            const selectedCheckboxes = document.querySelectorAll('.material-checkbox:checked');
+            const count = selectedCheckboxes.length;
+            selectedCountSpan.textContent = count + ' selecionados';
+            bulkMoveBtn.disabled = count === 0;
+            
+            // Atualizar estado dos "selecionar todos"
+            const totalCheckboxes = materialCheckboxes.length;
+            if (selectAllCheckbox) {
+                selectAllCheckbox.indeterminate = count > 0 && count < totalCheckboxes;
+                selectAllCheckbox.checked = count === totalCheckboxes;
+            }
+            if (selectAllTableCheckbox) {
+                selectAllTableCheckbox.indeterminate = count > 0 && count < totalCheckboxes;
+                selectAllTableCheckbox.checked = count === totalCheckboxes;
+            }
+        }
+        
+        // Event listeners para checkboxes individuais
+        materialCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateSelectedCount);
+        });
+        
+        // Event listeners para "selecionar todos"
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function() {
+                const isChecked = this.checked;
+                materialCheckboxes.forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                });
+                updateSelectedCount();
+            });
+        }
+        
+        if (selectAllTableCheckbox) {
+            selectAllTableCheckbox.addEventListener('change', function() {
+                const isChecked = this.checked;
+                materialCheckboxes.forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                });
+                updateSelectedCount();
+            });
+        }
+        
+        // Botão de movimentação em lote
+        if (bulkMoveBtn) {
+            bulkMoveBtn.addEventListener('click', function() {
+                const selectedCheckboxes = document.querySelectorAll('.material-checkbox:checked');
+                const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+                const selectedNames = Array.from(selectedCheckboxes).map(cb => cb.dataset.name);
+                
+                // Preencher modal
+                document.getElementById('selectedMaterialIds').value = selectedIds.join(',');
+                
+                const materialsList = document.getElementById('selectedMaterialsList');
+                materialsList.innerHTML = selectedNames.map(name => 
+                    `<div class="small mb-1"><i class="bi bi-box-seam me-2"></i>${name}</div>`
+                ).join('');
+                
+                // Mostrar modal
+                const modal = new bootstrap.Modal(document.getElementById('bulkMoveModal'));
+                modal.show();
+            });
+        }
+        
+        updateSelectedCount();
         
         // Função para calcular a porcentagem de estoque
         function calculateStockPercentage(current, minimum) {

@@ -1,6 +1,7 @@
 # scheduling/forms.py
 from django import forms
 from .models import ScheduleRequest, Laboratory, User
+from inventory.models import Material
 from django.utils import timezone
 from django.contrib.auth.forms import PasswordChangeForm as DjangoPasswordChangeForm
 from datetime import datetime, timedelta, time
@@ -49,12 +50,28 @@ class ScheduleRequestForm(forms.ModelForm):
     
     shift = forms.ChoiceField(choices=SHIFT_CHOICES, label="Turno", required=True)
     
+    selected_materials = forms.ModelMultipleChoiceField(
+        queryset=Material.objects.none(),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="Materiais Necessários",
+        help_text="Selecione os materiais que você pretende usar na aula"
+    )
+    
+    class_semester = forms.CharField(
+        max_length=20,
+        required=False,
+        label="Semestre/Turma",
+        help_text="Ex: 1º Semestre, 3º Período, Turma A",
+        widget=forms.TextInput(attrs={'placeholder': 'Ex: 1º Semestre'})
+    )
+    
     class Meta:
         model = ScheduleRequest
         fields = [
             'laboratory', 'subject', 'description', 
             'scheduled_date', 'shift',  # Substituímos start_time e end_time por shift 
-            'number_of_students', 'materials',
+            'number_of_students', 'class_semester', 'materials', 'selected_materials',
             'guide_file',
         ]
         widgets = {
@@ -69,16 +86,20 @@ class ScheduleRequestForm(forms.ModelForm):
         # Filtra apenas laboratórios ativos
         self.fields['laboratory'].queryset = Laboratory.objects.filter(is_active=True)
         
+        # Inicializar queryset de materiais vazio
+        self.fields['selected_materials'].queryset = Material.objects.none()
+        
         # Adiciona classes Bootstrap aos campos
         for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
+            if field_name != 'selected_materials':  # Excluir checkboxes
+                field.widget.attrs['class'] = 'form-control'
             
-        # Aplica limites de data (próxima semana)
+        # Aplica limites de data (próxima semana - segunda a sábado)
         today = timezone.now().date()
         next_week_start = today + timedelta(days=(7 - today.weekday()))
-        next_week_end = next_week_start + timedelta(days=4)
+        next_week_end = next_week_start + timedelta(days=5)  # Segunda a sábado
 
-        # Configurar o campo de data para não permitir fins de semana
+        # Configurar o campo de data para permitir segunda a sábado
         self.fields['scheduled_date'].widget.attrs.update({
             'min': next_week_start,
             'max': next_week_end,
@@ -97,20 +118,20 @@ class ScheduleRequestForm(forms.ModelForm):
                     self.initial['shift'] = 'evening'
 
     def clean_scheduled_date(self):
-        """Valida que a data é em um dia de semana (segunda a sexta)"""
+        """Valida que a data é em um dia de semana (segunda a sábado)"""
         date = self.cleaned_data.get('scheduled_date')
         
         if date:
-            if date.weekday() > 4:  # 5=sábado, 6=domingo
-                raise forms.ValidationError("Por favor, selecione apenas dias úteis (segunda a sexta).")
+            if date.weekday() == 6:  # 6=domingo (0=segunda, 1=terça, ..., 5=sábado, 6=domingo)
+                raise forms.ValidationError("Domingo não é permitido para agendamentos.")
                 
             # Valida que a data está na próxima semana
             today = timezone.now().date()
             next_week_start = today + timedelta(days=(7 - today.weekday()))
-            next_week_end = next_week_start + timedelta(days=4)  # Segunda a sexta
+            next_week_end = next_week_start + timedelta(days=5)  # Segunda a sábado
             
             if not (next_week_start <= date <= next_week_end):
-                raise forms.ValidationError("Os agendamentos só podem ser realizados para a próxima semana.")
+                raise forms.ValidationError("Os agendamentos só podem ser realizados para a próxima semana (segunda a sábado).")
         
         return date
     
