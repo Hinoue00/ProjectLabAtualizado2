@@ -350,7 +350,7 @@ def ai_smart_suggestions(request):
     suggestions = []
     
     # 1. Materiais com estoque baixo que podem ser agrupados
-    low_stock_materials = Material.objects.filter(quantity__lte=F('minimum_stock'))
+    low_stock_materials = Material.objects.filter(quantity__lt=F('minimum_stock'))
     
     # 2. Laboratórios com materiais similares que podem ser consolidados
     labs_with_similar = {}

@@ -121,9 +121,9 @@ def technician_dashboard(request):
     # Como is_low_stock é uma @property, precisamos usar query diferente
     from django.db.models import F
     
-    # Buscar materiais onde quantity <= minimum_stock
+    # Buscar materiais onde quantity < minimum_stock
     materials_in_alert = Material.objects.filter(
-        quantity__lte=F('minimum_stock')
+        quantity__lt=F('minimum_stock')
     )
     materials_in_alert_count = materials_in_alert.count()
     
@@ -356,6 +356,14 @@ def professor_dashboard(request):
     # PREPARAR CONTEXTO
     # ==========================================
     
+    # Verificar se é dia de agendamento (quinta = 3, sexta = 4)
+    is_scheduling_day = today.weekday() in [3, 4]
+    
+    # Estatísticas do professor
+    pending_count = ScheduleRequest.objects.filter(professor=professor, status='pending').count()
+    approved_count = ScheduleRequest.objects.filter(professor=professor, status='approved').count()
+    draft_count = DraftScheduleRequest.objects.filter(professor=professor).count()
+    
     context = {
         'calendar_data': calendar_data,
         'current_week_start': start_of_week,
@@ -367,6 +375,10 @@ def professor_dashboard(request):
         'departments': departments,
         'laboratories': available_laboratories,
         'today': today,
+        'is_scheduling_day': is_scheduling_day,
+        'pending_count': pending_count,
+        'approved_count': approved_count,
+        'draft_count': draft_count,
         
         # Compatibility
         'start_of_week': start_of_week,

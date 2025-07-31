@@ -1,0 +1,304 @@
+/* Materials Dark Mode Fixes */
+[data-theme="dark"] .card {
+    background-color: var(--dark-card-bg, #2d3748);
+    border-color: var(--dark-border, #4a5568);
+    color: var(--dark-text, #e2e8f0);
+}
+
+[data-theme="dark"] .card-header {
+    background-color: var(--dark-card-header, #1a202c);
+    border-bottom-color: var(--dark-border, #4a5568);
+    color: var(--dark-text, #e2e8f0);
+}
+
+[data-theme="dark"] .table {
+    color: var(--dark-text, #e2e8f0);
+    background-color: transparent;
+}
+
+[data-theme="dark"] .table th,
+[data-theme="dark"] .table td {
+    border-color: var(--dark-border, #4a5568);
+}
+
+[data-theme="dark"] .table-hover tbody tr:hover {
+    background-color: var(--dark-hover, #374151);
+}
+
+[data-theme="dark"] .empty-state {
+    color: var(--dark-text-muted, #a0aec0);
+}
+
+[data-theme="dark"] .empty-state-icon i {
+    color: var(--dark-text-muted, #718096);
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    background-color: var(--dark-input-bg, #2d3748);
+    border-color: var(--dark-border, #4a5568);
+    color: var(--dark-text, #e2e8f0);
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+    background-color: var(--dark-input-bg, #2d3748);
+    border-color: var(--primary-color, #0d6efd);
+    color: var(--dark-text, #e2e8f0);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+[data-theme="dark"] .breadcrumb {
+    background-color: transparent;
+}
+
+[data-theme="dark"] .breadcrumb-item + .breadcrumb-item::before {
+    color: var(--dark-text-muted, #718096);
+}
+
+[data-theme="dark"] .breadcrumb-item a {
+    color: var(--primary-color, #66b3ff);
+}
+
+[data-theme="dark"] .breadcrumb-item.active {
+    color: var(--dark-text, #e2e8f0);
+}
+
+/* Laboratory Cards Dark Mode */
+[data-theme="dark"] .card-header[style*="background-color"] {
+    color: white !important;
+}
+
+[data-theme="dark"] .h4,
+[data-theme="dark"] .h3 {
+    color: var(--dark-text, #e2e8f0) !important;
+}
+
+[data-theme="dark"] .text-muted {
+    color: var(--dark-text-muted, #a0aec0) !important;
+}
+
+[data-theme="dark"] .badge.bg-light {
+    background-color: var(--dark-badge-bg, #4a5568) !important;
+    color: var(--dark-text, #e2e8f0) !important;
+}
+
+/* Pagination Dark Mode */
+[data-theme="dark"] .page-link {
+    background-color: var(--dark-card-bg, #2d3748);
+    border-color: var(--dark-border, #4a5568);
+    color: var(--dark-text, #e2e8f0);
+}
+
+[data-theme="dark"] .page-link:hover {
+    background-color: var(--dark-hover, #374151);
+    border-color: var(--dark-border, #4a5568);
+    color: var(--dark-text, #e2e8f0);
+}
+
+[data-theme="dark"] .page-item.active .page-link {
+    background-color: var(--primary-color, #0d6efd);
+    border-color: var(--primary-color, #0d6efd);
+    color: white;
+}
+
+/* Input Groups Dark Mode */
+[data-theme="dark"] .input-group-text {
+    background-color: var(--dark-input-bg, #2d3748);
+    border-color: var(--dark-border, #4a5568);
+    color: var(--dark-text, #e2e8f0);
+}
+
+/* Alerts Dark Mode */
+[data-theme="dark"] .alert-info {
+    background-color: rgba(13, 110, 253, 0.1);
+    border-color: rgba(13, 110, 253, 0.3);
+    color: var(--dark-text, #e2e8f0);
+}
+
+/* Small text fixes */
+[data-theme="dark"] small {
+    color: var(--dark-text-muted, #a0aec0) !important;
+}
+
+/* Filter box dark mode */
+[data-theme="dark"] .filter-box {
+    background-color: var(--dark-card-bg, #2d3748);
+    border: 1px solid var(--dark-border, #4a5568);
+}
+
+/* Content container and body dark mode */
+[data-theme="dark"] .content-container {
+    background-color: var(--dark-bg, #1a202c);
+    color: var(--dark-text, #e2e8f0);
+}
+
+[data-theme="dark"] body {
+    background-color: var(--dark-bg, #1a202c) !important;
+    color: var(--dark-text, #e2e8f0) !important;
+}
+
+/* Page headers dark mode */
+[data-theme="dark"] .page-header {
+    color: var(--dark-text, #e2e8f0);
+}
+
+[data-theme="dark"] .page-title {
+    color: var(--dark-text, #e2e8f0) !important;
+}
+
+[data-theme="dark"] .page-subtitle {
+    color: var(--dark-text-muted, #a0aec0) !important;
+}
+
+/* Links dark mode - exclude sidebar links */
+[data-theme="dark"] a:not(.sidebar-link):not(.sidebar-dropdown-link) {
+    color: var(--primary-color, #66b3ff);
+}
+
+[data-theme="dark"] a:not(.sidebar-link):not(.sidebar-dropdown-link):hover {
+    color: var(--primary-color-hover, #4da6ff);
+}
+
+/* Ensure sidebar links maintain their proper colors */
+[data-theme="dark"] .sidebar-link {
+    color: var(--sidebar-color) !important;
+}
+
+[data-theme="dark"] .sidebar-link:hover {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .sidebar-link.active {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .sidebar-dropdown-link {
+    color: var(--sidebar-color) !important;
+}
+
+[data-theme="dark"] .sidebar-dropdown-link:hover {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .sidebar-dropdown-link.active {
+    color: #ffffff !important;
+}
+
+/* Ensure sidebar links maintain their proper colors in light mode too */
+.sidebar-link {
+    color: var(--sidebar-color) !important;
+}
+
+.sidebar-link:hover {
+    color: #ffffff !important;
+}
+
+.sidebar-link.active {
+    color: #ffffff !important;
+}
+
+.sidebar-dropdown-link {
+    color: var(--sidebar-color) !important;
+}
+
+.sidebar-dropdown-link:hover {
+    color: #ffffff !important;
+}
+
+.sidebar-dropdown-link.active {
+    color: #ffffff !important;
+}
+
+/* Table responsive wrapper */
+[data-theme="dark"] .table-responsive {
+    background-color: var(--dark-card-bg, #2d3748);
+    border-radius: 0.375rem;
+}
+
+/* Empty state dark mode */
+[data-theme="dark"] .empty-state {
+    background-color: var(--dark-card-bg, #2d3748);
+    color: var(--dark-text-muted, #a0aec0);
+}
+
+/* Buttons dark mode */
+[data-theme="dark"] .btn-outline-primary {
+    border-color: var(--primary-color, #66b3ff);
+    color: var(--primary-color, #66b3ff);
+}
+
+[data-theme="dark"] .btn-outline-primary:hover {
+    background-color: var(--primary-color, #66b3ff);
+    color: white;
+}
+
+/* Fix for white backgrounds */
+[data-theme="dark"] * {
+    background-color: inherit;
+}
+
+[data-theme="dark"] .bg-white {
+    background-color: var(--dark-card-bg, #2d3748) !important;
+}
+
+/* Laboratory header colors - maintain original colors but ensure text is visible */
+[data-theme="dark"] .card-header[style*="background-color"] {
+    color: white !important;
+    border-bottom-color: var(--dark-border, #4a5568);
+}
+
+/* Statistics numbers */
+[data-theme="dark"] .h1, 
+[data-theme="dark"] .h2, 
+[data-theme="dark"] .h3, 
+[data-theme="dark"] .h4, 
+[data-theme="dark"] .h5, 
+[data-theme="dark"] .h6,
+[data-theme="dark"] h1, 
+[data-theme="dark"] h2, 
+[data-theme="dark"] h3, 
+[data-theme="dark"] h4, 
+[data-theme="dark"] h5, 
+[data-theme="dark"] h6 {
+    color: var(--dark-text, #e2e8f0) !important;
+}
+
+/* Force dark background for all containers */
+[data-theme="dark"] .container,
+[data-theme="dark"] .container-fluid,
+[data-theme="dark"] .row,
+[data-theme="dark"] .col,
+[data-theme="dark"] .col-md-6,
+[data-theme="dark"] .col-md-4,
+[data-theme="dark"] .col-lg-4,
+[data-theme="dark"] .col-12 {
+    background-color: transparent !important;
+}
+
+/* Force dark theme variables */
+[data-theme="dark"] {
+    --bs-body-bg: #1a202c !important;
+    --bs-body-color: #e2e8f0 !important;
+    --bs-card-bg: #2d3748 !important;
+    --bs-border-color: #4a5568 !important;
+}
+
+/* Override any bootstrap white backgrounds */
+[data-theme="dark"] .bg-light {
+    background-color: var(--dark-card-bg, #2d3748) !important;
+    color: var(--dark-text, #e2e8f0) !important;
+}
+
+/* Fix laboratory cards background */
+[data-theme="dark"] .card .card-body {
+    background-color: var(--dark-card-bg, #2d3748) !important;
+    color: var(--dark-text, #e2e8f0) !important;
+}
+
+/* Fix for laboratory numbers visibility */
+[data-theme="dark"] .text-center .h4,
+[data-theme="dark"] .text-center .h3 {
+    color: var(--dark-text, #e2e8f0) !important;
+    font-weight: bold !important;
+}

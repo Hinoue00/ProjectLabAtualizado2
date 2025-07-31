@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Laboratórios | LabConnect{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/materials-dark-mode.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Cabeçalho da página -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="page-title">Laboratórios</h1>
+                <p class="page-subtitle">Visualize os laboratórios e seus materiais</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="{% url 'professor_material_list' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-box-seam me-1"></i> Ver Todos os Materiais
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Laboratórios -->
+    <div class="row">
+        {% for laboratory in laboratories %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header d-flex align-items-center" style="background-color: {{ laboratory.color }}; color: white;">
+                        <i class="bi bi-building me-2"></i>
+                        <h5 class="mb-0">{{ laboratory.name }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">{{ laboratory.description|truncatechars:100 }}</p>
+                        
+                        <div class="row text-center mb-3">
+                            <div class="col">
+                                <div class="h4 mb-1">{{ laboratory.material_count }}</div>
+                                <small class="text-muted">Materiais</small>
+                            </div>
+                            <div class="col">
+                                <div class="h4 mb-1 {% if laboratory.low_stock_count > 0 %}text-danger{% else %}text-success{% endif %}">
+                                    {{ laboratory.low_stock_count }}
+                                </div>
+                                <small class="text-muted">Estoque Baixo</small>
+                            </div>
+                        </div>
+                        
+                        {% if laboratory.technicians.exists %}
+                            <div class="mb-3">
+                                <small class="text-muted d-block mb-1">Técnicos:</small>
+                                {% for technician in laboratory.technicians.all %}
+                                    <span class="badge bg-light text-dark me-1">{{ technician.first_name }} {{ technician.last_name }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                {% if laboratory.is_active %}
+                                    <i class="bi bi-check-circle text-success"></i> Ativo
+                                {% else %}
+                                    <i class="bi bi-x-circle text-danger"></i> Inativo
+                                {% endif %}
+                            </small>
+                            <a href="{% url 'professor_laboratory_materials' laboratory.id %}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-eye me-1"></i> Ver Materiais
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <i class="bi bi-building"></i>
+                            </div>
+                            <h4>Nenhum laboratório encontrado</h4>
+                            <p>Não há laboratórios ativos no momento.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -257,7 +257,7 @@ def inventory_dashboard(request):
         'total_materials': Material.objects.count(),
         'categories': MaterialCategory.objects.count(),
         'low_stock_count': Material.objects.filter(
-            quantity__lte=F('minimum_stock')
+            quantity__lt=F('minimum_stock')
         ).count(),
     }
     

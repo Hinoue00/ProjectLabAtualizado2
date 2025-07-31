@@ -196,7 +196,7 @@ def get_real_time_context(user_query, user):
     if (user.user_type == 'technician') and ("estoque" in query_lower or "material" in query_lower):
         try:
             from inventory.models import Material
-            low_stock = Material.objects.filter(quantity__lte=models.F('minimum_stock'))[:5]
+            low_stock = Material.objects.filter(quantity__lt=models.F('minimum_stock'))[:5]
             
             if low_stock:
                 stock_info = "Materiais com estoque baixo:\n"

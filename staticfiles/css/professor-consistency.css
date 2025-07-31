@@ -273,8 +273,89 @@
 }
 
 [data-theme="dark"] .professor-dashboard .card-header {
-    border-color: var(--border-color-dark);
-    background-color: var(--card-bg-dark) !important;
+    border-color: var(--border-color) !important;
+    background-color: var(--card-bg) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .professor-list-item {
+    border-bottom-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .professor-name {
+    color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .professor-contact {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .professor-contact i {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .empty-state {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .empty-state h5 {
+    color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .stats-label {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .card-footer-link {
+    color: #66b3ff !important;
+}
+
+[data-theme="dark"] .professor-dashboard .card-footer-link:hover {
+    color: #4da6ff !important;
+}
+
+[data-theme="dark"] .professor-dashboard .card-title i {
+    color: #66b3ff !important;
+}
+
+[data-theme="dark"] .professor-dashboard .btn-outline-secondary {
+    border-color: var(--border-color) !important;
+    color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .btn-outline-secondary:hover {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+}
+
+[data-theme="dark"] .professor-dashboard .btn-outline-primary {
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color) !important;
+}
+
+[data-theme="dark"] .professor-dashboard .btn-outline-primary:hover {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+}
+
+[data-theme="dark"] .professor-dashboard .custom-scrollbar {
+    scrollbar-color: rgba(102, 179, 255, 0.3) transparent;
+}
+
+[data-theme="dark"] .professor-dashboard .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(102, 179, 255, 0.3);
+}
+
+[data-theme="dark"] .professor-dashboard .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(102, 179, 255, 0.5);
+}
+
+[data-theme="dark"] .professor-dashboard .loading-skeleton {
+    background: linear-gradient(90deg, 
+        rgba(255, 255, 255, 0.05) 25%, 
+        rgba(255, 255, 255, 0.1) 50%, 
+        rgba(255, 255, 255, 0.05) 75%);
 }
 
 /* Animations igual ao técnico */

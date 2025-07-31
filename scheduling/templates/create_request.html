@@ -6,6 +6,31 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/create-request-optimized.css' %}">
+<style>
+.materials-grid {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.material-card {
+    border: 1px solid #dee2e6;
+    transition: all 0.2s;
+}
+
+.material-card:hover {
+    border-color: #007bff;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.1);
+}
+
+.form-check-input:checked ~ .form-check-label {
+    font-weight: bold;
+    color: #007bff;
+}
+
+.material-card .form-check {
+    margin-bottom: 0.5rem;
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -69,7 +94,7 @@
 
                     <div class="request-body">
                         <!-- Laboratory Selection -->
-                        <div class="form-section mb-5">
+                        <div class="form-section mb-5 laboratory-suggestion">
                             <h5><i class="bi bi-building me-2"></i>Selecione o Laboratório</h5>
                             
                             <div class="mb-4">
@@ -175,7 +200,7 @@
                                     <label for="id_scheduled_date" class="form-label">Data Agendada</label>
                                     <input type="date" name="scheduled_date" id="id_scheduled_date" class="form-control" 
                                            min="{{ next_week_start|date:'Y-m-d' }}" max="{{ next_week_end|date:'Y-m-d' }}" required>
-                                    <div class="form-text">Apenas dias úteis (segunda a sexta) da próxima semana</div>
+                                    <div class="form-text">Selecione uma data da próxima semana</div>
                                 </div>
                             </div>
                             
@@ -201,6 +226,13 @@
                                            placeholder="Ex: 30" min="1">
                                     <div class="form-text">Quantidade de alunos que participarão da aula</div>
                                 </div>
+                                <div class="col-md-6 mb-4">
+                                    <label for="{{ form.class_semester.id_for_label }}" class="form-label">Semestre/Turma</label>
+                                    <input type="text" name="{{ form.class_semester.name }}" 
+                                           id="{{ form.class_semester.id_for_label }}" class="form-control" 
+                                           placeholder="Ex: 1º Semestre">
+                                    <div class="form-text">Identificação do semestre ou turma</div>
+                                </div>
                             </div>
                         </div>
 
@@ -215,10 +247,39 @@
                             </div>
                             
                             <div class="mb-4">
-                                <label for="{{ form.materials.id_for_label }}" class="form-label">Materiais Necessários</label>
+                                <label for="{{ form.materials.id_for_label }}" class="form-label">Materiais Necessários (Descrição)</label>
                                 <textarea name="{{ form.materials.name }}" id="{{ form.materials.id_for_label }}" 
                                           class="form-control" rows="3" 
-                                          placeholder="Liste os materiais necessários, separados por vírgula..."></textarea>
+                                          placeholder="Descreva os materiais necessários..."></textarea>
+                            </div>
+                            
+                            <!-- Seleção de Materiais do Laboratório -->
+                            <div class="mb-4" id="laboratoryMaterialsSection" style="display: none;">
+                                <label class="form-label">Materiais Disponíveis no Laboratório</label>
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    Selecione os materiais que você pretende usar na aula.
+                                </div>
+                                
+                                <!-- Busca de Materiais -->
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-search"></i>
+                                        </span>
+                                        <input type="text" id="materialSearch" class="form-control" placeholder="Buscar materiais...">
+                                        <button type="button" class="btn btn-outline-secondary" id="searchAllLabsBtn">
+                                            <i class="bi bi-building me-1"></i>Buscar em Todos os Labs
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div id="materialsList" class="materials-grid">
+                                    <div class="text-center text-muted">
+                                        <i class="bi bi-box-seam fs-1"></i>
+                                        <p>Selecione um laboratório para ver os materiais disponíveis</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -279,6 +340,7 @@
             const selectedRow = document.querySelector(`.lab-row[data-laboratory-id="${labSelect.value}"]`);
             if (selectedRow) {
                 selectLab(selectedRow);
+                loadLaboratoryMaterials(labSelect.value);
             }
         }
         
@@ -338,6 +400,173 @@
             
             // Hide the table for a cleaner UI
             document.querySelector('.table-responsive').classList.add('d-none');
+            
+            // Load laboratory materials
+            loadLaboratoryMaterials(labId);
+        }
+        
+        // Load laboratory materials
+        function loadLaboratoryMaterials(labId) {
+            const materialsSection = document.getElementById('laboratoryMaterialsSection');
+            const materialsList = document.getElementById('materialsList');
+            
+            if (!labId) {
+                materialsSection.style.display = 'none';
+                return;
+            }
+            
+            // Show loading state
+            materialsList.innerHTML = `
+                <div class="text-center text-muted">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                    <p class="mt-2">Carregando materiais...</p>
+                </div>
+            `;
+            
+            materialsSection.style.display = 'block';
+            
+            // Fetch materials from API
+            fetch(`/scheduling/api/laboratory-materials/${labId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.materials && data.materials.length > 0) {
+                        renderMaterials(data.materials);
+                    } else {
+                        materialsList.innerHTML = `
+                            <div class="text-center text-muted">
+                                <i class="bi bi-box-seam fs-1"></i>
+                                <p>Nenhum material cadastrado neste laboratório</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading materials:', error);
+                    materialsList.innerHTML = `
+                        <div class="text-center text-danger">
+                            <i class="bi bi-exclamation-triangle fs-1"></i>
+                            <p>Erro ao carregar materiais</p>
+                        </div>
+                    `;
+                });
+        }
+        
+        // Render materials list
+        function renderMaterials(materials) {
+            const materialsList = document.getElementById('materialsList');
+            currentLabMaterials = materials; // Store current materials for search
+            
+            let html = '<div class="row">';
+            
+            materials.forEach(material => {
+                const stockClass = material.is_low_stock ? 'text-danger' : 'text-success';
+                const stockIcon = material.is_low_stock ? 'exclamation-triangle' : 'check-circle';
+                
+                html += `
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card material-card h-100">
+                            <div class="card-body">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" 
+                                           name="selected_materials" value="${material.id}" 
+                                           id="material_${material.id}">
+                                    <label class="form-check-label" for="material_${material.id}">
+                                        <strong>${material.name}</strong>
+                                    </label>
+                                </div>
+                                <p class="small text-muted mb-2">${material.description || 'Sem descrição'}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="badge bg-light text-dark">${material.category}</small>
+                                    <small class="${stockClass}">
+                                        <i class="bi bi-${stockIcon} me-1"></i>
+                                        ${material.quantity}/${material.minimum_stock}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            materialsList.innerHTML = html;
+        }
+        
+        // Material search functionality
+        const materialSearch = document.getElementById('materialSearch');
+        const searchAllLabsBtn = document.getElementById('searchAllLabsBtn');
+        let currentLabMaterials = [];
+        
+        // Search materials within current laboratory
+        if (materialSearch) {
+            materialSearch.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                filterMaterials(currentLabMaterials, searchTerm);
+            });
+        }
+        
+        // Search materials across all laboratories
+        if (searchAllLabsBtn) {
+            searchAllLabsBtn.addEventListener('click', function() {
+                const searchTerm = materialSearch.value.toLowerCase();
+                if (searchTerm.length < 2) {
+                    alert('Digite pelo menos 2 caracteres para buscar');
+                    return;
+                }
+                searchAllLaboratories(searchTerm);
+            });
+        }
+        
+        function filterMaterials(materials, searchTerm) {
+            if (!searchTerm) {
+                renderMaterials(materials);
+                return;
+            }
+            
+            const filtered = materials.filter(material => 
+                material.name.toLowerCase().includes(searchTerm) ||
+                material.description.toLowerCase().includes(searchTerm)
+            );
+            renderMaterials(filtered);
+        }
+        
+        function searchAllLaboratories(searchTerm) {
+            const materialsList = document.getElementById('materialsList');
+            
+            materialsList.innerHTML = `
+                <div class="text-center text-muted">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Buscando...</span>
+                    </div>
+                    <p class="mt-2">Buscando em todos os laboratórios...</p>
+                </div>
+            `;
+            
+            // Simular busca cross-laboratory (implementar API depois)
+            setTimeout(() => {
+                materialsList.innerHTML = `
+                    <div class="text-center text-info">
+                        <i class="bi bi-lightbulb fs-1"></i>
+                        <p>Funcionalidade de busca cross-laboratory em desenvolvimento</p>
+                        <p class="small">Em breve você poderá buscar materiais em todos os laboratórios</p>
+                    </div>
+                `;
+            }, 1000);
+        }
+        
+        function filterMaterials(materials, searchTerm) {
+            if (!searchTerm) {
+                renderMaterials(materials);
+                return;
+            }
+            
+            const filtered = materials.filter(material => 
+                material.name.toLowerCase().includes(searchTerm) ||
+                (material.description && material.description.toLowerCase().includes(searchTerm))
+            );
+            renderMaterials(filtered);
         }
         
         // Add event listeners
@@ -453,38 +682,8 @@
             }
         }
         
-        // Data de agendamento - bloquear fins de semana
-        const dateInput = document.getElementById('id_scheduled_date');
-        if (dateInput) {
-            dateInput.addEventListener('input', function() {
-                const selectedDate = new Date(this.value);
-                const dayOfWeek = selectedDate.getDay();
-                
-                // 0 = domingo, 6 = sábado
-                if (dayOfWeek === 0 || dayOfWeek === 6) {
-                    this.setCustomValidity('Por favor, selecione apenas dias úteis (segunda a sexta).');
-                    
-                    // Visual feedback
-                    this.classList.add('is-invalid');
-                    
-                    // Adicionar mensagem de erro
-                    let errorDiv = this.nextElementSibling;
-                    if (!errorDiv || !errorDiv.classList.contains('invalid-feedback')) {
-                        errorDiv = document.createElement('div');
-                        errorDiv.className = 'invalid-feedback';
-                        errorDiv.textContent = 'Por favor, selecione apenas dias úteis (segunda a sexta).';
-                        this.parentNode.appendChild(errorDiv);
-                    }
-                } else {
-                    this.setCustomValidity('');
-                    this.classList.remove('is-invalid');
-                    
-                    // Remover mensagem de erro se existir
-                    const errorDiv = this.nextElementSibling;
-                    if (errorDiv && errorDiv.classList.contains('invalid-feedback')) {
-                        errorDiv.remove();
-                    }
-                }
+        // Data de agendamento - validar apenas no backend
+        // JavaScript removido para evitar conflitos com validação do servidor
             });
         }
         
@@ -500,6 +699,8 @@
                 }
                 
                 const isConfirmationDay = {{ is_confirmation_day|yesno:"true,false" }};
+        
+        // Nota: Validação de domingos feita apenas no evento 'input' acima
                 
                 if (!isConfirmationDay) {
                     const confirmMessage = 'Tem certeza que deseja salvar este agendamento como rascunho? ' +

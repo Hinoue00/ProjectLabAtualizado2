@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Materiais - {{ laboratory.name }} | LabConnect{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/materials-dark-mode.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Cabeçalho da página -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'professor_laboratory_list' %}">Laboratórios</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">{{ laboratory.name }}</li>
+                    </ol>
+                </nav>
+                <h1 class="page-title">{{ laboratory.name }}</h1>
+                <p class="page-subtitle">{{ material_count }} materiais disponíveis</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações do Laboratório -->
+    <div class="card mb-4">
+        <div class="card-header d-flex align-items-center" style="background-color: {{ laboratory.color }}; color: white;">
+            <i class="bi bi-building me-2"></i>
+            <h5 class="mb-0">Informações do Laboratório</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <p class="mb-2"><strong>Descrição:</strong> {{ laboratory.description }}</p>
+                    {% if laboratory.technicians.exists %}
+                        <p class="mb-0">
+                            <strong>Técnicos Responsáveis:</strong>
+                            {% for technician in laboratory.technicians.all %}
+                                <span class="badge bg-light text-dark me-1">{{ technician.first_name }} {{ technician.last_name }}</span>
+                            {% endfor %}
+                        </p>
+                    {% endif %}
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <div class="h3 mb-1">{{ material_count }}</div>
+                        <small class="text-muted">Materiais no Laboratório</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if materials %}
+        <!-- Lista de Materiais -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Materiais Disponíveis</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Material</th>
+                                <th>Categoria</th>
+                                <th>Quantidade</th>
+                                <th>Mínimo</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for material in materials %}
+                                <tr {% if material.is_low_stock %}class="table-danger"{% endif %}>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3">
+                                                {% if material.category.material_type == 'consumable' %}
+                                                    <i class="bi bi-box-seam text-success"></i>
+                                                {% elif material.category.material_type == 'permanent' %}
+                                                    <i class="bi bi-tools text-primary"></i>
+                                                {% else %}
+                                                    <i class="bi bi-hourglass-split text-danger"></i>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0">{{ material.name }}</h6>
+                                                {% if material.description %}
+                                                    <small class="text-muted">{{ material.description|truncatechars:60 }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">{{ material.category.name }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold {% if material.is_low_stock %}text-danger{% endif %}">
+                                            {{ material.quantity }}
+                                        </span>
+                                    </td>
+                                    <td>{{ material.minimum_stock }}</td>
+                                    <td>
+                                        {% if material.is_low_stock %}
+                                            <span class="badge bg-danger">
+                                                <i class="bi bi-exclamation-triangle me-1"></i>Baixo
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle me-1"></i>OK
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- Estado vazio -->
+        <div class="card">
+            <div class="card-body">
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <h4>Nenhum material encontrado</h4>
+                    <p>Este laboratório não possui materiais cadastrados.</p>
+                    <a href="{% url 'professor_laboratory_list' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left me-1"></i> Voltar aos Laboratórios
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

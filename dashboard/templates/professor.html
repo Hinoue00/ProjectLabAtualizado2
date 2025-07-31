@@ -116,12 +116,19 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <div class="stats-icon">
-                            <i class="bi bi-graph-up"></i>
+                            <i class="bi bi-file-earmark-text"></i>
                         </div>
-                        <span class="badge bg-info rounded-pill">Total</span>
+                        {% if draft_count > 0 %}
+                            <span class="badge bg-info rounded-pill">Rascunhos</span>
+                        {% endif %}
                     </div>
-                    <h3 class="stats-value">{{ total_schedules }}</h3>
-                    <p class="stats-label">Total de Agendamentos</p>
+                    <h3 class="stats-value">{{ draft_count|default:0 }}</h3>
+                    <p class="stats-label">Rascunhos Salvos</p>
+                    {% if draft_count > 0 %}
+                        <a href="{% url 'list_draft_schedule_requests' %}" class="btn btn-sm btn-outline-info mt-2">
+                            <i class="bi bi-eye me-1"></i>Ver Rascunhos
+                        </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
