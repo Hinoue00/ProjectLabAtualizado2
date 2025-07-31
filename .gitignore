@@ -58,4 +58,4 @@ ENV/
 # Cache e temporários
 *.tmp
 *.temp
- 
+ logs/labconnect.log
