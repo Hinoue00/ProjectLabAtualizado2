@@ -513,7 +513,7 @@
 }
 
 [data-theme="dark"] .calendar-weekday {
-    background: rgba(255, 255, 255, 0.03);
+    background: transparent;
     color: var(--text-color);
     border-color: var(--border-color);
 }
@@ -664,9 +664,9 @@
 }
 
 [data-theme="dark"] .mobile-event-card:hover {
-    border-color: var(--primary-color);
-    background: rgba(74, 111, 165, 0.05);
-    box-shadow: var(--box-shadow-medium);
+    border-color: var(--border-color);
+    background: var(--card-bg);
+    box-shadow: none;
 }
 
 [data-theme="dark"] .mobile-event-time {

@@ -83,3 +83,101 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Docling for document processing
 - OpenAI integration for advanced AI features
 - Ollama for local LLM integration
+
+## Recent Updates & New Features
+
+### UI/UX Improvements (ATT0.1 Branch)
+- **Dark Theme Standardization**: Consistent dark mode across all pages using centralized CSS variables
+- **Mobile Responsive Design**: Enhanced mobile layout fixes for calendar and dashboard views
+- **Professor Calendar Enhancement**: Aligned professor calendar cards with technician interface styling patterns
+- **Navigation Consistency**: Standardized sidebar styling and navigation colors across all modules
+
+### Inventory System Enhancements
+- **Read-Only Access for Professors**: Professors can now view laboratory materials but cannot modify inventory
+- **Bulk Material Operations**: Added mass selection and batch operations for material management
+- **Inter-Laboratory Material Transfer**: Ability to move materials between different laboratories
+- **Stock Alert Logic Improvements**: Fixed minimum stock alert logic (now uses < instead of <=)
+- **Enhanced Material Organization**: Improved inventory organization with better categorization
+
+### Scheduling System Updates
+- **Class/Semester Field**: Added class_semester field to both ScheduleRequest and DraftScheduleRequest models
+- **Enhanced Request Forms**: Updated scheduling forms to include semester/class information
+- **Improved Data Tracking**: Better tracking of which classes/semesters are using laboratory resources
+
+### CI/CD & Deployment Infrastructure
+- **GitHub Actions Integration**: Automated CI/CD pipeline with testing and deployment
+- **Automated Testing**: Tests run on every push/PR to main branch
+- **Production Deploy Automation**: Automatic deployment to production server after successful tests
+- **Server Health Monitoring**: Integrated health checks and service verification
+- **Backup Integration**: Automatic backup before deployment using existing git-deploy.sh script
+
+### Development & Maintenance
+- **Log Management**: Added logs/labconnect.log to .gitignore for cleaner repository
+- **Server Documentation**: Comprehensive production server analysis and documentation
+- **Deployment Scripts**: Enhanced deployment automation with monitoring and health checks
+- **Infrastructure Monitoring**: Detailed server resource monitoring and status tracking
+
+## Deployment & CI/CD
+
+### GitHub Actions Workflow
+The project now includes automated CI/CD pipeline (`.github/workflows/deploy.yml`):
+
+#### Test Stage
+- Runs on all pushes and pull requests to main
+- Uses PostgreSQL 13 service container for testing
+- Python 3.11 environment with dependency caching
+- Automated database migrations and test execution
+- Environment variables automatically configured for testing
+
+#### Deploy Stage
+- Triggered only on successful tests for main branch pushes
+- SSH deployment to production server (custom port 2222)
+- Integrates with existing `git-deploy.sh` script
+- Automatic service health checks and restart if needed
+- Post-deployment verification of service status
+
+### Production Server Infrastructure
+Detailed server analysis documented in `labconnect-server-analysis.md`:
+
+#### Server Specifications
+- **OS**: Ubuntu 24.04.2 LTS with Intel Celeron J1800
+- **Stack**: Django + PostgreSQL + Redis + Nginx + Gunicorn
+- **Security**: SSL/HTTPS enforced, HSTS enabled, corporate domain restrictions
+- **Monitoring**: Ngrok integration for external access with automated URL updates
+
+#### Key Production Features
+- **Multi-department Support**: Color-coded departments with assigned technicians
+- **Automated Backup**: Pre-deployment backup system with 5-backup rotation
+- **Health Monitoring**: Service status verification and automatic recovery
+- **AI Integration**: Docling + spaCy for Portuguese document processing
+- **Role-based Access**: Separate interfaces for professors vs technicians
+
+#### Service Management
+- **Application**: Gunicorn WSGI server (3 workers) on port 8000
+- **External Access**: Ngrok tunneling with automatic URL monitoring
+- **Logs**: Centralized logging to `/var/www/labconnect/logs/labconnect.log`
+- **Deploy Scripts**: Automated deployment via `/home/labadm/git-deploy.sh`
+
+## Technical Specifications Update
+
+### Enhanced Database Schema
+Recent migrations added:
+- **scheduling_0009**: Added `class_semester` field to ScheduleRequest model
+- **scheduling_0010**: Added `class_semester` field to DraftScheduleRequest model
+
+### New URL Patterns
+- **Professor Material Views**: Read-only access routes for professors to view laboratory materials
+- **Inventory Management**: Enhanced bulk operations and inter-laboratory transfers
+- **API Endpoints**: Extended chatbot and assistant functionality
+
+### CSS Architecture Improvements
+- **Centralized Variables**: `variables.css` for consistent theming across all pages
+- **Dark Mode**: Comprehensive dark theme implementation in `materials-dark-mode.css`
+- **Mobile Optimization**: `professor-calendar-mobile-fix.css` for responsive design
+- **Cross-platform Consistency**: `professor-consistency.css` for unified styling patterns
+
+### Security & Performance
+- **Log File Management**: Proper gitignore configuration for sensitive log files
+- **Static File Optimization**: Separated collected static files for production
+- **Cache Management**: Enhanced Redis integration for session management
+- **HTTPS Enforcement**: Production-grade SSL configuration with HSTS

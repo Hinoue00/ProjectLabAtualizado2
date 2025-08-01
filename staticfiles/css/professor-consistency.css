@@ -50,7 +50,7 @@
 }
 
 .professor-dashboard .professor-list-item:hover {
-    background-color: rgba(74, 111, 165, 0.02);
+    background-color: transparent;
     border-radius: 8px;
     margin: 0 -0.5rem;
     padding-left: 1.25rem;
@@ -269,7 +269,7 @@
 /* Dark mode support igual ao técnico */
 
 [data-theme="dark"] .professor-dashboard .professor-list-item:hover {
-    background-color: rgba(74, 111, 165, 0.05);
+    background-color: transparent !important;
 }
 
 [data-theme="dark"] .professor-dashboard .card-header {

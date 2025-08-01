@@ -23,8 +23,16 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- CSS Variables (deve vir primeiro) -->
+    <link rel="stylesheet" href="{% static 'css/variables.css' %}">
+    
     <!-- Base CSS Otimizado -->
     <link rel="stylesheet" href="{% static 'css/base-optimized.css' %}">
+    
+    <!-- Dark Theme CSS -->
+    <link rel="stylesheet" href="{% static 'css/materials-dark-mode.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard-base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dark-theme-override.css' %}">
     
     <!-- Page-specific CSS -->
     {% block extra_css %}{% endblock %}

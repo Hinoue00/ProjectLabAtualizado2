@@ -1,0 +1,285 @@
+/* =============================================================================
+   DARK THEME OVERRIDE - LabConnect
+   Este arquivo força a padronização de todas as cores do tema escuro
+   ============================================================================= */
+
+/* === OVERRIDE DE CORES PARA GARANTIR CONSISTÊNCIA === */
+
+[data-theme="dark"] {
+    /* === Reforce todas as variáveis principais === */
+    --body-bg: #1a1d23 !important;
+    --card-bg: #212529 !important;
+    --sidebar-bg: #1a1d23 !important;
+    --modal-bg: #212529 !important;
+    --input-bg: #212529 !important;
+    --header-bg: #1a1d23 !important;
+    
+    --text-color: #e2e8f0 !important;
+    --text-muted: #a0aec0 !important;
+    --text-muted-light: #718096 !important;
+    --text-muted-dark: #4a5568 !important;
+    
+    --border-color: #4a5568 !important;
+    --border-color-light: #4a5568 !important;
+    
+    --hover-bg: #374151 !important;
+    --hover-border: #4a5568 !important;
+    
+    --badge-bg: #4a5568 !important;
+    --table-hover-bg: #374151 !important;
+    --dropdown-bg: #2d3748 !important;
+    --tooltip-bg: #1a202c !important;
+}
+
+/* === FORÇA APLICAÇÃO NOS ELEMENTOS MAIS COMUNS === */
+
+/* Body e containers principais */
+[data-theme="dark"] body,
+[data-theme="dark"] .container,
+[data-theme="dark"] .container-fluid,
+[data-theme="dark"] .content-container,
+[data-theme="dark"] .main-content {
+    background-color: var(--body-bg) !important;
+    color: var(--text-color) !important;
+}
+
+/* Cards e elementos similares */
+[data-theme="dark"] .card,
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .dropdown-menu,
+[data-theme="dark"] .popover,
+[data-theme="dark"] .tooltip-inner {
+    background-color: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+}
+
+/* Headers e títulos */
+[data-theme="dark"] .card-header,
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .page-header {
+    background-color: var(--header-bg) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+}
+
+/* Formulários */
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select,
+[data-theme="dark"] .form-check-input,
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+    background-color: var(--input-bg) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+}
+
+/* Tabelas */
+[data-theme="dark"] .table,
+[data-theme="dark"] .table th,
+[data-theme="dark"] .table td {
+    background-color: transparent !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .table-hover tbody tr:hover {
+    background-color: var(--table-hover-bg) !important;
+}
+
+/* Texto com cores específicas */
+[data-theme="dark"] .text-muted,
+[data-theme="dark"] .text-secondary,
+[data-theme="dark"] small,
+[data-theme="dark"] .small {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3,
+[data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6,
+[data-theme="dark"] .h1, [data-theme="dark"] .h2, [data-theme="dark"] .h3,
+[data-theme="dark"] .h4, [data-theme="dark"] .h5, [data-theme="dark"] .h6 {
+    color: var(--text-color) !important;
+}
+
+/* Estados hover */
+[data-theme="dark"] .btn:hover {
+    background-color: var(--hover-bg) !important;
+    border-color: var(--hover-border) !important;
+}
+
+/* Remover hover de cards - sem mudança de cor de fundo */
+[data-theme="dark"] .card:hover {
+    transform: none !important;
+    background-color: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* Remover hover de stats-cards - sem mudança de cor */
+[data-theme="dark"] .stats-card:hover {
+    transform: none !important;
+    background-color: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+    box-shadow: none !important;
+}
+
+/* Remover hovers de outros tipos de cards */
+[data-theme="dark"] .material-card:hover,
+[data-theme="dark"] .laboratory-card:hover,
+[data-theme="dark"] .feature-card:hover,
+[data-theme="dark"] .info-card:hover {
+    transform: none !important;
+    background-color: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+    box-shadow: none !important;
+}
+
+[data-theme="dark"] .list-group-item:hover {
+    background-color: var(--hover-bg) !important;
+    border-color: var(--hover-border) !important;
+}
+
+/* Badges e labels */
+[data-theme="dark"] .badge.bg-light,
+[data-theme="dark"] .badge.bg-secondary {
+    background-color: var(--badge-bg) !important;
+    color: var(--text-color) !important;
+}
+
+/* Override de cores específicas muito usadas */
+[data-theme="dark"] * {
+    /* Remove qualquer background branco ou muito claro */
+}
+
+[data-theme="dark"] .bg-white,
+[data-theme="dark"] .bg-light,
+[data-theme="dark"] .bg-secondary {
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
+}
+
+/* Navegação e sidebar */
+[data-theme="dark"] .navbar,
+[data-theme="dark"] .sidebar,
+[data-theme="dark"] .nav-tabs,
+[data-theme="dark"] .nav-pills {
+    background-color: var(--sidebar-bg) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* Paginação */
+[data-theme="dark"] .pagination .page-link {
+    background-color: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .pagination .page-link:hover {
+    background-color: var(--hover-bg) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* Alertas */
+[data-theme="dark"] .alert {
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+}
+
+/* Loading spinners */
+[data-theme="dark"] .spinner-border,
+[data-theme="dark"] .loading::after {
+    border-color: var(--border-color) !important;
+    border-top-color: var(--primary-color) !important;
+}
+
+/* === CLASSES ESPECÍFICAS PARA ELEMENTOS PROBLEMÁTICOS === */
+
+/* Para casos onde elementos específicos ainda não seguem as variáveis */
+[data-theme="dark"] .override-bg {
+    background-color: var(--card-bg) !important;
+}
+
+[data-theme="dark"] .override-text {
+    color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .override-border {
+    border-color: var(--border-color) !important;
+}
+
+/* === CORREÇÕES ESPECÍFICAS DE CONTRASTE === */
+
+/* Garantir que todos os textos tenham contraste adequado */
+[data-theme="dark"] .text-dark,
+[data-theme="dark"] .text-body {
+    color: var(--text-color) !important;
+}
+
+/* Placeholders devem ser visíveis */
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder,
+[data-theme="dark"] select option {
+    color: var(--text-muted) !important;
+    opacity: 0.8;
+}
+
+/* Labels e textos de ajuda */
+[data-theme="dark"] label,
+[data-theme="dark"] .form-label,
+[data-theme="dark"] .form-text,
+[data-theme="dark"] .help-text {
+    color: var(--text-color) !important;
+}
+
+/* Botões de alternância/toggle */
+[data-theme="dark"] .btn-toggle:not(.active),
+[data-theme="dark"] .nav-link:not(.active) {
+    color: var(--text-muted) !important;
+}
+
+/* Elementos de formulário select */
+[data-theme="dark"] select option {
+    background-color: var(--input-bg) !important;
+    color: var(--text-color) !important;
+}
+
+/* === CORREÇÕES ESPECÍFICAS DE FUNDOS ESCUROS INDESEJADOS === */
+
+/* Calendário semanal - remover fundo escuro dos headers dos dias */
+[data-theme="dark"] .calendar-weekday,
+[data-theme="dark"] .day-header {
+    background-color: transparent !important;
+}
+
+/* Professor hover - remover fundo escuro */
+[data-theme="dark"] .professor-list-item:hover,
+[data-theme="dark"] .activity-item:hover {
+    background-color: transparent !important;
+}
+
+/* Departamentos e laboratoristas - remover hover escuro */
+[data-theme="dark"] .dropdown-item:hover,
+[data-theme="dark"] .list-group-item:hover,
+[data-theme="dark"] .form-select:hover {
+    background-color: transparent !important;
+}
+
+/* Sidebar navegação - remover hover escuro */
+[data-theme="dark"] .nav-link:hover,
+[data-theme="dark"] .sidebar .nav-link:hover,
+[data-theme="dark"] .navbar-nav .nav-link:hover {
+    background-color: transparent !important;
+}
+
+/* Card footer links - remover fundo escuro */
+[data-theme="dark"] .card-footer-link:hover {
+    background-color: transparent !important;
+}
+
+/* === DEBUG - Remover após teste === */
+/*
+[data-theme="dark"] * {
+    outline: 1px solid red !important;
+}
+*/

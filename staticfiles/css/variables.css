@@ -63,15 +63,35 @@
     --z-tooltip: 1070;
 }
 
-/* === Tema Escuro === */
+/* === Tema Escuro - Cores Padronizadas === */
 [data-theme="dark"] {
-    --text-color: #e9ecef;
-    --text-muted: #adb5bd;
-    --text-muted-light: #6c757d;
-    --body-bg: #212529;
-    --card-bg: #343a40;
-    --border-color: #495057;
-    --border-color-light: #343a40;
+    /* === Cores de Fundo === */
+    --body-bg: #1a1d23;
+    --card-bg: #212529;
+    --sidebar-bg: #1a1d23;
+    --modal-bg: #212529;
+    --input-bg: #212529;
+    --header-bg: #1a1d23;
+    
+    /* === Cores de Texto === */
+    --text-color: #e2e8f0;
+    --text-muted: #a0aec0;
+    --text-muted-light: #718096;
+    --text-muted-dark: #4a5568;
+    
+    /* === Bordas === */
+    --border-color: #4a5568;
+    --border-color-light: #4a5568;
+    
+    /* === Estados de Hover === */
+    --hover-bg: #2d3136;
+    --hover-border: #4a5568;
+    
+    /* === Elementos Específicos === */
+    --badge-bg: #4a5568;
+    --table-hover-bg: #2d3136;
+    --dropdown-bg: #212529;
+    --tooltip-bg: #1a1d23;
 }
 
 /* === Variáveis de Status (Badges) === */

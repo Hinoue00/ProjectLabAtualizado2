@@ -1,51 +1,51 @@
 /* Materials Dark Mode Fixes */
 [data-theme="dark"] .card {
-    background-color: var(--dark-card-bg, #2d3748);
-    border-color: var(--dark-border, #4a5568);
-    color: var(--dark-text, #e2e8f0);
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-color);
 }
 
 [data-theme="dark"] .card-header {
-    background-color: var(--dark-card-header, #1a202c);
-    border-bottom-color: var(--dark-border, #4a5568);
-    color: var(--dark-text, #e2e8f0);
+    background-color: var(--header-bg);
+    border-bottom-color: var(--border-color);
+    color: var(--text-color);
 }
 
 [data-theme="dark"] .table {
-    color: var(--dark-text, #e2e8f0);
+    color: var(--text-color);
     background-color: transparent;
 }
 
 [data-theme="dark"] .table th,
 [data-theme="dark"] .table td {
-    border-color: var(--dark-border, #4a5568);
+    border-color: var(--border-color);
 }
 
 [data-theme="dark"] .table-hover tbody tr:hover {
-    background-color: var(--dark-hover, #374151);
+    background-color: var(--table-hover-bg);
 }
 
 [data-theme="dark"] .empty-state {
-    color: var(--dark-text-muted, #a0aec0);
+    color: var(--text-muted);
 }
 
 [data-theme="dark"] .empty-state-icon i {
-    color: var(--dark-text-muted, #718096);
+    color: var(--text-muted-light);
 }
 
 [data-theme="dark"] .form-control,
 [data-theme="dark"] .form-select {
-    background-color: var(--dark-input-bg, #2d3748);
-    border-color: var(--dark-border, #4a5568);
-    color: var(--dark-text, #e2e8f0);
+    background-color: var(--input-bg);
+    border-color: var(--border-color);
+    color: var(--text-color);
 }
 
 [data-theme="dark"] .form-control:focus,
 [data-theme="dark"] .form-select:focus {
-    background-color: var(--dark-input-bg, #2d3748);
-    border-color: var(--primary-color, #0d6efd);
-    color: var(--dark-text, #e2e8f0);
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    background-color: var(--input-bg);
+    border-color: var(--primary-color);
+    color: var(--text-color);
+    box-shadow: 0 0 0 0.2rem rgba(74, 111, 165, 0.25);
 }
 
 [data-theme="dark"] .breadcrumb {
@@ -53,15 +53,15 @@
 }
 
 [data-theme="dark"] .breadcrumb-item + .breadcrumb-item::before {
-    color: var(--dark-text-muted, #718096);
+    color: var(--text-muted-light);
 }
 
 [data-theme="dark"] .breadcrumb-item a {
-    color: var(--primary-color, #66b3ff);
+    color: var(--primary-color);
 }
 
 [data-theme="dark"] .breadcrumb-item.active {
-    color: var(--dark-text, #e2e8f0);
+    color: var(--text-color);
 }
 
 /* Laboratory Cards Dark Mode */
@@ -71,93 +71,93 @@
 
 [data-theme="dark"] .h4,
 [data-theme="dark"] .h3 {
-    color: var(--dark-text, #e2e8f0) !important;
+    color: var(--text-color) !important;
 }
 
 [data-theme="dark"] .text-muted {
-    color: var(--dark-text-muted, #a0aec0) !important;
+    color: var(--text-muted) !important;
 }
 
 [data-theme="dark"] .badge.bg-light {
-    background-color: var(--dark-badge-bg, #4a5568) !important;
-    color: var(--dark-text, #e2e8f0) !important;
+    background-color: var(--badge-bg) !important;
+    color: var(--text-color) !important;
 }
 
 /* Pagination Dark Mode */
 [data-theme="dark"] .page-link {
-    background-color: var(--dark-card-bg, #2d3748);
-    border-color: var(--dark-border, #4a5568);
-    color: var(--dark-text, #e2e8f0);
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-color);
 }
 
 [data-theme="dark"] .page-link:hover {
-    background-color: var(--dark-hover, #374151);
-    border-color: var(--dark-border, #4a5568);
-    color: var(--dark-text, #e2e8f0);
+    background-color: var(--hover-bg);
+    border-color: var(--border-color);
+    color: var(--text-color);
 }
 
 [data-theme="dark"] .page-item.active .page-link {
-    background-color: var(--primary-color, #0d6efd);
-    border-color: var(--primary-color, #0d6efd);
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
     color: white;
 }
 
 /* Input Groups Dark Mode */
 [data-theme="dark"] .input-group-text {
-    background-color: var(--dark-input-bg, #2d3748);
-    border-color: var(--dark-border, #4a5568);
-    color: var(--dark-text, #e2e8f0);
+    background-color: var(--input-bg);
+    border-color: var(--border-color);
+    color: var(--text-color);
 }
 
 /* Alerts Dark Mode */
 [data-theme="dark"] .alert-info {
-    background-color: rgba(13, 110, 253, 0.1);
-    border-color: rgba(13, 110, 253, 0.3);
-    color: var(--dark-text, #e2e8f0);
+    background-color: rgba(74, 111, 165, 0.1);
+    border-color: rgba(74, 111, 165, 0.3);
+    color: var(--text-color);
 }
 
 /* Small text fixes */
 [data-theme="dark"] small {
-    color: var(--dark-text-muted, #a0aec0) !important;
+    color: var(--text-muted) !important;
 }
 
 /* Filter box dark mode */
 [data-theme="dark"] .filter-box {
-    background-color: var(--dark-card-bg, #2d3748);
-    border: 1px solid var(--dark-border, #4a5568);
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
 }
 
 /* Content container and body dark mode */
 [data-theme="dark"] .content-container {
-    background-color: var(--dark-bg, #1a202c);
-    color: var(--dark-text, #e2e8f0);
+    background-color: var(--body-bg);
+    color: var(--text-color);
 }
 
 [data-theme="dark"] body {
-    background-color: var(--dark-bg, #1a202c) !important;
-    color: var(--dark-text, #e2e8f0) !important;
+    background-color: var(--body-bg) !important;
+    color: var(--text-color) !important;
 }
 
 /* Page headers dark mode */
 [data-theme="dark"] .page-header {
-    color: var(--dark-text, #e2e8f0);
+    color: var(--text-color);
 }
 
 [data-theme="dark"] .page-title {
-    color: var(--dark-text, #e2e8f0) !important;
+    color: var(--text-color) !important;
 }
 
 [data-theme="dark"] .page-subtitle {
-    color: var(--dark-text-muted, #a0aec0) !important;
+    color: var(--text-muted) !important;
 }
 
 /* Links dark mode - exclude sidebar links */
 [data-theme="dark"] a:not(.sidebar-link):not(.sidebar-dropdown-link) {
-    color: var(--primary-color, #66b3ff);
+    color: var(--primary-color);
 }
 
 [data-theme="dark"] a:not(.sidebar-link):not(.sidebar-dropdown-link):hover {
-    color: var(--primary-color-hover, #4da6ff);
+    color: var(--primary-color-dark);
 }
 
 /* Ensure sidebar links maintain their proper colors */
@@ -212,24 +212,24 @@
 
 /* Table responsive wrapper */
 [data-theme="dark"] .table-responsive {
-    background-color: var(--dark-card-bg, #2d3748);
+    background-color: var(--card-bg);
     border-radius: 0.375rem;
 }
 
 /* Empty state dark mode */
 [data-theme="dark"] .empty-state {
-    background-color: var(--dark-card-bg, #2d3748);
-    color: var(--dark-text-muted, #a0aec0);
+    background-color: var(--card-bg);
+    color: var(--text-muted);
 }
 
 /* Buttons dark mode */
 [data-theme="dark"] .btn-outline-primary {
-    border-color: var(--primary-color, #66b3ff);
-    color: var(--primary-color, #66b3ff);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
 }
 
 [data-theme="dark"] .btn-outline-primary:hover {
-    background-color: var(--primary-color, #66b3ff);
+    background-color: var(--primary-color);
     color: white;
 }
 
@@ -239,7 +239,7 @@
 }
 
 [data-theme="dark"] .bg-white {
-    background-color: var(--dark-card-bg, #2d3748) !important;
+    background-color: var(--card-bg) !important;
 }
 
 /* Laboratory header colors - maintain original colors but ensure text is visible */
@@ -278,27 +278,27 @@
 
 /* Force dark theme variables */
 [data-theme="dark"] {
-    --bs-body-bg: #1a202c !important;
-    --bs-body-color: #e2e8f0 !important;
-    --bs-card-bg: #2d3748 !important;
-    --bs-border-color: #4a5568 !important;
+    --bs-body-bg: var(--body-bg) !important;
+    --bs-body-color: var(--text-color) !important;
+    --bs-card-bg: var(--card-bg) !important;
+    --bs-border-color: var(--border-color) !important;
 }
 
 /* Override any bootstrap white backgrounds */
 [data-theme="dark"] .bg-light {
-    background-color: var(--dark-card-bg, #2d3748) !important;
-    color: var(--dark-text, #e2e8f0) !important;
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
 }
 
 /* Fix laboratory cards background */
 [data-theme="dark"] .card .card-body {
-    background-color: var(--dark-card-bg, #2d3748) !important;
-    color: var(--dark-text, #e2e8f0) !important;
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
 }
 
 /* Fix for laboratory numbers visibility */
 [data-theme="dark"] .text-center .h4,
 [data-theme="dark"] .text-center .h3 {
-    color: var(--dark-text, #e2e8f0) !important;
+    color: var(--text-color) !important;
     font-weight: bold !important;
 }

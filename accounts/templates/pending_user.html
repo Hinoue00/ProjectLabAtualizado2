@@ -2,6 +2,9 @@
 {% load static %}
 {% block title %}Aprovação Pendente | LabConnect{% endblock %}
 {% block extra_css %}
+<!-- Incluir variáveis CSS para garantir que o tema funcione -->
+<link rel="stylesheet" href="{% static 'css/variables.css' %}">
+<link rel="stylesheet" href="{% static 'css/dark-theme-override.css' %}">
 <link rel="stylesheet" href="{% static 'css/pending-user-optimized.css' %}">
 {% endblock %}
 

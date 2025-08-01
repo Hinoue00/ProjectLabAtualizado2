@@ -4,6 +4,10 @@
 {% block title %}Acessar | LabConnect{% endblock %}
 
 {% block extra_css %}
+<!-- Incluir variáveis CSS para garantir que o tema funcione -->
+<link rel="stylesheet" href="{% static 'css/variables.css' %}">
+<link rel="stylesheet" href="{% static 'css/dark-theme-override.css' %}">
+
 <style>
     /* Estilos específicos para as páginas de autenticação */
     .auth-content {
@@ -43,7 +47,9 @@
     }
     
     [data-theme="dark"] .auth-card {
-        background-color: rgba(33, 37, 41, 0.95);
+        background-color: var(--card-bg, #212529) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--text-color, #e2e8f0) !important;
     }
     
     .auth-switch-container {
@@ -88,6 +94,10 @@
     
     .auth-switch-button:not(.active) {
         color: #6c757d;
+    }
+    
+    [data-theme="dark"] .auth-switch-button:not(.active) {
+        color: #a0aec0;
     }
     
     .auth-forms-container {
@@ -138,6 +148,10 @@
         margin-bottom: 25px;
     }
     
+    [data-theme="dark"] .auth-subtitle {
+        color: #a0aec0;
+    }
+    
     .form-group {
         margin-bottom: 20px;
         position: relative;
@@ -156,9 +170,14 @@
     }
     
     [data-theme="dark"] .auth-input {
-        background-color: rgba(33, 37, 41, 0.8);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: #fff;
+        background-color: var(--input-bg, #212529) !important;
+        border: 1px solid var(--border-color, #4a5568) !important;
+        color: var(--text-color, #e2e8f0) !important;
+    }
+    
+    [data-theme="dark"] .auth-input::placeholder {
+        color: var(--text-muted, #a0aec0) !important;
+        opacity: 0.8;
     }
     
     .auth-input:focus {
@@ -239,6 +258,10 @@
         color: #6c757d;
     }
     
+    [data-theme="dark"] .divider {
+        color: var(--text-muted);
+    }
+    
     .divider::before,
     .divider::after {
         content: '';
@@ -302,8 +325,12 @@
     /* Form text help */
     .form-text {
         font-size: 0.875rem;
-        color: var(--text-muted);
+        color: #6c757d;
         margin-top: 0.25rem;
+    }
+    
+    [data-theme="dark"] .form-text {
+        color: var(--text-muted);
     }
     
     /* Form check styling */
@@ -312,8 +339,8 @@
     }
     
     [data-theme="dark"] .form-check-input {
-        background-color: rgba(33, 37, 41, 0.8);
-        border-color: rgba(255, 255, 255, 0.2);
+        background-color: var(--input-bg, #212529) !important;
+        border-color: var(--border-color, #4a5568) !important;
     }
     
     [data-theme="dark"] .form-check-input:checked {
@@ -325,6 +352,41 @@
         color: var(--text-color);
     }
     
+    /* === FORÇA TEMA ESCURO ESPECÍFICO === */
+    [data-theme="dark"] .auth-brand h2 {
+        color: var(--text-color, #e2e8f0) !important;
+    }
+    
+    [data-theme="dark"] .auth-brand span {
+        color: #4a6fa5 !important;
+    }
+    
+    [data-theme="dark"] .form-check-label,
+    [data-theme="dark"] label {
+        color: var(--text-color, #e2e8f0) !important;
+    }
+    
+    [data-theme="dark"] .auth-footer {
+        background-color: rgba(255, 255, 255, 0.02) !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+        color: var(--text-color, #e2e8f0) !important;
+    }
+    
+    [data-theme="dark"] .auth-footer p {
+        color: var(--text-muted, #a0aec0) !important;
+    }
+    
+    /* Garantir que select options sejam visíveis */
+    [data-theme="dark"] select.auth-input option {
+        background-color: var(--input-bg, #212529) !important;
+        color: var(--text-color, #e2e8f0) !important;
+    }
+    
+    /* Garantir visibilidade dos botões de toggle */
+    [data-theme="dark"] .password-toggle {
+        color: var(--text-muted, #a0aec0) !important;
+    }
+
     /* Responsividade */
     @media (max-width: 576px) {
         .auth-card {
@@ -424,7 +486,7 @@
                         <div class="form-group">
                             <select class="auth-input" id="userType" name="user_type" required>
                                 <option value="" selected disabled>Selecione o tipo de usuário</option>
-                                <option value="professor">Professor</option>
+                                <option value="professor">Tutor/Professor</option>
                                 <option value="technician">Laboratorista</option>
                             </select>
                         </div>
