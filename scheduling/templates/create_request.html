@@ -725,8 +725,8 @@
                 }
                 
                 const isConfirmationDay = {{ is_confirmation_day|yesno:"true,false" }};
-        
-        // Nota: Validação de domingos feita apenas no evento 'input' acima
+                
+                // Nota: Validação de domingos feita apenas no evento 'input' acima
                 
                 if (!isConfirmationDay) {
                     const confirmMessage = 'Tem certeza que deseja salvar este agendamento como rascunho? ' +
