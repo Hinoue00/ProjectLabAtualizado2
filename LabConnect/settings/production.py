@@ -56,16 +56,17 @@ CACHES = {
 
 # Middleware adicional para produção
 MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
-MIDDLEWARE.insert(0, 'django.middleware.cache.UpdateCacheMiddleware')
-MIDDLEWARE.append('django.middleware.cache.FetchFromCacheMiddleware')
+# Remover middleware de cache de página para evitar conflitos com AJAX
+# MIDDLEWARE.insert(0, 'django.middleware.cache.UpdateCacheMiddleware')
+# MIDDLEWARE.append('django.middleware.cache.FetchFromCacheMiddleware')
 
 # Configuração de arquivos estáticos para produção - OTIMIZADA
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Configurações de cache de página completa
-CACHE_MIDDLEWARE_ALIAS = 'default'
-CACHE_MIDDLEWARE_SECONDS = 60  # 1 minuto para páginas inteiras
-CACHE_MIDDLEWARE_KEY_PREFIX = 'labconnect_page'
+# Configurações de cache de página completa - DESABILITADO para AJAX
+# CACHE_MIDDLEWARE_ALIAS = 'default'
+# CACHE_MIDDLEWARE_SECONDS = 60  # 1 minuto para páginas inteiras
+# CACHE_MIDDLEWARE_KEY_PREFIX = 'labconnect_page'
 
 # Sessões no Redis para performance
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'

@@ -245,7 +245,18 @@ class CalendarModule {
         });
 
         if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Response not OK:', response.status, response.statusText);
+            console.error('❌ Response body:', errorText.substring(0, 500));
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const contentType = response.headers.get('Content-Type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('❌ Response is not JSON:', contentType);
+            console.error('❌ Response body:', text.substring(0, 500));
+            throw new Error(`Expected JSON but got ${contentType}`);
         }
 
         const data = await response.json();

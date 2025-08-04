@@ -320,6 +320,8 @@ def professor_dashboard(request):
     
     if is_ajax:
         try:
+            logger.info(f"📅 PROF AJAX: Gerando resposta para calendário")
+            
             calendar_html = render_to_string(
                 'partials/calendar_week_professor.html',
                 {
@@ -329,7 +331,7 @@ def professor_dashboard(request):
                 request=request
             )
             
-            return JsonResponse({
+            response_data = {
                 'success': True,
                 'calendar_html': calendar_html,  # 🔧 O JavaScript espera 'calendar_html'
                 'html': calendar_html,           # 🔧 Fallback para compatibilidade
@@ -339,13 +341,18 @@ def professor_dashboard(request):
                 'department_filter': department_filter,
                 'start_of_week': start_of_week.strftime('%Y-%m-%d'),  # 🔧 Formato esperado pelo JS
                 'end_of_week': end_of_week.strftime('%Y-%m-%d'),      # 🔧 Formato esperado pelo JS
-            }, json_dumps_params={'ensure_ascii': False})
+            }
+            
+            logger.info(f"✅ PROF AJAX: Resposta gerada com sucesso")
+            return JsonResponse(response_data, json_dumps_params={'ensure_ascii': False})
             
         except Exception as e:
             logger.error(f"❌ PROF AJAX Error: {str(e)}")
+            logger.error(f"❌ PROF AJAX Error Stack: ", exc_info=True)
             return JsonResponse({
                 'success': False,
-                'error': str(e)
+                'error': str(e),
+                'type': 'professor_dashboard_error'
             }, status=500)
     
     # ==========================================
