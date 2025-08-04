@@ -99,8 +99,13 @@ def technician_dashboard(request):
                 'end_of_week': end_of_week.strftime('%Y-%m-%d'),      # 🔧 Formato esperado pelo JS
             }
             
-            logger.info(f"✅ AJAX response sent successfully")
-            return JsonResponse(response_data, json_dumps_params={'ensure_ascii': False})
+            logger.info(f"✅ AJAX response sent successfully - tamanho HTML: {len(response_data.get('calendar_html', ''))}")
+            
+            # Criar resposta com headers específicos para evitar truncamento
+            response = JsonResponse(response_data, json_dumps_params={'ensure_ascii': False})
+            response['Content-Length'] = str(len(response.content))
+            response['Connection'] = 'close'  # Forçar fechamento da conexão
+            return response
             
         except Exception as e:
             logger.error(f"❌ AJAX Error: {str(e)}")
@@ -343,8 +348,13 @@ def professor_dashboard(request):
                 'end_of_week': end_of_week.strftime('%Y-%m-%d'),      # 🔧 Formato esperado pelo JS
             }
             
-            logger.info(f"✅ PROF AJAX: Resposta gerada com sucesso")
-            return JsonResponse(response_data, json_dumps_params={'ensure_ascii': False})
+            logger.info(f"✅ PROF AJAX: Resposta gerada - tamanho HTML: {len(calendar_html)}")
+            
+            # Criar resposta com headers específicos para evitar truncamento
+            response = JsonResponse(response_data, json_dumps_params={'ensure_ascii': False})
+            response['Content-Length'] = str(len(response.content))
+            response['Connection'] = 'close'  # Forçar fechamento da conexão
+            return response
             
         except Exception as e:
             logger.error(f"❌ PROF AJAX Error: {str(e)}")
