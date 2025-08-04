@@ -8,9 +8,13 @@ import json
 from collections import Counter
 import unicodedata
 
-import spacy
-
 logger = logging.getLogger(__name__)
+
+# Tentar importar spacy, mas não falhar se não estiver disponível
+try:
+    import spacy
+except ImportError:
+    spacy = None
 
 class DoclingService:
     """
@@ -24,9 +28,11 @@ class DoclingService:
         
         # Tentar carregar spaCy se disponível
         try:
-            import spacy
-            self.nlp = spacy.load("pt_core_news_sm")
-            logger.info("SpaCy carregado com sucesso")
+            if spacy is not None:
+                self.nlp = spacy.load("pt_core_news_sm")
+                logger.info("SpaCy carregado com sucesso")
+            else:
+                logger.info("SpaCy não está instalado, usando análise baseada em regras")
         except (ImportError, OSError):
             logger.warning("SpaCy não disponível, usando análise baseada em regras")
         
@@ -191,7 +197,7 @@ class DoclingService:
                 entities.append({
                     'text': ent.text,
                     'label': ent.label_,
-                    'description': spacy.explain(ent.label_) if hasattr(spacy, 'explain') else ent.label_
+                    'description': spacy.explain(ent.label_) if spacy and hasattr(spacy, 'explain') else ent.label_
                 })
             
             # Extrair tokens importantes
