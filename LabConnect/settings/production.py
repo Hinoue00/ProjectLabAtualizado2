@@ -84,12 +84,10 @@ COMPRESS_JS_FILTERS = [
     'compressor.filters.jsmin.JSMinFilter',
 ]
 
-# Configurações de database otimizadas
+# Configurações de database otimizadas para PostgreSQL
+DATABASES['default']['CONN_MAX_AGE'] = 60
 DATABASES['default']['OPTIONS'] = {
-    'MAX_CONNS': 20,
-    'OPTIONS': {
-        'MAX_CONNS': 20,
-    }
+    'connect_timeout': 10,
 }
 
 # Configurações para evitar truncamento de respostas grandes
