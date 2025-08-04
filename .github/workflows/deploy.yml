@@ -88,7 +88,17 @@ jobs:
         echo "PROD_USER existe: ${{ secrets.PROD_USER != '' }}"
         echo "PROD_SSH_KEY existe: ${{ secrets.PROD_SSH_KEY != '' }}"
     
-    - name: Deploy to Production Server
+    - name: Deploy via Webhook
+      run: |
+        echo "🚀 Enviando webhook para deploy..."
+        curl -X POST "${{ secrets.NGROK_WEBHOOK_URL }}/api/deploy/" \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer ${{ secrets.DEPLOY_TOKEN }}" \
+          -d '{"commit": "${{ github.sha }}", "branch": "${{ github.ref }}"}'
+        echo "✅ Webhook enviado!"
+        
+    - name: Deploy to Production Server (Fallback SSH)
+      if: failure()
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.PROD_HOST }}

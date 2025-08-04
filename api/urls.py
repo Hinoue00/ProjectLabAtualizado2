@@ -1,6 +1,7 @@
 # api/urls.py
 from django.urls import path
 from . import views
+from . import views_deploy
 
 urlpatterns = [
     # Endpoint principal do assistente
@@ -14,4 +15,8 @@ urlpatterns = [
     
     # Feedback do assistente
     path('assistant-feedback/', views.assistant_feedback, name='assistant_feedback'),
+    
+    # Deploy webhook endpoints
+    path('deploy/', views_deploy.deploy_webhook, name='deploy_webhook'),
+    path('deploy/status/', views_deploy.deploy_status, name='deploy_status'),
 ]
