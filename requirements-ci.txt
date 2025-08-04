@@ -1,0 +1,21 @@
+# Requirements específicos para CI/CD (mais leves)
+Django==5.2
+django-crispy-forms==2.3
+crispy-bootstrap5==2025.4
+psycopg2-binary==2.9.10
+python-dotenv==1.1.0
+djangorestframework==3.16.0
+requests==2.32.3
+pillow==11.1.0
+beautifulsoup4==4.13.3
+openpyxl==3.1.5
+python-docx==1.1.2
+python-dateutil==2.9.0.post0
+pytz==2025.2
+urllib3==2.3.0
+charset-normalizer==3.4.1
+certifi==2025.1.31
+idna==3.10
+asgiref==3.8.1
+sqlparse==0.5.3
+tzdata==2025.2
