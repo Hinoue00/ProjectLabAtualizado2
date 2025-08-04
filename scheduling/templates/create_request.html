@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load crispy_forms_tags %}
+{% load scheduling_filters %}
 
 {% block title %}Solicitar Agendamento | LabConnect{% endblock %}
 
@@ -39,8 +40,20 @@
     <div class="page-header mb-4">
         <div class="row align-items-center">
             <div class="col-md-6">
-                <h1 class="page-title">Solicitar Agendamento</h1>
-                <p class="page-subtitle">Agende um laboratório para sua aula</p>
+                <h1 class="page-title">
+                    {% if is_edit %}
+                        {{ title|default:"Editar Rascunho de Agendamento" }}
+                    {% else %}
+                        Solicitar Agendamento
+                    {% endif %}
+                </h1>
+                <p class="page-subtitle">
+                    {% if is_edit %}
+                        Modifique os dados do seu rascunho de agendamento
+                    {% else %}
+                        Agende um laboratório para sua aula
+                    {% endif %}
+                </p>
             </div>
             <div class="col-md-6 text-md-end">
                 <a href="{% url 'professor_dashboard' %}" class="btn btn-outline-secondary">
@@ -106,12 +119,11 @@
                                         </div>
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <!-- ALTERAÇÃO: Corrigidos os valores para os departamentos -->
                                         <select id="departmentFilter" class="form-select">
                                             <option value="all">Todos os departamentos</option>
-                                            <option value="exatas">Exatas</option>
-                                            <option value="saude">Saúde</option>
-                                            <option value="informatica">Informática</option>
+                                            {% for dept in departments %}
+                                                <option value="{{ dept.code }}">{{ dept.name }}</option>
+                                            {% endfor %}
                                         </select>
                                     </div>
                                 </div>
@@ -130,19 +142,11 @@
                                         </thead>
                                         <tbody id="labsTableBody">
                                             {% for laboratory in form.laboratory.field.queryset %}
-                                            <!-- ALTERAÇÃO: Garantindo que o departamento está normalizado para o filtro -->
-                                            <tr class="lab-row" data-laboratory-id="{{ laboratory.id }}" data-department="{{ laboratory.department|lower }}">
+                                            <tr class="lab-row" data-laboratory-id="{{ laboratory.id }}" data-department="{{ laboratory|department_codes|join:',' }}">
                                                 <td>
                                                     <div class="d-flex align-items-center">
                                                         <div class="lab-icon me-2">
-                                                            <!-- ALTERAÇÃO: Corrigidos os ícones conforme departamento -->
-                                                            {% if 'exatas' in laboratory.department|lower %}
-                                                                <i class="bi bi-gear text-primary"></i>
-                                                            {% elif 'saude' in laboratory.department|lower %}
-                                                                <i class="bi bi-heart-pulse text-danger"></i>
-                                                            {% else %}
-                                                                <i class="bi bi-laptop text-success"></i>
-                                                            {% endif %}
+                                                            <i class="bi bi-building text-primary"></i>
                                                         </div>
                                                         <span>{{ laboratory.name }}</span>
                                                     </div>
@@ -153,6 +157,13 @@
                                                     <button type="button" class="btn btn-sm btn-outline-primary select-lab-btn">
                                                         Selecionar
                                                     </button>
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted py-3">
+                                                    <i class="bi bi-building"></i>
+                                                    <p class="mb-0">Nenhum laboratório disponível</p>
                                                 </td>
                                             </tr>
                                             {% endfor %}
@@ -240,10 +251,10 @@
                         <div class="form-section mb-5">
                             <h5><i class="bi bi-file-text me-2"></i>Detalhes da Atividade</h5>
                             <div class="mb-4">
-                                <label for="{{ form.description.id_for_label }}" class="form-label">Descrição da Atividade</label>
+                                <label for="{{ form.description.id_for_label }}" class="form-label">Descrição da Atividade <span class="text-muted">(opcional)</span></label>
                                 <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" 
                                           class="form-control" rows="4" 
-                                          placeholder="Descreva detalhadamente a atividade que será realizada..."></textarea>
+                                          placeholder="Descreva detalhadamente a atividade que será realizada (opcional)..."></textarea>
                             </div>
                             
                             <div class="mb-4">
@@ -286,6 +297,23 @@
                         <!-- Attachments Section -->
                         <div class="form-section">
                             <h5><i class="bi bi-paperclip me-2"></i>Anexos</h5>
+                            
+                            <!-- Mostrar arquivo existente se estiver editando -->
+                            {% if is_edit and draft_request.guide_file %}
+                            <div class="alert alert-info mb-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-file-earmark me-2"></i>
+                                    <div class="flex-grow-1">
+                                        <strong>Arquivo atual:</strong> {{ draft_request.guide_file.name|basename }}
+                                        <small class="d-block text-muted">Você pode substituir este arquivo anexando um novo abaixo</small>
+                                    </div>
+                                    <a href="{{ draft_request.guide_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye me-1"></i>Visualizar
+                                    </a>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
                             <div class="custom-file-upload" id="dropArea">
                                 <input type="file" name="attachments" id="id_attachments" multiple class="d-none">
                                 <div class="custom-file-icon">
@@ -346,16 +374,17 @@
         
         // Filter labs by search term and department
         function filterLabs() {
-            const searchTerm = labSearch.value.toLowerCase();
-            const departmentValue = departmentFilter.value;
+            const searchTerm = labSearch ? labSearch.value.toLowerCase() : '';
+            const departmentValue = departmentFilter ? departmentFilter.value : 'all';
             let visibleCount = 0;
             
             labRows.forEach(row => {
-                const labName = row.querySelector('td:first-child span').textContent.toLowerCase();
-                const labDepartment = row.dataset.department;
+                const labNameElement = row.querySelector('td:first-child span');
+                const labName = labNameElement ? labNameElement.textContent.toLowerCase() : '';
+                const labDepartments = row.dataset.department ? row.dataset.department.split(',').filter(d => d.trim() !== '') : [];
                 
-                const matchesSearch = labName.includes(searchTerm);
-                const matchesDepartment = departmentValue === 'all' || labDepartment.includes(departmentValue);
+                const matchesSearch = !searchTerm || labName.includes(searchTerm);
+                const matchesDepartment = departmentValue === 'all' || labDepartments.includes(departmentValue);
                 
                 if (matchesSearch && matchesDepartment) {
                     row.classList.remove('d-none');
@@ -366,10 +395,12 @@
             });
             
             // Show "no labs found" message if no results
-            if (visibleCount === 0) {
-                noLabsFound.classList.remove('d-none');
-            } else {
-                noLabsFound.classList.add('d-none');
+            if (noLabsFound) {
+                if (visibleCount === 0) {
+                    noLabsFound.classList.remove('d-none');
+                } else {
+                    noLabsFound.classList.add('d-none');
+                }
             }
         }
         
@@ -527,7 +558,7 @@
             
             const filtered = materials.filter(material => 
                 material.name.toLowerCase().includes(searchTerm) ||
-                material.description.toLowerCase().includes(searchTerm)
+                (material.description && material.description.toLowerCase().includes(searchTerm))
             );
             renderMaterials(filtered);
         }
@@ -556,32 +587,29 @@
             }, 1000);
         }
         
-        function filterMaterials(materials, searchTerm) {
-            if (!searchTerm) {
-                renderMaterials(materials);
-                return;
-            }
-            
-            const filtered = materials.filter(material => 
-                material.name.toLowerCase().includes(searchTerm) ||
-                (material.description && material.description.toLowerCase().includes(searchTerm))
-            );
-            renderMaterials(filtered);
+        // Add event listeners
+        if (labSearch) {
+            labSearch.addEventListener('input', filterLabs);
         }
         
-        // Add event listeners
-        labSearch.addEventListener('input', filterLabs);
-        departmentFilter.addEventListener('change', filterLabs);
+        if (departmentFilter) {
+            departmentFilter.addEventListener('change', filterLabs);
+        }
+        
+        // Initialize filters
+        filterLabs();
         
         // Event listener for lab selection
-        labRows.forEach(row => {
+        labRows.forEach((row, index) => {
             const selectBtn = row.querySelector('.select-lab-btn');
             
-            // Select on button click
-            selectBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                selectLab(row);
-            });
+            if (selectBtn) {
+                // Select on button click
+                selectBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    selectLab(row);
+                });
+            }
             
             // Also select on row click
             row.addEventListener('click', function() {
@@ -684,8 +712,6 @@
         
         // Data de agendamento - validar apenas no backend
         // JavaScript removido para evitar conflitos com validação do servidor
-            });
-        }
         
         // Form submission confirmation
         const form = document.getElementById('scheduleRequestForm');
@@ -722,6 +748,54 @@
                 }
             });
         }
+        
+        // ===== CÓDIGO PARA MODO DE EDIÇÃO =====
+        {% if is_edit and draft_request %}
+        console.log('🔧 Modo de edição ativado - carregando dados do rascunho');
+        
+        // Se já há um laboratório selecionado, carregar seus materiais e marcar os selecionados
+        const currentLabId = {{ draft_request.laboratory.id|default:"null" }};
+        if (currentLabId) {
+            console.log(`🏢 Laboratório do rascunho: ${currentLabId}`);
+            
+            // Carregar materiais do laboratório automaticamente
+            loadLaboratoryMaterials(currentLabId);
+            
+            // Aguardar um pouco para os materiais carregarem, então marcar os selecionados
+            setTimeout(() => {
+                console.log('📦 Marcando materiais selecionados...');
+                
+                // Marcar materiais que estavam selecionados
+                const selectedMaterialIds = {{ form.initial.selected_materials|default:"[]"|safe }};
+                console.log('📦 IDs de materiais para marcar:', selectedMaterialIds);
+                
+                selectedMaterialIds.forEach(materialId => {
+                    const checkbox = document.querySelector(`input[name="selected_materials"][value="${materialId}"]`);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                        console.log(`✅ Material ${materialId} marcado`);
+                    } else {
+                        console.warn(`⚠️ Checkbox para material ${materialId} não encontrado`);
+                    }
+                });
+            }, 1000); // Aguardar 1 segundo para os materiais carregarem
+            
+            // Mostrar informações do laboratório selecionado
+            const labRow = document.querySelector(`tr[data-lab-id="${currentLabId}"]`);
+            if (labRow) {
+                selectLab(labRow);
+                console.log('🏢 Laboratório pré-selecionado no formulário');
+            }
+        }
+        
+        // Modificar mensagem do botão para modo de edição
+        const submitBtn = document.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.innerHTML = '<i class="bi bi-pencil-square me-2"></i>Atualizar Rascunho';
+        }
+        
+        console.log('✅ Modo de edição configurado com sucesso');
+        {% endif %}
     });
 </script>
 {% endblock %}

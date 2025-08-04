@@ -2,6 +2,7 @@
 
 {% extends 'base.html' %}
 {% load static %}
+{% load scheduling_filters %}
 
 {% block title %}Calendário de Agendamentos{% endblock %}
 
@@ -52,11 +53,21 @@
         <!-- Filtros -->
         <div class="calendar-filters">
             <div class="filter-group">
+                <label class="filter-label" for="department-filter">Departamento:</label>
+                <select class="filter-select" id="department-filter">
+                    <option value="all">Todos os departamentos</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept.code }}">{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
                 <label class="filter-label" for="lab-filter">Laboratório:</label>
                 <select class="filter-select" id="lab-filter">
                     <option value="all">Todos os laboratórios</option>
                     {% for lab in laboratories %}
-                        <option value="{{ lab.id }}">{{ lab.name }}</option>
+                        <option value="{{ lab.id }}" data-department="{{ lab|department_codes|join:',' }}">{{ lab.name }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -134,6 +145,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedDate = new Date();
     let events = {{ events|safe|default:"[]" }};
     let selectedLab = 'all';
+    let selectedDepartment = 'all';
     let selectedStatus = 'all';
     
     console.log('Eventos carregados:', events.length);
@@ -148,6 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const prevButton = document.getElementById('prev-month');
     const nextButton = document.getElementById('next-month');
     const todayButton = document.getElementById('today-btn');
+    const departmentFilter = document.getElementById('department-filter');
     const labFilter = document.getElementById('lab-filter');
     const statusFilter = document.getElementById('status-filter');
     
@@ -170,6 +183,14 @@ document.addEventListener('DOMContentLoaded', function() {
         todayButton.addEventListener('click', function() {
             currentDate = new Date();
             selectedDate = new Date();
+            updateCalendar();
+        });
+    }
+    
+    if (departmentFilter) {
+        departmentFilter.addEventListener('change', function() {
+            selectedDepartment = this.value;
+            updateLabFilter();
             updateCalendar();
         });
     }
@@ -224,11 +245,49 @@ document.addEventListener('DOMContentLoaded', function() {
         return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
     }
     
+    function updateLabFilter() {
+        if (!labFilter) return;
+        
+        const labOptions = labFilter.querySelectorAll('option[data-department]');
+        
+        labOptions.forEach(option => {
+            const departments = option.getAttribute('data-department').split(',');
+            
+            if (selectedDepartment === 'all') {
+                option.style.display = 'block';
+            } else {
+                if (departments.includes(selectedDepartment)) {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            }
+        });
+        
+        // Reset lab selection if current selection is hidden
+        const currentOption = labFilter.querySelector(`option[value="${selectedLab}"]`);
+        if (currentOption && currentOption.style.display === 'none') {
+            selectedLab = 'all';
+            labFilter.value = 'all';
+        }
+    }
+    
     function filterEvents(events) {
         return events.filter(event => {
             const labMatch = selectedLab === 'all' || event.laboratory_id == selectedLab;
             const statusMatch = selectedStatus === 'all' || event.status === selectedStatus;
-            return labMatch && statusMatch;
+            
+            // Departamento match - precisa verificar nos dados do evento
+            let departmentMatch = selectedDepartment === 'all';
+            if (!departmentMatch && labFilter) {
+                const labOption = labFilter.querySelector(`option[value="${event.laboratory_id}"]`);
+                if (labOption) {
+                    const departments = labOption.getAttribute('data-department').split(',');
+                    departmentMatch = departments.includes(selectedDepartment);
+                }
+            }
+            
+            return labMatch && statusMatch && departmentMatch;
         });
     }
     
@@ -487,6 +546,7 @@ function renderSelectedDayEvents() {
     }
 
     // Inicialização
+    updateLabFilter();
     updateMonthYear();
     renderDesktopCalendar();
     renderMobileCalendar();

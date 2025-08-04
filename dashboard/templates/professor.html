@@ -129,9 +129,20 @@
                     <h3 class="stats-value">{{ draft_count|default:0 }}</h3>
                     <p class="stats-label">Rascunhos Salvos</p>
                     {% if draft_count > 0 %}
-                        <a href="{% url 'list_draft_schedule_requests' %}" class="btn btn-sm btn-outline-info mt-2">
-                            <i class="bi bi-eye me-1"></i>Ver Rascunhos
-                        </a>
+                        <div class="d-flex gap-1 mt-2">
+                            <a href="{% url 'view_draft_schedule_requests' %}" class="btn btn-sm btn-outline-info flex-fill">
+                                <i class="bi bi-eye me-1"></i>Ver
+                            </a>
+                            {% if is_scheduling_day %}
+                                <a href="{% url 'list_draft_schedule_requests' %}" class="btn btn-sm btn-outline-success flex-fill">
+                                    <i class="bi bi-check-circle me-1"></i>Confirmar
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="text-muted mt-2">
+                            <small><i class="bi bi-info-circle me-1"></i>Nenhum rascunho salvo</small>
+                        </div>
                     {% endif %}
                 </div>
             </div>

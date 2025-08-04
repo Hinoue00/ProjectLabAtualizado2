@@ -76,7 +76,7 @@ class ScheduleRequestForm(forms.ModelForm):
         ]
         widgets = {
             'scheduled_date': DateInput(),
-            'description': forms.Textarea(attrs={'rows': 4}),
+            'description': forms.Textarea(attrs={'rows': 4, 'required': False}),
             'materials': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Liste os materiais necessários para a aula...'}),
         }
 
@@ -100,15 +100,30 @@ class ScheduleRequestForm(forms.ModelForm):
         next_week_end = next_week_start + timedelta(days=5)  # Segunda a sábado
 
         # Configurar o campo de data para permitir segunda a sábado
-        self.fields['scheduled_date'].widget.attrs.update({
-            'min': next_week_start,
-            'max': next_week_end,
-        })
+        # Mas flexibilizar quando editando um rascunho existente
+        instance = kwargs.get('instance')
+        if instance and hasattr(instance, 'scheduled_date') and instance.scheduled_date:
+            # Se editando rascunho, permitir datas mais flexíveis (incluindo a data atual do rascunho)
+            min_date = min(instance.scheduled_date, next_week_start)
+            max_date = max(instance.scheduled_date, next_week_end)
+            self.fields['scheduled_date'].widget.attrs.update({
+                'min': min_date,
+                'max': max_date,
+            })
+        else:
+            # Para novos agendamentos, manter restrição original
+            self.fields['scheduled_date'].widget.attrs.update({
+                'min': next_week_start,
+                'max': next_week_end,
+            })
 
         # Se estamos editando um agendamento existente, preencher o campo de turno
-        instance = kwargs.get('instance')
-        if instance and hasattr(instance, 'start_time') and hasattr(instance, 'end_time'):
-            if instance.start_time:
+        if instance:
+            # Priorizar campo shift se existir
+            if hasattr(instance, 'shift') and instance.shift:
+                self.initial['shift'] = instance.shift
+            elif hasattr(instance, 'start_time') and instance.start_time:
+                # Determinar turno baseado no horário
                 start_hour = instance.start_time.hour
                 if 7 <= start_hour < 12:
                     self.initial['shift'] = 'morning'

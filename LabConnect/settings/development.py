@@ -8,7 +8,7 @@ from .base import *
 load_dotenv()
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-s!9v%s#j@@tjx#=82c5id%t=(w4!pxxi331rnb!n_4^21$tty1')
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'dev-secret-key-change-in-production-with-at-least-50-characters-including-special-chars-123!@#')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

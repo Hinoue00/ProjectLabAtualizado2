@@ -63,6 +63,14 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
     steps:
+    - name: Debug deployment info
+      run: |
+        echo "🔍 Deploy Info:"
+        echo "Branch: ${{ github.ref }}"
+        echo "Event: ${{ github.event_name }}"
+        echo "Commit: ${{ github.sha }}"
+        echo "Actor: ${{ github.actor }}"
+    
     - name: Deploy to Production Server
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -70,24 +78,60 @@ jobs:
         port: ${{ secrets.PROD_PORT }}
         username: ${{ secrets.PROD_USER }}
         key: ${{ secrets.PROD_SSH_KEY }}
+        timeout: 300s
+        command_timeout: 60s
         script: |
-          cd /home/labadm
+          set -e  # Exit on any error
+          
           echo "🚀 Iniciando deploy automático..."
+          echo "📅 Data/Hora: $(date)"
+          echo "👤 Usuário: $(whoami)"
+          echo "📂 Diretório atual: $(pwd)"
+          
+          # Ir para o diretório correto
+          cd /home/labadm
+          echo "📂 Mudando para: $(pwd)"
+          
+          # Verificar se o script existe
+          if [ ! -f "./git-deploy.sh" ]; then
+            echo "❌ Erro: git-deploy.sh não encontrado!"
+            ls -la
+            exit 1
+          fi
+          
+          # Tornar o script executável (caso necessário)
+          chmod +x ./git-deploy.sh
           
           # Executar o script de deploy existente
+          echo "🔧 Executando git-deploy.sh..."
           ./git-deploy.sh
           
           echo "✅ Deploy concluído!"
           
           # Verificar se o serviço está rodando
+          echo "🔍 Verificando status do serviço..."
           if sudo systemctl is-active --quiet labconnect; then
             echo "✅ Serviço LabConnect está ativo"
           else
-            echo "⚠️ Reiniciando serviços..."
+            echo "⚠️ Serviço inativo. Reiniciando..."
             sudo systemctl start labconnect
-            ./start-labconnect-ngrok.sh start
+            sleep 5
+            
+            # Verificar se o ngrok existe e iniciar
+            if [ -f "./start-labconnect-ngrok.sh" ]; then
+              chmod +x ./start-labconnect-ngrok.sh
+              ./start-labconnect-ngrok.sh start
+            else
+              echo "⚠️ start-labconnect-ngrok.sh não encontrado"
+            fi
           fi
           
-          # Status final
+          # Status final detalhado
           echo "📊 Status final:"
-          sudo systemctl status labconnect --no-pager -l
+          sudo systemctl status labconnect --no-pager -l || echo "❌ Erro ao obter status"
+          
+          # Verificar se o processo está rodando
+          echo "🔍 Processos LabConnect:"
+          ps aux | grep -v grep | grep -i labconnect || echo "⚠️ Nenhum processo encontrado"
+          
+          echo "🎉 Deploy finalizado!"

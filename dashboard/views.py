@@ -364,10 +364,45 @@ def professor_dashboard(request):
     approved_count = ScheduleRequest.objects.filter(professor=professor, status='approved').count()
     draft_count = DraftScheduleRequest.objects.filter(professor=professor).count()
     
+    # Buscar próximas aulas aprovadas
+    upcoming_classes = ScheduleRequest.objects.filter(
+        professor=professor,
+        status='approved',
+        scheduled_date__gte=today
+    ).select_related('laboratory').order_by('scheduled_date', 'start_time')
+    
+    # Buscar rascunhos para exibir na seção
+    draft_requests = DraftScheduleRequest.objects.filter(
+        professor=professor
+    ).select_related('laboratory').order_by('-created_at')
+    
+    # Calcular estatísticas da semana
+    this_week_count = ScheduleRequest.objects.filter(
+        professor=professor,
+        status='approved',
+        scheduled_date__range=[start_of_week, end_of_week]
+    ).count()
+    
+    # Calcular mudança percentual (semana anterior)
+    prev_week_start = start_of_week - timedelta(weeks=1)
+    prev_week_end = end_of_week - timedelta(weeks=1)
+    prev_week_count = ScheduleRequest.objects.filter(
+        professor=professor,
+        status='approved',
+        scheduled_date__range=[prev_week_start, prev_week_end]
+    ).count()
+    
+    if prev_week_count > 0:
+        week_change = ((this_week_count - prev_week_count) / prev_week_count) * 100
+    else:
+        week_change = 100 if this_week_count > 0 else 0
+    
     context = {
         'calendar_data': calendar_data,
         'current_week_start': start_of_week,
         'current_week_end': end_of_week,
+        'week_start': start_of_week,
+        'week_end': end_of_week,
         'week_offset': week_offset,
         'prev_week_offset': week_offset - 1,
         'next_week_offset': week_offset + 1,
@@ -379,6 +414,10 @@ def professor_dashboard(request):
         'pending_count': pending_count,
         'approved_count': approved_count,
         'draft_count': draft_count,
+        'this_week_count': this_week_count,
+        'week_change': week_change,
+        'upcoming_classes': upcoming_classes,
+        'draft_requests': draft_requests,
         
         # Compatibility
         'start_of_week': start_of_week,

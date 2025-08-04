@@ -39,7 +39,11 @@ def schedule_calendar(request):
         ).select_related('professor', 'laboratory')
     
     # Obtém todos os laboratórios disponíveis para os filtros
-    laboratories = Laboratory.objects.filter(is_active=True)
+    laboratories = Laboratory.objects.filter(is_active=True).prefetch_related('departments')
+    
+    # Obtém todos os departamentos para o filtro
+    from laboratories.models import Department
+    departments = Department.objects.filter(is_active=True).order_by('name')
     
     # Converter agendamentos para formato JSON - CAMPOS CORRETOS
     events = []
@@ -91,6 +95,7 @@ def schedule_calendar(request):
     context = {
         'calendar_weeks': calendar_weeks,
         'laboratories': laboratories,
+        'departments': departments,
         'events': events,  # CRÍTICO: Esta era a variável que estava faltando!
         'is_scheduling_day': is_scheduling_day,
         'today': today,
@@ -126,6 +131,16 @@ def create_schedule_request(request):
         logger.info(f"📝 PROCESSANDO FORMULÁRIO DE AGENDAMENTO")
         form = ScheduleRequestForm(request.POST, request.FILES)
         
+        # Atualizar queryset de materiais baseado no laboratório selecionado
+        if 'laboratory' in request.POST and request.POST['laboratory']:
+            try:
+                lab_id = int(request.POST['laboratory'])
+                from inventory.models import Material
+                form.fields['selected_materials'].queryset = Material.objects.filter(laboratory_id=lab_id)
+                logger.info(f"📦 QUERYSET DE MATERIAIS ATUALIZADO PARA LAB {lab_id}")
+            except (ValueError, TypeError):
+                logger.warning(f"⚠️ ERRO AO PROCESSAR LAB ID: {request.POST.get('laboratory')}")
+        
         if form.is_valid():
             logger.info(f"✅ FORMULÁRIO VÁLIDO")
             
@@ -135,7 +150,22 @@ def create_schedule_request(request):
                 for field in form.cleaned_data:
                     if hasattr(draft, field):
                         setattr(draft, field, form.cleaned_data[field])
+                
+                # Garantir que os campos obrigatórios estão definidos
                 draft.professor = request.user
+                draft.laboratory = form.cleaned_data['laboratory']
+                
+                # Definir horários baseados no turno (se disponível)
+                if 'shift' in form.cleaned_data and form.cleaned_data['shift']:
+                    draft.shift = form.cleaned_data['shift']
+                    draft.set_times_from_shift()
+                
+                logger.info(f"🔍 DADOS DO RASCUNHO:")
+                logger.info(f"   Professor: {draft.professor.get_full_name()}")
+                logger.info(f"   Laboratório: {draft.laboratory.name if draft.laboratory else 'NULO'}")
+                logger.info(f"   Subject: {draft.subject}")
+                logger.info(f"   Date: {draft.scheduled_date}")
+                logger.info(f"   Turno: {draft.shift}")
                 
                 # Processar materiais selecionados para rascunho
                 selected_materials = request.POST.getlist('selected_materials')
@@ -224,8 +254,13 @@ def create_schedule_request(request):
         logger.info(f"📄 EXIBINDO FORMULÁRIO DE AGENDAMENTO")
         form = ScheduleRequestForm()
     
+    # Obter departamentos para o filtro
+    from laboratories.models import Department
+    departments = Department.objects.filter(is_active=True).order_by('name')
+    
     context = {
         'form': form,
+        'departments': departments,
         'next_week_start': next_week_start,
         'next_week_end': next_week_end,
         'is_confirmation_day': is_confirmation_day
@@ -237,7 +272,7 @@ def create_schedule_request(request):
 @user_passes_test(is_professor)
 def list_draft_schedule_requests(request):
     """
-    Lista os rascunhos de agendamento para confirmação
+    Lista os rascunhos de agendamento para confirmação (apenas quinta/sexta)
     """
     today = timezone.now().date()
     
@@ -252,7 +287,30 @@ def list_draft_schedule_requests(request):
     ).order_by('scheduled_date')
     
     context = {
-        'draft_requests': draft_requests
+        'draft_requests': draft_requests,
+        'can_confirm': True
+    }
+    
+    return render(request, 'draft_requests.html', context)
+
+@login_required
+@user_passes_test(is_professor)
+def view_draft_schedule_requests(request):
+    """
+    Visualiza os rascunhos de agendamento (qualquer dia)
+    """
+    # Busca rascunhos do usuário atual
+    draft_requests = DraftScheduleRequest.objects.filter(
+        professor=request.user
+    ).order_by('scheduled_date')
+    
+    today = timezone.now().date()
+    can_confirm = today.weekday() in [3, 4]  # 3=quinta, 4=sexta
+    
+    context = {
+        'draft_requests': draft_requests,
+        'can_confirm': can_confirm,
+        'is_view_only': not can_confirm
     }
     
     return render(request, 'draft_requests.html', context)
@@ -266,9 +324,9 @@ def confirm_draft_schedule_request(request, draft_id):
     today = timezone.now().date()
     
     # Verifica se é quinta ou sexta-feira
-    if today.weekday() not in [3, 4] or settings.ALLOW_SCHEDULING_ANY_DAY:  # 3=quinta, 4=sexta
+    if today.weekday() not in [3, 4]:  # 3=quinta, 4=sexta
         messages.warning(request, 'Rascunhos só podem ser confirmados às quintas e sextas-feiras.')
-        return redirect('professor_dashboard')
+        return redirect('view_draft_schedule_requests')
     
     draft_request = get_object_or_404(DraftScheduleRequest, id=draft_id, professor=request.user)
     
@@ -282,6 +340,7 @@ def confirm_draft_schedule_request(request, draft_id):
         start_time=draft_request.start_time,
         end_time=draft_request.end_time,
         number_of_students=draft_request.number_of_students,
+        class_semester=draft_request.class_semester,
         materials=draft_request.materials,
         guide_file=draft_request.guide_file,
     )
@@ -291,13 +350,13 @@ def confirm_draft_schedule_request(request, draft_id):
         # Se houver conflito, deleta a solicitação e mantém o rascunho
         schedule_request.delete()
         messages.error(request, 'Já existe um agendamento aprovado para este laboratório neste horário.')
-        return redirect('list_draft_schedule_requests')
+        return redirect('view_draft_schedule_requests')
     
     
     # Deleta o rascunho após confirmação
     draft_request.delete()
     
-    messages.success(request, 'Solicitação de agendamento enviada com sucesso! Aguarde a aprovação.')
+    messages.success(request, f'Solicitação de agendamento "{schedule_request.subject}" enviada com sucesso! Aguarde a aprovação do técnico.')
     return redirect('professor_dashboard')
 
 @login_required
@@ -310,7 +369,7 @@ def delete_draft_schedule_request(request, draft_id):
     draft_request.delete()
     
     messages.success(request, 'Rascunho de agendamento excluído com sucesso.')
-    return redirect('list_draft_schedule_requests')
+    return redirect('view_draft_schedule_requests')
 
 @login_required
 def schedule_request_detail(request, pk):
@@ -480,22 +539,181 @@ def edit_draft_schedule_request(request, draft_id):
     """
     Edita um rascunho de agendamento
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
     draft_request = get_object_or_404(DraftScheduleRequest, id=draft_id, professor=request.user)
+    logger.info(f"📝 EDITANDO RASCUNHO ID: {draft_id}")
+    logger.info(f"   Laboratory: {draft_request.laboratory.name if draft_request.laboratory else 'None'}")
+    logger.info(f"   Subject: {draft_request.subject}")
+    logger.info(f"   Shift: {draft_request.shift}")
     
     if request.method == 'POST':
         form = ScheduleRequestForm(request.POST, request.FILES, instance=draft_request)
+        
+        # Atualizar queryset de materiais baseado no laboratório selecionado
+        if 'laboratory' in request.POST and request.POST['laboratory']:
+            try:
+                lab_id = int(request.POST['laboratory'])
+                from inventory.models import Material
+                form.fields['selected_materials'].queryset = Material.objects.filter(laboratory_id=lab_id)
+                logger.info(f"📦 QUERYSET DE MATERIAIS ATUALIZADO PARA LAB {lab_id}")
+            except (ValueError, TypeError):
+                logger.warning(f"⚠️ ERRO AO PROCESSAR LAB ID: {request.POST.get('laboratory')}")
+        
         if form.is_valid():
-            form.save()
+            updated_draft = form.save(commit=False)
+            
+            # Processar materiais selecionados
+            selected_materials = request.POST.getlist('selected_materials')
+            if selected_materials:
+                materials = Material.objects.filter(id__in=selected_materials)
+                materials_text = ', '.join([mat.name for mat in materials])
+                if updated_draft.materials:
+                    # Se já tem materiais no texto, substituir a seção de materiais selecionados
+                    lines = updated_draft.materials.split('\n')
+                    # Remover linhas que contenham "Materiais selecionados:"
+                    lines = [line for line in lines if 'Materiais selecionados:' not in line]
+                    updated_draft.materials = '\n'.join(lines).strip()
+                    if updated_draft.materials:
+                        updated_draft.materials += f"\n\nMateriais selecionados: {materials_text}"
+                    else:
+                        updated_draft.materials = f"Materiais selecionados: {materials_text}"
+                else:
+                    updated_draft.materials = f"Materiais selecionados: {materials_text}"
+            
+            updated_draft.save()
+            logger.info(f"✅ RASCUNHO ATUALIZADO COM SUCESSO")
             messages.success(request, 'Rascunho de agendamento atualizado com sucesso!')
-            return redirect('professor_dashboard')
+            return redirect('view_draft_schedule_requests')
     else:
         form = ScheduleRequestForm(instance=draft_request)
+        
+        logger.info(f"📋 DADOS DO RASCUNHO PARA PREENCHIMENTO:")
+        logger.info(f"   Laboratory: {draft_request.laboratory.name if draft_request.laboratory else 'None'}")
+        logger.info(f"   Subject: {draft_request.subject}")
+        logger.info(f"   Description: {draft_request.description}")
+        logger.info(f"   Scheduled Date: {draft_request.scheduled_date}")
+        logger.info(f"   Number of Students: {draft_request.number_of_students}")
+        logger.info(f"   Class Semester: {draft_request.class_semester}")
+        logger.info(f"   Materials: {draft_request.materials}")
+        logger.info(f"   Shift: {getattr(draft_request, 'shift', 'N/A')}")
+        
+        # ===== PREENCHER TODOS OS CAMPOS EXPLICITAMENTE =====
+        
+        # Campos básicos do formulário
+        if draft_request.laboratory:
+            form.initial['laboratory'] = draft_request.laboratory.id
+            logger.info(f"🏢 LABORATÓRIO PREENCHIDO: {draft_request.laboratory.name}")
+        
+        if draft_request.subject:
+            form.initial['subject'] = draft_request.subject
+            logger.info(f"📚 DISCIPLINA PREENCHIDA: {draft_request.subject}")
+            
+        if draft_request.description:
+            form.initial['description'] = draft_request.description
+            logger.info(f"📝 DESCRIÇÃO PREENCHIDA")
+            
+        if draft_request.scheduled_date:
+            form.initial['scheduled_date'] = draft_request.scheduled_date
+            logger.info(f"📅 DATA PREENCHIDA: {draft_request.scheduled_date}")
+            
+        if draft_request.number_of_students:
+            form.initial['number_of_students'] = draft_request.number_of_students
+            logger.info(f"👥 NÚMERO DE ALUNOS PREENCHIDO: {draft_request.number_of_students}")
+            
+        if draft_request.class_semester:
+            form.initial['class_semester'] = draft_request.class_semester
+            logger.info(f"🎓 TURMA/SEMESTRE PREENCHIDO: {draft_request.class_semester}")
+        
+        # Arquivo de roteiro
+        if hasattr(draft_request, 'guide_file') and draft_request.guide_file:
+            # O arquivo já anexado será mostrado através do instance
+            logger.info(f"📄 ARQUIVO DE ROTEIRO EXISTENTE: {draft_request.guide_file.name}")
+            
+        # Materiais em texto livre (separado dos materiais selecionáveis)
+        if draft_request.materials:
+            # Separar materiais em texto livre dos materiais selecionados
+            materials_lines = draft_request.materials.split('\n')
+            free_text_materials = []
+            for line in materials_lines:
+                if 'Materiais selecionados:' not in line:
+                    free_text_materials.append(line)
+            
+            if free_text_materials:
+                form.initial['materials'] = '\n'.join(free_text_materials).strip()
+                logger.info(f"📦 MATERIAIS TEXTO LIVRE PREENCHIDOS")
+        
+        # Configurar queryset de materiais para o laboratório do rascunho
+        if draft_request.laboratory:
+            logger.info(f"🔧 CONFIGURANDO MATERIAIS PARA LAB: {draft_request.laboratory.name}")
+            from inventory.models import Material
+            form.fields['selected_materials'].queryset = Material.objects.filter(
+                laboratory=draft_request.laboratory
+            )
+            
+            # Extrair materiais já selecionados do campo de texto
+            selected_material_ids = []
+            if draft_request.materials:
+                # Procurar por linha que contém "Materiais selecionados:"
+                for line in draft_request.materials.split('\n'):
+                    if 'Materiais selecionados:' in line:
+                        # Extrair nomes dos materiais
+                        materials_text = line.replace('Materiais selecionados:', '').strip()
+                        material_names = [name.strip() for name in materials_text.split(',') if name.strip()]
+                        
+                        # Encontrar IDs dos materiais pelos nomes
+                        for name in material_names:
+                            try:
+                                material = Material.objects.get(
+                                    name__icontains=name,
+                                    laboratory=draft_request.laboratory
+                                )
+                                selected_material_ids.append(material.id)
+                                logger.info(f"📦 MATERIAL ENCONTRADO: {material.name} (ID: {material.id})")
+                            except Material.DoesNotExist:
+                                logger.warning(f"⚠️ MATERIAL NÃO ENCONTRADO: {name}")
+                            except Material.MultipleObjectsReturned:
+                                # Se há múltiplos, pegar o primeiro
+                                material = Material.objects.filter(
+                                    name__icontains=name,
+                                    laboratory=draft_request.laboratory
+                                ).first()
+                                if material:
+                                    selected_material_ids.append(material.id)
+                                    logger.info(f"📦 MATERIAL ENCONTRADO (MÚLTIPLOS): {material.name} (ID: {material.id})")
+            
+            # Definir materiais selecionados no formulário
+            if selected_material_ids:
+                form.initial['selected_materials'] = selected_material_ids
+                logger.info(f"✅ MATERIAIS PRÉ-SELECIONADOS: {len(selected_material_ids)} itens")
+        
+        # Configurar turno baseado nos horários ou campo shift
+        if hasattr(draft_request, 'shift') and draft_request.shift:
+            form.initial['shift'] = draft_request.shift
+            logger.info(f"🕐 TURNO PRÉ-SELECIONADO: {draft_request.shift}")
+        elif draft_request.start_time:
+            # Determinar turno baseado no horário de início
+            start_hour = draft_request.start_time.hour
+            if 7 <= start_hour < 12:
+                form.initial['shift'] = 'morning'
+            elif 19 <= start_hour < 23:
+                form.initial['shift'] = 'evening'
+            logger.info(f"🕐 TURNO DETERMINADO PELO HORÁRIO: {form.initial.get('shift', 'indefinido')}")
+        
+        logger.info(f"📋 DADOS INICIAIS DO FORMULÁRIO: {form.initial}")
+    
+    # Obter departamentos para filtro
+    from laboratories.models import Department
+    departments = Department.objects.filter(is_active=True).order_by('name')
     
     context = {
         'form': form,
+        'departments': departments,
         'title': 'Editar Rascunho de Agendamento',
         'is_edit': True,
         'draft_id': draft_id,
+        'draft_request': draft_request,
     }
     
     return render(request, 'create_request.html', context)
