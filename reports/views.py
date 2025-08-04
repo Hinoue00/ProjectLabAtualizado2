@@ -16,8 +16,17 @@ from inventory.models import Material, MaterialCategory
 from scheduling.models import ScheduleRequest
 from accounts.models import User
 from weasyprint import HTML
-import pandas as pd
-import matplotlib.pyplot as plt
+
+# Importações condicionais para relatórios avançados
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
+
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
 import io
 import base64
 import tempfile

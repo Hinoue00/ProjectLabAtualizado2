@@ -9,9 +9,19 @@ from accounts.views import is_technician, is_professor
 from .models import Material, MaterialCategory
 from .forms import MaterialForm, MaterialCategoryForm, ImportMaterialsForm
 from laboratories.models import Laboratory
-import pandas as pd
-import openpyxl
-from openpyxl.styles import Font, Alignment, PatternFill
+
+# Importações condicionais para funcionalidades de importação
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
+
+try:
+    import openpyxl
+    from openpyxl.styles import Font, Alignment, PatternFill
+except ImportError:
+    openpyxl = None
+    Font = Alignment = PatternFill = None
 import csv
 import io
 from django.http import JsonResponse, HttpResponse
@@ -251,12 +261,15 @@ def import_materials(request):
             skip_errors = request.POST.get('skip_errors', False)
             
             try:
+                # Verificar se pandas está disponível
+                if pd is None:
+                    messages.error(request, 'Funcionalidade de importação não disponível. Entre em contato com o administrador.')
+                    return redirect('import_materials')
+                
                 # Ler arquivo baseado na extensão
                 if file.name.endswith('.csv'):
-                    import pandas as pd
                     df = pd.read_csv(file)
                 elif file.name.endswith(('.xlsx', '.xls')):
-                    import pandas as pd
                     df = pd.read_excel(file)
                 else:
                     messages.error(request, 'Formato de arquivo não suportado.')
@@ -519,6 +532,11 @@ def export_materials(request):
     """Exportar materiais para Excel"""
     materials = Material.objects.select_related('category', 'laboratory').all()
     
+    # Verificar se openpyxl está disponível
+    if openpyxl is None:
+        # Fallback para CSV
+        return export_materials_csv(request)
+    
     # Criar workbook
     workbook = openpyxl.Workbook()
     worksheet = workbook.active
@@ -533,7 +551,7 @@ def export_materials(request):
     for col_num, header in enumerate(headers, 1):
         cell = worksheet.cell(row=1, column=col_num)
         cell.value = header
-        cell.font = openpyxl.styles.Font(bold=True)
+        cell.font = Font(bold=True)
     
     # Adicionar dados
     for row_num, material in enumerate(materials, 2):
@@ -942,8 +960,10 @@ def download_template_excel(request):
     Gera e faz download de template Excel para importação de materiais
     """
     try:
-        import openpyxl
-        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        # Verificar se openpyxl está disponível
+        if openpyxl is None:
+            return download_template_csv(request)
+            
         from openpyxl.utils import get_column_letter
         import io
         

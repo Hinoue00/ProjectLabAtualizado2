@@ -1,7 +1,6 @@
 # inventory/forms.py
 from django import forms
 from .models import Material, MaterialCategory
-import pandas as pd
 from .services import DoclingService
 from django.conf import settings
 
