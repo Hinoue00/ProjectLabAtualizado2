@@ -15,9 +15,11 @@ from laboratories.models import Laboratory
 from inventory.models import Material, MaterialCategory
 from scheduling.models import ScheduleRequest
 from accounts.models import User
-from weasyprint import HTML
-
 # Importações condicionais para relatórios avançados
+try:
+    from weasyprint import HTML
+except ImportError:
+    HTML = None
 try:
     import pandas as pd
 except ImportError:
@@ -268,6 +270,11 @@ def scheduling_report(request, report_id, format='pdf'):
     }
     
     if format == 'pdf':
+        # Verificar se weasyprint está disponível
+        if HTML is None:
+            messages.error(request, 'Geração de PDF não disponível. Entre em contato com o administrador.')
+            return redirect('reports:scheduling_report', report_id=report.id)
+        
         # Render HTML
         html_string = render_to_string('reports/scheduling_pdf.html', context)
         
@@ -483,6 +490,11 @@ def inventory_report(request, report_id, format='pdf'):
     }
     
     if format == 'pdf':
+        # Verificar se weasyprint está disponível
+        if HTML is None:
+            messages.error(request, 'Geração de PDF não disponível. Entre em contato com o administrador.')
+            return redirect('reports:inventory_report')
+        
         # Render HTML
         html_string = render_to_string('reports/inventory_pdf.html', context)
         
@@ -732,6 +744,11 @@ def user_activity_report(request, report_id, format='pdf'):
     }
     
     if format == 'pdf':
+        # Verificar se weasyprint está disponível
+        if HTML is None:
+            messages.error(request, 'Geração de PDF não disponível. Entre em contato com o administrador.')
+            return redirect('reports:user_activity_report', report_id=report.id)
+        
         # Render HTML
         html_string = render_to_string('reports/user_activity_pdf.html', context)
         
