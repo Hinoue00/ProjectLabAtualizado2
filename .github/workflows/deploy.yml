@@ -79,6 +79,14 @@ jobs:
         echo "Event: ${{ github.event_name }}"
         echo "Commit: ${{ github.sha }}"
         echo "Actor: ${{ github.actor }}"
+        
+    - name: Debug secrets availability
+      run: |
+        echo "🔐 Verificando secrets:"
+        echo "PROD_HOST existe: ${{ secrets.PROD_HOST != '' }}"
+        echo "PROD_PORT existe: ${{ secrets.PROD_PORT != '' }}"
+        echo "PROD_USER existe: ${{ secrets.PROD_USER != '' }}"
+        echo "PROD_SSH_KEY existe: ${{ secrets.PROD_SSH_KEY != '' }}"
     
     - name: Deploy to Production Server
       uses: appleboy/ssh-action@v1.0.3
