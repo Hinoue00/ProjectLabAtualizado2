@@ -10,18 +10,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     
-    services:
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_labconnect
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    
     steps:
     - uses: actions/checkout@v4
     
@@ -47,15 +35,16 @@ jobs:
       run: |
         echo "SECRET_KEY=test-secret-key-for-github-actions" > .env
         echo "DEBUG=True" >> .env
-        echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/test_labconnect" >> .env
+        echo "DOCLING_ENABLED=False" >> .env
+        echo "WHATSAPP_ENABLED=False" >> .env
         
     - name: Run migrations
       run: |
-        python manage.py migrate --settings=LabConnect.settings.development
+        python manage.py migrate --settings=LabConnect.settings.ci
         
     - name: Run tests
       run: |
-        python manage.py test --settings=LabConnect.settings.development
+        python manage.py test --settings=LabConnect.settings.ci
 
   deploy:
     needs: test
