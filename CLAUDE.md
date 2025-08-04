@@ -90,6 +90,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Deploy Automático**: Configurado deploy automático via GitHub Actions com testes e validação
 - **PostgreSQL 14**: Atualizado CI para usar PostgreSQL 14 conforme requisitos do Django
 - **Secrets Configurados**: SSH keys e credenciais configuradas para deploy em produção
+- **Chave SSH Corrigida**: Formato da chave SSH privada ajustado para funcionamento correto
 
 ### UI/UX Improvements (ATT0.1 Branch)
 - **Dark Theme Standardization**: Consistent dark mode across all pages using centralized CSS variables
