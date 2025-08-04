@@ -724,7 +724,7 @@
                     return;
                 }
                 
-                const isConfirmationDay = {{ is_confirmation_day|yesno:"true,false" }};
+                const isConfirmationDay = {% if is_confirmation_day %}true{% else %}false{% endif %};
                 
                 // Nota: Validação de domingos feita apenas no evento 'input' acima
                 
