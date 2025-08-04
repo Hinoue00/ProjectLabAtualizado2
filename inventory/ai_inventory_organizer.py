@@ -3,8 +3,10 @@
 # Importações condicionais para AI
 try:
     import pandas as pd
+    DataFrame = pd.DataFrame
 except ImportError:
     pd = None
+    DataFrame = object  # Fallback type
 
 try:
     import numpy as np  
@@ -96,7 +98,7 @@ class AIInventoryOrganizer:
             'structure_detected': 'unknown'
         }
     
-    def _detect_complex_structure(self, df: pd.DataFrame) -> Dict[str, Any]:
+    def _detect_complex_structure(self, df: DataFrame) -> Dict[str, Any]:
         """
         Detecta estruturas complexas de planilhas que não seguem padrão tradicional
         """
@@ -149,7 +151,7 @@ class AIInventoryOrganizer:
         print(f"DEBUG: Colunas detectadas: {detected_columns}")
         return {'detected_columns': detected_columns}
     
-    def _extract_materials_from_complex_structure(self, df: pd.DataFrame, structure_info: Dict) -> pd.DataFrame:
+    def _extract_materials_from_complex_structure(self, df: DataFrame, structure_info: Dict) -> DataFrame:
         """
         Extrai materiais de estruturas complexas detectadas
         """
@@ -222,7 +224,7 @@ class AIInventoryOrganizer:
         materials_df = pd.DataFrame(all_materials)
         return materials_df
     
-    def _detect_lab_from_context(self, material_name: str, mat_col: Dict, df: pd.DataFrame, row_idx: int) -> str:
+    def _detect_lab_from_context(self, material_name: str, mat_col: Dict, df: DataFrame, row_idx: int) -> str:
         """
         Detecta laboratório baseado no contexto da planilha
         """
@@ -375,7 +377,7 @@ class AIInventoryOrganizer:
             }
     
     # Manter todos os outros métodos da versão anterior
-    def _read_and_analyze_excel(self, file_path: str) -> pd.DataFrame:
+    def _read_and_analyze_excel(self, file_path: str) -> DataFrame:
         """Lê planilha - Mantido da versão anterior"""
         try:
             if file_path.endswith('.csv'):
@@ -397,7 +399,7 @@ class AIInventoryOrganizer:
         logger.info(f"Planilha carregada: {len(df)} linhas, {len(df.columns)} colunas")
         return df
     
-    def _apply_ai_organization(self, df: pd.DataFrame, options: Dict) -> pd.DataFrame:
+    def _apply_ai_organization(self, df: DataFrame, options: Dict) -> DataFrame:
         """Aplica IA - Mantido da versão anterior"""
         organized_rows = []
         
@@ -504,10 +506,10 @@ class AIInventoryOrganizer:
         return templates.get(str(categoria), f"{nome} - Material para uso em laboratório")
     
     # Manter outros métodos necessários da versão anterior
-    def _detect_and_handle_duplicates(self, df: pd.DataFrame, options: Dict) -> pd.DataFrame:
+    def _detect_and_handle_duplicates(self, df: DataFrame, options: Dict) -> DataFrame:
         return df  # Simplificado para esta versão
     
-    def _validate_final_data(self, df: pd.DataFrame) -> pd.DataFrame:
+    def _validate_final_data(self, df: DataFrame) -> DataFrame:
         required_columns = ['nome', 'categoria', 'laboratorio', 'quantidade', 'estoque_minimo']
         
         for col in required_columns:
@@ -529,7 +531,7 @@ class AIInventoryOrganizer:
         
         return df
     
-    def _save_organized_data(self, df: pd.DataFrame, options: Dict) -> List[Dict]:
+    def _save_organized_data(self, df: DataFrame, options: Dict) -> List[Dict]:
         results = []
         created_count = 0
         updated_count = 0

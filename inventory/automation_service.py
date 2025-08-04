@@ -2,8 +2,12 @@
 # Importações condicionais para automação
 try:
     import pandas as pd
+    DataFrame = pd.DataFrame
+    Series = pd.Series
 except ImportError:
     pd = None
+    DataFrame = object  # Fallback type
+    Series = object     # Fallback type
 
 try:
     import numpy as np
@@ -70,8 +74,12 @@ class InventoryAutomationService:
                 'stats': self.stats
             }
     
-    def _read_excel_file(self, file_path: str) -> pd.DataFrame:
+    def _read_excel_file(self, file_path: str) -> DataFrame:
         """Lê arquivo Excel e detecta automaticamente a estrutura"""
+        
+        # Verificar se pandas está disponível
+        if pd is None:
+            raise ImportError("Pandas não está disponível. Funcionalidade de automação desabilitada.")
         
         # Tentar diferentes formatos de arquivo
         try:
@@ -130,7 +138,7 @@ class InventoryAutomationService:
         
         return column_mapping.get(normalized, normalized)
     
-    def _clean_and_validate_data(self, df: pd.DataFrame) -> pd.DataFrame:
+    def _clean_and_validate_data(self, df: DataFrame) -> DataFrame:
         """Limpa e valida os dados do DataFrame"""
         
         # Verificar colunas obrigatórias
@@ -171,7 +179,7 @@ class InventoryAutomationService:
         
         return df
     
-    def _auto_map_columns(self, df: pd.DataFrame) -> pd.DataFrame:
+    def _auto_map_columns(self, df: DataFrame) -> DataFrame:
         """Mapeia automaticamente colunas baseado no conteúdo"""
         
         # Analisar primeira linha de dados para identificar padrões
@@ -191,7 +199,7 @@ class InventoryAutomationService:
         
         return df
     
-    def _enrich_data_with_analysis(self, df: pd.DataFrame) -> pd.DataFrame:
+    def _enrich_data_with_analysis(self, df: DataFrame) -> DataFrame:
         """Enriquece dados com análise automática do Docling"""
         
         enriched_rows = []
@@ -316,7 +324,7 @@ class InventoryAutomationService:
         # Retornar primeiro laboratório disponível como padrão
         return Laboratory.objects.first()
     
-    def _save_materials_to_database(self, df: pd.DataFrame) -> List[Dict[str, Any]]:
+    def _save_materials_to_database(self, df: DataFrame) -> List[Dict[str, Any]]:
         """Salva materiais no banco de dados"""
         
         results = []
@@ -344,7 +352,7 @@ class InventoryAutomationService:
         
         return results
     
-    def _create_or_update_material(self, row: pd.Series) -> Dict[str, Any]:
+    def _create_or_update_material(self, row: Series) -> Dict[str, Any]:
         """Cria ou atualiza um material"""
         
         name = row['name']
