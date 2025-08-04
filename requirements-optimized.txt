@@ -1,0 +1,86 @@
+# Requirements otimizados para LabConnect - Performance Máxima
+# Gerado automaticamente para produção otimizada
+
+# Framework principal - versões estáveis
+Django==5.2
+djangorestframework==3.16.0
+
+# Cache e Performance - OTIMIZAÇÕES PRINCIPAIS
+django-redis==5.4.0
+redis==5.2.1
+django-compressor==4.6.1
+django-cache-machine==1.2.0
+django-cachalot==2.7.1
+
+# Banco de dados otimizado
+psycopg2-binary==2.9.10
+asyncpg==0.30.0
+django-db-connection-pool==1.2.5
+
+# Interface otimizada  
+django-crispy-forms==2.3
+crispy-bootstrap5==2025.4
+whitenoise==6.8.2
+
+# Processamento assíncrono para performance
+celery==5.4.0
+kombu==5.4.2
+billiard==4.2.1
+
+# IA e análise (otimizado)
+docling==2.28.4
+transformers==4.51.1
+torch==2.6.0+cpu  # CPU only para performance
+spacy==3.8.5
+easyocr==1.7.2
+
+# APIs e integrações (essenciais)
+openai==1.71.0
+requests==2.32.3
+aiohttp==3.11.16
+
+# Documentos e relatórios
+pandas==2.2.3
+openpyxl==3.1.5
+python-docx==1.1.2
+pypdf2==4.30.1
+
+# Visualização (minimalista)
+matplotlib==3.10.1
+beautifulsoup4==4.13.3
+
+# Produção e deploy
+gunicorn==23.0.0
+supervisor==4.2.5
+dj-database-url==2.3.0
+python-dotenv==1.0.1
+
+# Monitoramento e logging
+sentry-sdk==2.20.0
+django-extensions==3.2.3
+django-debug-toolbar==4.7.0  # Apenas para desenvolvimento
+
+# Segurança otimizada
+cryptography==44.0.0
+argon2-cffi==23.1.0
+django-cors-headers==4.6.0
+
+# Utilitários essenciais
+pillow==11.1.0
+python-dateutil==2.9.0
+pytz==2025.1
+six==1.17.0
+
+# Compressão e otimização de assets
+rcssmin==1.1.2
+rjsmin==1.2.2
+
+# WebSockets para tempo real (futuro)
+channels==4.2.0
+channels-redis==4.2.0
+
+# Testes otimizados
+pytest==8.3.4
+pytest-django==4.9.0
+pytest-cov==6.0.0
+factory-boy==3.4.0

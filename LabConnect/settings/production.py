@@ -24,11 +24,33 @@ DATABASES = {
     }
 }
 
-# Configuração de cache para produção
+# Configuração de cache para produção - OTIMIZADA
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
         'LOCATION': os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/1'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'CONNECTION_POOL_KWARGS': {
+                'max_connections': 20,
+                'retry_on_timeout': True,
+            },
+            'SERIALIZER': 'django_redis.serializers.json.JSONSerializer',
+            'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',
+        },
+        'TIMEOUT': 300,  # 5 minutos default
+        'KEY_PREFIX': 'labconnect',
+        'VERSION': 1,
+    },
+    'sessions': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/2'),
+        'TIMEOUT': 1800,  # 30 minutos para sessões
+    },
+    'templates': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/3'),
+        'TIMEOUT': 600,  # 10 minutos para templates
     }
 }
 
@@ -37,8 +59,64 @@ MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 MIDDLEWARE.insert(0, 'django.middleware.cache.UpdateCacheMiddleware')
 MIDDLEWARE.append('django.middleware.cache.FetchFromCacheMiddleware')
 
-# Configuração de arquivos estáticos para produção
+# Configuração de arquivos estáticos para produção - OTIMIZADA
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Configurações de cache de página completa
+CACHE_MIDDLEWARE_ALIAS = 'default'
+CACHE_MIDDLEWARE_SECONDS = 60  # 1 minuto para páginas inteiras
+CACHE_MIDDLEWARE_KEY_PREFIX = 'labconnect_page'
+
+# Sessões no Redis para performance
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'sessions'
+SESSION_COOKIE_AGE = 1800  # 30 minutos
+
+# Configurações de compressão
+COMPRESS_ENABLED = True
+COMPRESS_OFFLINE = True
+COMPRESS_CSS_FILTERS = [
+    'compressor.filters.css_default.CssAbsoluteFilter',
+    'compressor.filters.cssmin.rCSSMinFilter',
+]
+COMPRESS_JS_FILTERS = [
+    'compressor.filters.jsmin.JSMinFilter',
+]
+
+# Configurações de database otimizadas
+DATABASES['default']['OPTIONS'] = {
+    'MAX_CONNS': 20,
+    'OPTIONS': {
+        'MAX_CONNS': 20,
+    }
+}
+
+# Configurações de logging otimizadas
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'INFO',  # Reduzir para INFO em produção
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': '/var/www/labconnect/logs/labconnect.log',
+            'maxBytes': 15728640,  # 15MB
+            'backupCount': 5,
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'scheduling': {
+            'handlers': ['file'],
+            'level': 'INFO',  # Reduzir de DEBUG para INFO
+            'propagate': True,
+        },
+    },
+}
 
 # Configurações de segurança para produção
 SECURE_SSL_REDIRECT = True

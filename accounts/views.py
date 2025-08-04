@@ -90,32 +90,65 @@ def is_professor(user):
 @login_required
 @user_passes_test(is_technician)
 def pending_approvals(request):
-    pending_users = User.objects.filter(is_approved=False)
+    # Cache otimizado para lista de usuários pendentes
+    cache_key = f'pending_users_{request.user.id}'
+    pending_users = cache.get(cache_key)
+    
+    if pending_users is None:
+        pending_users = list(User.objects.filter(is_approved=False).select_related().only(
+            'id', 'first_name', 'last_name', 'email', 'phone_number', 
+            'user_type', 'lab_department', 'registration_date'
+        ))
+        cache.set(cache_key, pending_users, 120)  # Cache por 2 minutos
+    
+    # Suporte a AJAX para atualizações em tempo real
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
     if request.method == 'POST':
         user_id = request.POST.get('user_id')
         action = request.POST.get('action')
         
         if user_id and action:
-            user = User.objects.get(id=user_id)
-            
-            if action == 'approve':
-                user.is_approved = True
-                user.save()
+            try:
+                user = User.objects.get(id=user_id)
                 
+                if action == 'approve':
+                    user.is_approved = True
+                    user.save()
+                    
 
-                # Adicionar: Enviar notificação WhatsApp
-                WhatsAppNotificationService.notify_user_approval(user)
+                    # Adicionar: Enviar notificação WhatsApp
+                    WhatsAppNotificationService.notify_user_approval(user)
+                    
+                    messages.success(request, f'Usuário {user.get_full_name()} foi aprovado com sucesso.')
+
+                elif action == 'reject':
+
+                    # Adicionar: Enviar notificação WhatsApp
+                    WhatsAppNotificationService.notify_user_rejection(user)
+                    
+                    user.delete()  # Ou marcar como rejeitado ao invés de deletar
+                    messages.warning(request, f'Usuário {user.get_full_name()} foi rejeitado.')
                 
-                messages.success(request, f'Usuário {user.get_full_name()} foi aprovado com sucesso.')
-
-            elif action == 'reject':
-
-                # Adicionar: Enviar notificação WhatsApp
-                WhatsAppNotificationService.notify_user_rejection(user)
+                # Invalidar cache após mudanças
+                cache.delete(f'pending_users_{request.user.id}')
                 
-                user.delete()  # Ou marcar como rejeitado ao invés de deletar
-                messages.warning(request, f'Usuário {user.get_full_name()} foi rejeitado.')
+                # Resposta AJAX ou redirect normal
+                if is_ajax:
+                    return JsonResponse({
+                        'success': True,
+                        'message': f'Usuário processado com sucesso!',
+                        'action': action,
+                        'user_id': user_id
+                    })
+                
+            except User.DoesNotExist:
+                if is_ajax:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Usuário não encontrado'
+                    }, status=404)
+                messages.error(request, 'Usuário não encontrado')
         
         return redirect('pending_approvals')
     

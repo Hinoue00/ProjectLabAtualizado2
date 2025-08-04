@@ -167,7 +167,7 @@
                     {% endif %}
 
                     <div class="actions">
-                        <form method="post" class="d-inline" onsubmit="showLoading()">
+                        <form method="post" class="d-inline" data-ajax="true" data-realtime-update="true">
                             {% csrf_token %}
                             <input type="hidden" name="schedule_id" value="{{ request.id }}">
                             <button type="submit" name="action" value="approve" class="btn btn-success btn-sm">
@@ -196,7 +196,7 @@
                             </h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                         </div>
-                        <form method="post" onsubmit="showLoading()">
+                        <form method="post" data-ajax="true" data-realtime-update="true">
                             {% csrf_token %}
                             <input type="hidden" name="schedule_id" value="{{ request.id }}">
                             <input type="hidden" name="action" value="reject">

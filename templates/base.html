@@ -341,4 +341,9 @@
     
     <!-- Feature-specific JS (load only when needed) -->
     <script src="{% static 'js/chatbot-global.js' %}"></script>
+    
+    <!-- Real-time updates para performance otimizada -->
+    {% if user.is_authenticated and user.is_approved %}
+    <script src="{% static 'js/real-time-updates.js' %}"></script>
+    {% endif %}
 
