@@ -12,11 +12,15 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']
 
-# Database para CI - usar SQLite para simplicidade
+# Database para CI - usar PostgreSQL como em produção
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': ':memory:',  # Banco em memória para CI
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'test_labconnect',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
