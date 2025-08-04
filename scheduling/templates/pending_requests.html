@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Solicitações Pendentes | LabConnect{% endblock %}
+
+{% block extra_css %}
+<style>
+    .request-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid var(--warning-color);
+        margin-bottom: 1rem;
+    }
+    
+    .request-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .request-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+    
+    .request-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+    
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .info-item i {
+        color: var(--primary-color);
+        width: 16px;
+    }
+    
+    .actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-muted);
+    }
+    
+    .loading {
+        display: none;
+        text-align: center;
+        padding: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .request-info {
+            grid-template-columns: 1fr;
+        }
+        
+        .actions {
+            flex-direction: column;
+        }
+        
+        .actions .btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="page-title">
+                    <i class="bi bi-hourglass-split me-2"></i>
+                    Solicitações Pendentes
+                </h1>
+                <p class="page-subtitle">
+                    Aprovar ou rejeitar solicitações de agendamento
+                    {% if total_count > 50 %}
+                        <span class="badge bg-warning ms-2">Mostrando 50 de {{ total_count }}</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <span class="badge bg-warning fs-6">{{ total_count }} pendente{{ total_count|pluralize }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading" id="loading">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p>Processando solicitação...</p>
+    </div>
+
+    <!-- Requests List -->
+    <div id="requests-container">
+        {% if pending_requests %}
+            {% for request in pending_requests %}
+            <div class="card request-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="request-avatar me-3">
+                                {{ request.professor.first_name|first }}{{ request.professor.last_name|first }}
+                            </div>
+                            <div>
+                                <h5 class="mb-1">{{ request.professor.get_full_name }}</h5>
+                                <small class="text-muted">{{ request.professor.email }}</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-warning">
+                            <i class="bi bi-clock me-1"></i>
+                            {{ request.request_date|timesince }} atrás
+                        </span>
+                    </div>
+
+                    <div class="request-info">
+                        <div class="info-item">
+                            <i class="bi bi-building"></i>
+                            <span><strong>Lab:</strong> {{ request.laboratory.name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="bi bi-calendar3"></i>
+                            <span><strong>Data:</strong> {{ request.scheduled_date|date:"d/m/Y" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="bi bi-clock"></i>
+                            <span><strong>Horário:</strong> {{ request.start_time|time:"H:i" }} - {{ request.end_time|time:"H:i" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="bi bi-book"></i>
+                            <span><strong>Disciplina:</strong> {{ request.subject }}</span>
+                        </div>
+                        {% if request.number_of_students %}
+                        <div class="info-item">
+                            <i class="bi bi-people"></i>
+                            <span><strong>Alunos:</strong> {{ request.number_of_students }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if request.description %}
+                    <div class="mb-3">
+                        <h6><i class="bi bi-file-text me-1"></i>Descrição:</h6>
+                        <p class="text-muted small">{{ request.description|truncatewords:20 }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="actions">
+                        <form method="post" class="d-inline" onsubmit="showLoading()">
+                            {% csrf_token %}
+                            <input type="hidden" name="schedule_id" value="{{ request.id }}">
+                            <button type="submit" name="action" value="approve" class="btn btn-success btn-sm">
+                                <i class="bi bi-check-circle me-1"></i> Aprovar
+                            </button>
+                        </form>
+                        
+                        <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal{{ request.id }}">
+                            <i class="bi bi-x-circle me-1"></i> Rejeitar
+                        </button>
+                        
+                        <a href="{% url 'schedule_request_detail' request.id %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye me-1"></i> Ver Detalhes
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de Rejeição -->
+            <div class="modal fade" id="rejectModal{{ request.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title">
+                                <i class="bi bi-exclamation-triangle me-2"></i>Rejeitar Solicitação
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form method="post" onsubmit="showLoading()">
+                            {% csrf_token %}
+                            <input type="hidden" name="schedule_id" value="{{ request.id }}">
+                            <input type="hidden" name="action" value="reject">
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Motivo da Rejeição *</label>
+                                    <textarea name="rejection_reason" class="form-control" rows="3" required 
+                                              placeholder="Explique o motivo da rejeição..."></textarea>
+                                </div>
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    O professor receberá uma notificação WhatsApp com este motivo.
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-check-lg me-1"></i> Confirmar Rejeição
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="card">
+                <div class="card-body">
+                    <div class="empty-state">
+                        <i class="bi bi-check-circle display-4 text-success"></i>
+                        <h4 class="mt-3">Nenhuma solicitação pendente</h4>
+                        <p>Todas as solicitações foram processadas.</p>
+                        <a href="{% url 'technician_dashboard' %}" class="btn btn-primary">
+                            <i class="bi bi-arrow-left me-1"></i> Voltar ao Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showLoading() {
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('requests-container').style.opacity = '0.5';
+}
+
+// Auto-refresh every 30 seconds if there are pending requests
+{% if pending_requests %}
+setInterval(function() {
+    // Only refresh if user is still on the page
+    if (document.visibilityState === 'visible') {
+        location.reload();
+    }
+}, 30000);
+{% endif %}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        // Close any open modals
+        const modals = document.querySelectorAll('.modal.show');
+        modals.forEach(modal => {
+            const bsModal = bootstrap.Modal.getInstance(modal);
+            if (bsModal) bsModal.hide();
+        });
+    }
+});
+</script>
+{% endblock %}

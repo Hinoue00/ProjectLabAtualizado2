@@ -13,6 +13,16 @@ from django.urls import reverse
 from django.http import JsonResponse
 from whatsapp.services import WhatsAppNotificationService
 from inventory.models import Material
+from django.core.cache import cache
+
+
+def invalidate_schedule_caches():
+    """Invalida todos os caches relacionados a agendamentos"""
+    cache_keys = [
+        'pending_requests_list',
+        'pending_appointments_count',
+    ]
+    cache.delete_many(cache_keys)
 
 
 @login_required
@@ -209,6 +219,7 @@ def create_schedule_request(request):
                 # Salvar o agendamento
                 logger.info(f"💾 SALVANDO AGENDAMENTO...")
                 schedule_request.save()
+                invalidate_schedule_caches()  # Invalidar cache
                 logger.info(f"✅ AGENDAMENTO SALVO COM SUCESSO - ID: {schedule_request.pk}")
                 
                 # Processar materiais selecionados
@@ -344,6 +355,8 @@ def confirm_draft_schedule_request(request, draft_id):
         materials=draft_request.materials,
         guide_file=draft_request.guide_file,
     )
+    
+    invalidate_schedule_caches()  # Invalidar cache
     
     # Verifica conflitos de horário
     if schedule_request.is_conflicting():
@@ -562,28 +575,42 @@ def edit_draft_schedule_request(request, draft_id):
                 logger.warning(f"⚠️ ERRO AO PROCESSAR LAB ID: {request.POST.get('laboratory')}")
         
         if form.is_valid():
-            updated_draft = form.save(commit=False)
+            # CORREÇÃO: Não usar form.save() pois o form é de ScheduleRequest, não DraftScheduleRequest
+            # Copiar dados manualmente para o rascunho existente
+            draft_request.laboratory = form.cleaned_data['laboratory']
+            draft_request.subject = form.cleaned_data['subject']
+            draft_request.description = form.cleaned_data['description']
+            draft_request.scheduled_date = form.cleaned_data['scheduled_date']
+            draft_request.number_of_students = form.cleaned_data['number_of_students']
+            draft_request.class_semester = form.cleaned_data['class_semester']
+            
+            # Processar turno para definir horários
+            if 'shift' in form.cleaned_data and form.cleaned_data['shift']:
+                draft_request.shift = form.cleaned_data['shift']
+                draft_request.set_times_from_shift()
+            
+            # Processar arquivo de roteiro
+            if form.cleaned_data.get('guide_file'):
+                draft_request.guide_file = form.cleaned_data['guide_file']
             
             # Processar materiais selecionados
             selected_materials = request.POST.getlist('selected_materials')
+            materials_text_from_form = form.cleaned_data.get('materials', '')
+            
             if selected_materials:
                 materials = Material.objects.filter(id__in=selected_materials)
-                materials_text = ', '.join([mat.name for mat in materials])
-                if updated_draft.materials:
-                    # Se já tem materiais no texto, substituir a seção de materiais selecionados
-                    lines = updated_draft.materials.split('\n')
-                    # Remover linhas que contenham "Materiais selecionados:"
-                    lines = [line for line in lines if 'Materiais selecionados:' not in line]
-                    updated_draft.materials = '\n'.join(lines).strip()
-                    if updated_draft.materials:
-                        updated_draft.materials += f"\n\nMateriais selecionados: {materials_text}"
-                    else:
-                        updated_draft.materials = f"Materiais selecionados: {materials_text}"
+                materials_list = ', '.join([mat.name for mat in materials])
+                
+                # Combinar materiais do texto livre com selecionados
+                if materials_text_from_form:
+                    draft_request.materials = f"{materials_text_from_form}\n\nMateriais selecionados: {materials_list}"
                 else:
-                    updated_draft.materials = f"Materiais selecionados: {materials_text}"
+                    draft_request.materials = f"Materiais selecionados: {materials_list}"
+            else:
+                draft_request.materials = materials_text_from_form
             
-            updated_draft.save()
-            logger.info(f"✅ RASCUNHO ATUALIZADO COM SUCESSO")
+            draft_request.save()
+            logger.info(f"✅ RASCUNHO ATUALIZADO COM SUCESSO - ID: {draft_request.pk}")
             messages.success(request, 'Rascunho de agendamento atualizado com sucesso!')
             return redirect('view_draft_schedule_requests')
     else:
@@ -904,3 +931,65 @@ def get_laboratory_materials(request, laboratory_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+
+@login_required
+@user_passes_test(is_technician)
+def pending_requests_list(request):
+    """Lista todas as solicitações pendentes para técnicos - OTIMIZADA"""
+    
+    # Processar aprovação/rejeição via POST
+    if request.method == 'POST':
+        schedule_id = request.POST.get('schedule_id')
+        action = request.POST.get('action')
+        
+        if schedule_id and action:
+            try:
+                schedule_request = ScheduleRequest.objects.select_related('professor', 'laboratory').get(
+                    id=schedule_id, status='pending'
+                )
+                
+                if action == 'approve':
+                    if schedule_request.is_conflicting():
+                        messages.error(request, 'Existe conflito de horário com outro agendamento já aprovado.')
+                    else:
+                        schedule_request.approve(request.user)
+                        WhatsAppNotificationService.notify_schedule_approval(schedule_request)
+                        invalidate_schedule_caches()  # Invalidar cache
+                        messages.success(request, f'Solicitação de {schedule_request.professor.get_full_name()} aprovada com sucesso.')
+                
+                elif action == 'reject':
+                    rejection_reason = request.POST.get('rejection_reason', '')
+                    schedule_request.reject(request.user, rejection_reason)
+                    WhatsAppNotificationService.notify_schedule_rejection(schedule_request)
+                    invalidate_schedule_caches()  # Invalidar cache
+                    messages.success(request, f'Solicitação de {schedule_request.professor.get_full_name()} rejeitada.')
+                    
+            except ScheduleRequest.DoesNotExist:
+                messages.error(request, 'Solicitação não encontrada ou já foi processada.')
+        
+        return redirect('pending_requests')
+    
+    # Query otimizada com CACHE - limitar a 50 mais recentes e usar índices
+    cache_key = 'pending_requests_list'
+    pending_requests = cache.get(cache_key)
+    
+    if pending_requests is None:
+        pending_requests = list(ScheduleRequest.objects.filter(
+            status='pending'
+        ).select_related('professor', 'laboratory').only(
+            'id', 'request_date', 'scheduled_date', 'start_time', 'end_time',
+            'subject', 'number_of_students', 'description', 'materials',
+            'professor__first_name', 'professor__last_name', 'professor__email',
+            'laboratory__name'
+        ).order_by('-request_date')[:50])  # Limitar a 50 mais recentes
+        
+        # Cache por 2 minutos
+        cache.set(cache_key, pending_requests, 120)
+    
+    context = {
+        'pending_requests': pending_requests,
+        'title': 'Solicitações Pendentes',
+        'total_count': ScheduleRequest.objects.filter(status='pending').count()
+    }
+    
+    return render(request, 'pending_requests.html', context)

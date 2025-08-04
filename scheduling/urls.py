@@ -9,6 +9,7 @@ urlpatterns = [
     path('request/<int:pk>/edit/', views.edit_schedule_request, name='edit_schedule_request'),
     path('request/<int:pk>/cancel/', views.cancel_schedule_request, name='cancel_schedule_request'),
     path('requests/', views.schedule_requests_list, name='schedule_requests_list'),
+    path('pending/', views.pending_requests_list, name='pending_requests'),
     path('requests/<int:pk>/approve/', views.approve_schedule_request, name='approve_schedule_request'),
     path('requests/<int:pk>/reject/', views.reject_schedule_request, name='reject_schedule_request'),
     path('drafts/', views.list_draft_schedule_requests, name='list_draft_schedule_requests'),

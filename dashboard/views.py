@@ -100,7 +100,7 @@ def technician_dashboard(request):
             }
             
             logger.info(f"✅ AJAX response sent successfully")
-            return JsonResponse(response_data)
+            return JsonResponse(response_data, json_dumps_params={'ensure_ascii': False})
             
         except Exception as e:
             logger.error(f"❌ AJAX Error: {str(e)}")
@@ -109,13 +109,20 @@ def technician_dashboard(request):
                 'error': str(e)
             }, status=500)
     
-    # Get statistics
-    pending_appointments_count = ScheduleRequest.objects.filter(status='pending').count()
+    # Get statistics - COM CACHE
+    pending_appointments_count = cache.get('pending_appointments_count')
+    if pending_appointments_count is None:
+        pending_appointments_count = ScheduleRequest.objects.filter(status='pending').count()
+        cache.set('pending_appointments_count', pending_appointments_count, 60)  # Cache por 1 minuto
     
-    # Get pending approvals
+    # Get pending approvals - OTIMIZADO
     pending_approvals = ScheduleRequest.objects.filter(
         status='pending'
-    ).select_related('professor', 'laboratory').order_by('-request_date')[:5]
+    ).select_related('professor', 'laboratory').only(
+        'id', 'request_date', 'scheduled_date', 'start_time', 'end_time',
+        'subject', 'professor__first_name', 'professor__last_name',
+        'laboratory__name'
+    ).order_by('-request_date')[:5]
     
     # 🔧 CORREÇÃO: Materials in alert (baixo estoque)
     # Como is_low_stock é uma @property, precisamos usar query diferente
@@ -192,6 +199,7 @@ def technician_dashboard(request):
         # Stats for template
         'pending_appointments': pending_appointments_count,
         'pending_approvals': pending_approvals,
+        'pending_requests': pending_approvals,  # Para compatibilidade com template
         'materials_in_alert': materials_in_alert,
         'materials_in_alert_count': materials_in_alert_count,
         'active_professors': active_professors,
@@ -331,7 +339,7 @@ def professor_dashboard(request):
                 'department_filter': department_filter,
                 'start_of_week': start_of_week.strftime('%Y-%m-%d'),  # 🔧 Formato esperado pelo JS
                 'end_of_week': end_of_week.strftime('%Y-%m-%d'),      # 🔧 Formato esperado pelo JS
-            })
+            }, json_dumps_params={'ensure_ascii': False})
             
         except Exception as e:
             logger.error(f"❌ PROF AJAX Error: {str(e)}")

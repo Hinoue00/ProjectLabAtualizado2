@@ -49,6 +49,12 @@ class ScheduleRequest(models.Model):
         verbose_name = "Solicitação de Agendamento"
         verbose_name_plural = "Solicitações de Agendamento"
         ordering = ['-scheduled_date', 'start_time']
+        indexes = [
+            models.Index(fields=['status'], name='scheduling_status_idx'),
+            models.Index(fields=['status', '-request_date'], name='scheduling_status_date_idx'),
+            models.Index(fields=['professor', 'status'], name='scheduling_prof_status_idx'),
+            models.Index(fields=['laboratory', 'scheduled_date', 'status'], name='scheduling_lab_date_status_idx'),
+        ]
     
     def __str__(self):
         return f"{self.professor.get_full_name()} - {self.laboratory.name} - {self.scheduled_date}"
