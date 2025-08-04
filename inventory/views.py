@@ -32,7 +32,11 @@ from .services import DoclingService
 from django.conf import settings
 from django.core.paginator import Paginator
 from django.contrib import messages
-from .automation_service import InventoryAutomationService
+# Importação condicional do serviço de automação
+try:
+    from .automation_service import InventoryAutomationService
+except ImportError:
+    InventoryAutomationService = None
 import os
 import tempfile
 

@@ -1,6 +1,14 @@
 # inventory/automation_service.py
-import pandas as pd
-import numpy as np
+# Importações condicionais para automação
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
+
+try:
+    import numpy as np
+except ImportError:
+    np = None
 from typing import Dict, List, Tuple, Any, Optional
 from django.conf import settings
 from django.db import transaction
