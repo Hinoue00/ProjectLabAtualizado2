@@ -462,3 +462,6 @@ class CalendarModule {
  * Export to global scope
  */
 window.CalendarModule = CalendarModule;
+
+// Debug: Confirmar que o arquivo foi carregado completamente
+console.log('✅ CalendarModule loaded successfully');
