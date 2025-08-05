@@ -1,5 +1,5 @@
 import datetime
-from venv import logger
+import logging
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, user_passes_test
 from accounts.views import is_technician, is_professor
@@ -99,16 +99,15 @@ def technician_dashboard(request):
                 'end_of_week': end_of_week.strftime('%Y-%m-%d'),      # 🔧 Formato esperado pelo JS
             }
             
-            logger.info(f"✅ AJAX response sent successfully - tamanho HTML: {len(response_data.get('calendar_html', ''))}")
+            logging.getLogger('dashboard').info(f"AJAX response sent successfully - tamanho HTML: {len(response_data.get('calendar_html', ''))}")
             
             # Criar resposta com headers específicos para evitar truncamento
             response = JsonResponse(response_data, json_dumps_params={'ensure_ascii': False})
             response['Content-Length'] = str(len(response.content))
-            response['Connection'] = 'close'  # Forçar fechamento da conexão
             return response
             
         except Exception as e:
-            logger.error(f"❌ AJAX Error: {str(e)}")
+            logging.getLogger('dashboard').error(f"AJAX Error: {str(e)}")
             return JsonResponse({
                 'success': False,
                 'error': str(e)
@@ -233,13 +232,13 @@ def professor_dashboard(request):
     professor = request.user
     today = timezone.now().date()
     
-    logger.info(f"🔍 DASHBOARD ACESSADO - Professor: {professor.get_full_name()} (ID: {professor.id})")
+    logger.info(f"DASHBOARD ACESSADO - Professor: {professor.get_full_name()} (ID: {professor.id})")
     
     # ==========================================
     # CONFIGURAÇÃO DE FILTROS
     # ==========================================
     department_filter = request.GET.get('department', 'all')
-    logger.info(f"🏢 FILTRO DEPARTAMENTO: '{department_filter}'")
+    logger.info(f"FILTRO DEPARTAMENTO: '{department_filter}'")
     
     # 🔧 BUSCAR DEPARTAMENTOS CORRIGIDO
     if Department.objects.exists():
@@ -248,7 +247,7 @@ def professor_dashboard(request):
         # Fallback para sistema antigo
         departments = Laboratory.objects.filter(is_active=True).values_list('department', flat=True).distinct()
     
-    logger.info(f"🏢 DEPARTAMENTOS DISPONÍVEIS: {list(departments)}")
+    logger.info(f"DEPARTAMENTOS DISPONÍVEIS: {list(departments)}")
     
     # ==========================================
     # CONFIGURAÇÃO DA SEMANA
@@ -257,7 +256,7 @@ def professor_dashboard(request):
     start_of_week = today - timedelta(days=today.weekday()) + timedelta(weeks=week_offset)
     end_of_week = start_of_week + timedelta(days=4)  # Segunda a sexta
     
-    logger.info(f"📅 SEMANA: {start_of_week} até {end_of_week} (offset: {week_offset})")
+    logger.info(f"SEMANA: {start_of_week} até {end_of_week} (offset: {week_offset})")
     
     # ==========================================
     # BUSCA DE AGENDAMENTOS
@@ -273,21 +272,21 @@ def professor_dashboard(request):
         professor=professor
     )
     
-    logger.info(f"📊 AGENDAMENTOS BASE: {appointments_base.count()}")
+    logger.info(f"AGENDAMENTOS BASE: {appointments_base.count()}")
     
     # 🔧 APLICAR FILTRO DE DEPARTAMENTO CORRIGIDO
     if department_filter != 'all':
         filtered_labs = get_laboratories_by_department(department_filter)
         appointments_base = appointments_base.filter(laboratory__in=filtered_labs)
-        logger.info(f"🔍 FILTRO APLICADO: department='{department_filter}'")
+        logger.info(f"FILTRO APLICADO: department='{department_filter}'")
     
     current_week_appointments = list(appointments_base)
-    logger.info(f"📊 AGENDAMENTOS FINAIS: {len(current_week_appointments)}")
+    logger.info(f"AGENDAMENTOS FINAIS: {len(current_week_appointments)}")
     
     # Debug dos agendamentos encontrados
     for apt in current_week_appointments:
         departments_display = apt.laboratory.get_departments_display()
-        logger.info(f"   ✅ {apt.scheduled_date} - {apt.laboratory.name} ({departments_display}) - {apt.status}")
+        logger.info(f"   {apt.scheduled_date} - {apt.laboratory.name} ({departments_display}) - {apt.status}")
     
     # ==========================================
     # CONSTRUIR DADOS DO CALENDÁRIO
@@ -316,7 +315,7 @@ def professor_dashboard(request):
         })
         
         if day_appointments:
-            logger.info(f"📅 {day}: {len(day_appointments)} agendamento(s)")
+            logger.info(f"{day}: {len(day_appointments)} agendamento(s)")
     
     # ==========================================
     # VERIFICAR SE É REQUISIÇÃO AJAX
@@ -325,7 +324,7 @@ def professor_dashboard(request):
     
     if is_ajax:
         try:
-            logger.info(f"📅 PROF AJAX: Gerando resposta para calendário")
+            logger.info(f"PROF AJAX: Gerando resposta para calendário")
             
             calendar_html = render_to_string(
                 'partials/calendar_week_professor.html',
@@ -348,17 +347,16 @@ def professor_dashboard(request):
                 'end_of_week': end_of_week.strftime('%Y-%m-%d'),      # 🔧 Formato esperado pelo JS
             }
             
-            logger.info(f"✅ PROF AJAX: Resposta gerada - tamanho HTML: {len(calendar_html)}")
+            logger.info(f"PROF AJAX: Resposta gerada - tamanho HTML: {len(calendar_html)}")
             
             # Criar resposta com headers específicos para evitar truncamento
             response = JsonResponse(response_data, json_dumps_params={'ensure_ascii': False})
             response['Content-Length'] = str(len(response.content))
-            response['Connection'] = 'close'  # Forçar fechamento da conexão
             return response
             
         except Exception as e:
-            logger.error(f"❌ PROF AJAX Error: {str(e)}")
-            logger.error(f"❌ PROF AJAX Error Stack: ", exc_info=True)
+            logger.error(f"PROF AJAX Error: {str(e)}")
+            logger.error(f"PROF AJAX Error Stack: ", exc_info=True)
             return JsonResponse({
                 'success': False,
                 'error': str(e),
@@ -375,7 +373,7 @@ def professor_dashboard(request):
     else:
         available_laboratories = Laboratory.objects.filter(is_active=True)
     
-    logger.info(f"🏢 LABORATÓRIOS DISPONÍVEIS: {available_laboratories.count()}")
+    logger.info(f"LABORATÓRIOS DISPONÍVEIS: {available_laboratories.count()}")
     
     # ==========================================
     # PREPARAR CONTEXTO
@@ -450,7 +448,7 @@ def professor_dashboard(request):
         'current_department': department_filter,
     }
     
-    logger.info(f"✅ DASHBOARD CARREGADO - {len(current_week_appointments)} agendamentos na semana")
+    logger.info(f"DASHBOARD CARREGADO - {len(current_week_appointments)} agendamentos na semana")
     
     return render(request, 'professor.html', context)
 
@@ -756,7 +754,7 @@ def chart_data(request):
         period = request.GET.get('period', 'week')
         department = request.GET.get('department', 'all')
         
-        logger.info(f"📊 CHART-DATA REQUEST: period={period}, department={department}")
+        logger.info(f"CHART-DATA REQUEST: period={period}, department={department}")
         
         # Validar período
         if period not in ['week', 'month', 'year']:
@@ -779,12 +777,12 @@ def chart_data(request):
             end_date = today
             x_axis_title = "Anos"
         
-        logger.info(f"📅 Período: {start_date} até {end_date}")
+        logger.info(f"Período: {start_date} até {end_date}")
         
         # Buscar laboratórios
         laboratories = get_laboratories_by_department(department)
         
-        logger.info(f"🏢 Laboratórios: {[lab.name for lab in laboratories]}")
+        logger.info(f"Laboratórios: {[lab.name for lab in laboratories]}")
         
         if not laboratories.exists():
             return JsonResponse({
@@ -802,11 +800,11 @@ def chart_data(request):
         if department != 'all':
             schedules = schedules.filter(laboratory__department=department)
         
-        logger.info(f"📊 Total de agendamentos encontrados: {schedules.count()}")
+        logger.info(f"Total de agendamentos encontrados: {schedules.count()}")
         
         # Debug detalhado dos agendamentos
         for schedule in schedules:
-            logger.info(f"   📋 {schedule.scheduled_date} - {schedule.laboratory.name} - {schedule.subject}")
+            logger.info(f"   {schedule.scheduled_date} - {schedule.laboratory.name} - {schedule.subject}")
         
         # 🔧 CORREÇÃO: Gerar labels baseados no período
         labels = []
@@ -832,7 +830,7 @@ def chart_data(request):
                 labels.append(str(current_year))
                 current_year += 1
         
-        logger.info(f"🏷️ Labels gerados: {len(labels)} -> {labels}")
+        logger.info(f"Labels gerados: {len(labels)} -> {labels}")
         
         # 🔧 CORREÇÃO PRINCIPAL: Processar dados por laboratório MANUALMENTE
         data_by_lab = {}
@@ -844,7 +842,7 @@ def chart_data(request):
             # Buscar agendamentos específicos deste laboratório
             lab_schedules = schedules.filter(laboratory=lab)
             
-            logger.info(f"🏗️ Processando {lab.name}: {lab_schedules.count()} agendamentos")
+            logger.info(f"Processando {lab.name}: {lab_schedules.count()} agendamentos")
             
             # 🔧 CORREÇÃO: Processar cada agendamento individualmente
             for schedule in lab_schedules:
@@ -856,7 +854,7 @@ def chart_data(request):
                         weeks_diff = (schedule_date - start_date).days // 7
                         if 0 <= weeks_diff < len(labels):
                             lab_data[weeks_diff] += 1
-                            logger.info(f"   ✅ Semana {weeks_diff}: +1 -> {lab_data[weeks_diff]}")
+                            logger.info(f"   Semana {weeks_diff}: +1 -> {lab_data[weeks_diff]}")
                     
                     elif period == 'month':
                         # 🔧 CORREÇÃO: Calcular índice do mês corretamente
@@ -868,24 +866,24 @@ def chart_data(request):
                         
                         if 0 <= months_diff < len(labels):
                             lab_data[months_diff] += 1
-                            logger.info(f"   ✅ {lab.name} - {schedule_date} -> Mês {months_diff} ({labels[months_diff]}): +1 -> {lab_data[months_diff]}")
+                            logger.info(f"   {lab.name} - {schedule_date} -> Mês {months_diff} ({labels[months_diff]}): +1 -> {lab_data[months_diff]}")
                         else:
-                            logger.warning(f"   ⚠️ {lab.name} - {schedule_date} -> Índice {months_diff} fora do range (0-{len(labels)-1})")
+                            logger.warning(f"   {lab.name} - {schedule_date} -> Índice {months_diff} fora do range (0-{len(labels)-1})")
                     
                     else:  # year
                         year_diff = schedule_date.year - start_date.year
                         if 0 <= year_diff < len(labels):
                             lab_data[year_diff] += 1
-                            logger.info(f"   ✅ Ano {year_diff}: +1 -> {lab_data[year_diff]}")
+                            logger.info(f"   Ano {year_diff}: +1 -> {lab_data[year_diff]}")
                 
                 except Exception as e:
-                    logger.error(f"   ❌ Erro ao processar agendamento {schedule.id}: {str(e)}")
+                    logger.error(f"   Erro ao processar agendamento {schedule.id}: {str(e)}")
                     continue
             
             # Armazenar dados do laboratório
             data_by_lab[lab.name] = lab_data
             total = sum(lab_data)
-            logger.info(f"🔢 {lab.name} - Total: {total}, Array: {lab_data}")
+            logger.info(f"{lab.name} - Total: {total}, Array: {lab_data}")
         
         # 🔧 CORREÇÃO: Construir datasets
         datasets = []
@@ -905,7 +903,7 @@ def chart_data(request):
             
             datasets.append(dataset)
             total = sum(lab_data)
-            logger.info(f"📈 Dataset criado - {lab_name}: Total={total}, Data={lab_data}")
+            logger.info(f"Dataset criado - {lab_name}: Total={total}, Data={lab_data}")
         
         # Resposta final
         response_data = {
@@ -914,7 +912,7 @@ def chart_data(request):
             'xAxisTitle': x_axis_title
         }
         
-        logger.info(f"📊 RESPOSTA FINAL:")
+        logger.info(f"RESPOSTA FINAL:")
         logger.info(f"   Labels: {len(labels)}")
         logger.info(f"   Datasets: {len(datasets)}")
         for i, dataset in enumerate(datasets):
@@ -924,9 +922,9 @@ def chart_data(request):
         return JsonResponse(response_data)
         
     except Exception as e:
-        logger.error(f"❌ ERRO CHART-DATA: {str(e)}")
+        logger.error(f"ERRO CHART-DATA: {str(e)}")
         import traceback
-        logger.error(f"❌ TRACEBACK: {traceback.format_exc()}")
+        logger.error(f"TRACEBACK: {traceback.format_exc()}")
         
         return JsonResponse({
             'error': f'Erro interno: {str(e)}'
