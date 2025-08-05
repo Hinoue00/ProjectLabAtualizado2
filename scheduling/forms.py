@@ -15,6 +15,13 @@ class TimeInput(forms.TimeInput):
 
 class DateInput(forms.DateInput):
     input_type = 'date'
+    
+    def format_value(self, value):
+        if value is None:
+            return ''
+        if hasattr(value, 'strftime'):
+            return value.strftime('%Y-%m-%d')
+        return str(value)
 
 class MultipleFileField(forms.FileField):
     def __init__(self, *args, **kwargs):
@@ -48,7 +55,7 @@ class ScheduleRequestForm(forms.ModelForm):
         ('evening', 'Noturno (19:00 - 22:00)'),
     )
     
-    shift = forms.ChoiceField(choices=SHIFT_CHOICES, label="Turno", required=True)
+    shift = forms.ChoiceField(choices=SHIFT_CHOICES, label="Turno", required=False)
     
     selected_materials = forms.ModelMultipleChoiceField(
         queryset=Material.objects.none(),
@@ -75,49 +82,78 @@ class ScheduleRequestForm(forms.ModelForm):
             'guide_file',
         ]
         widgets = {
-            'scheduled_date': DateInput(),
+            'scheduled_date': DateInput(attrs={'required': False}),
             'description': forms.Textarea(attrs={'rows': 4, 'required': False}),
-            'materials': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Liste os materiais necessários para a aula...'}),
+            'materials': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Liste os materiais necessários para a aula...', 'required': False}),
+            'subject': forms.TextInput(attrs={'required': False}),
         }
 
     
     def __init__(self, *args, **kwargs):
+        # Extrair parâmetro is_draft se fornecido
+        self.is_draft = kwargs.pop('is_draft', False)
         super().__init__(*args, **kwargs)
+        
+        # Obter instância se existir (antes de usar)
+        instance = kwargs.get('instance')
+        
         # Filtra apenas laboratórios ativos
         self.fields['laboratory'].queryset = Laboratory.objects.filter(is_active=True)
         
         # Inicializar queryset de materiais vazio
         self.fields['selected_materials'].queryset = Material.objects.none()
         
+        # Tornar todos os campos não obrigatórios
+        for field_name, field in self.fields.items():
+            field.required = False
+        
         # Adiciona classes Bootstrap aos campos
         for field_name, field in self.fields.items():
             if field_name != 'selected_materials':  # Excluir checkboxes
                 field.widget.attrs['class'] = 'form-control'
+                # Preservar atributos especiais do campo de data
+                if field_name == 'scheduled_date' and hasattr(field.widget, 'input_type'):
+                    field.widget.attrs['type'] = field.widget.input_type
             
-        # Aplica limites de data (próxima semana - segunda a sábado)
+        # Configurar limites de data baseado no tipo (rascunho vs solicitação)
         today = timezone.now().date()
-        next_week_start = today + timedelta(days=(7 - today.weekday()))
-        next_week_end = next_week_start + timedelta(days=5)  # Segunda a sábado
-
-        # Configurar o campo de data para permitir segunda a sábado
-        # Mas flexibilizar quando editando um rascunho existente
-        instance = kwargs.get('instance')
-        if instance and hasattr(instance, 'scheduled_date') and instance.scheduled_date:
-            # Se editando rascunho, permitir datas mais flexíveis (incluindo a data atual do rascunho)
-            min_date = min(instance.scheduled_date, next_week_start)
-            max_date = max(instance.scheduled_date, next_week_end)
+        
+        if self.is_draft:
+            # Para RASCUNHOS: permitir o mês inteiro
+            month_start = today.replace(day=1)
+            # Último dia do mês atual
+            if today.month == 12:
+                month_end = today.replace(year=today.year + 1, month=1, day=1) - timedelta(days=1)
+            else:
+                month_end = today.replace(month=today.month + 1, day=1) - timedelta(days=1)
+            
             self.fields['scheduled_date'].widget.attrs.update({
-                'min': min_date,
-                'max': max_date,
+                'min': month_start.strftime('%Y-%m-%d'),
+                'max': month_end.strftime('%Y-%m-%d'),
             })
         else:
-            # Para novos agendamentos, manter restrição original
-            self.fields['scheduled_date'].widget.attrs.update({
-                'min': next_week_start,
-                'max': next_week_end,
-            })
+            # Para SOLICITAÇÕES FINAIS: próxima semana (segunda a sábado)
+            next_week_start = today + timedelta(days=(7 - today.weekday()))
+            next_week_end = next_week_start + timedelta(days=5)  # Segunda a sábado
+            
+            # Configurar o campo de data para permitir segunda a sábado
+            # Mas flexibilizar quando editando um rascunho existente
+            if instance and hasattr(instance, 'scheduled_date') and instance.scheduled_date:
+                # Se editando, permitir datas mais flexíveis (incluindo a data atual)
+                min_date = min(instance.scheduled_date, next_week_start)
+                max_date = max(instance.scheduled_date, next_week_end)
+                self.fields['scheduled_date'].widget.attrs.update({
+                    'min': min_date.strftime('%Y-%m-%d'),
+                    'max': max_date.strftime('%Y-%m-%d'),
+                })
+            else:
+                # Para novos agendamentos, manter restrição da próxima semana
+                self.fields['scheduled_date'].widget.attrs.update({
+                    'min': next_week_start.strftime('%Y-%m-%d'),
+                    'max': next_week_end.strftime('%Y-%m-%d'),
+                })
 
-        # Se estamos editando um agendamento existente, preencher o campo de turno
+        # Se estamos editando uma instância existente, preencher o campo de turno
         if instance:
             # Priorizar campo shift se existir
             if hasattr(instance, 'shift') and instance.shift:
@@ -133,20 +169,37 @@ class ScheduleRequestForm(forms.ModelForm):
                     self.initial['shift'] = 'evening'
 
     def clean_scheduled_date(self):
-        """Valida que a data é em um dia de semana (segunda a sábado)"""
+        """Valida data baseado no tipo: rascunho (mês inteiro) vs solicitação (próxima semana)"""
         date = self.cleaned_data.get('scheduled_date')
         
-        if date:
-            if date.weekday() == 6:  # 6=domingo (0=segunda, 1=terça, ..., 5=sábado, 6=domingo)
-                raise forms.ValidationError("Domingo não é permitido para agendamentos.")
-                
-            # Valida que a data está na próxima semana
-            today = timezone.now().date()
-            next_week_start = today + timedelta(days=(7 - today.weekday()))
-            next_week_end = next_week_start + timedelta(days=5)  # Segunda a sábado
+        # Se não informar data, não há problema
+        if not date:
+            return date
             
-            if not (next_week_start <= date <= next_week_end):
-                raise forms.ValidationError("Os agendamentos só podem ser realizados para a próxima semana (segunda a sábado).")
+        if date:
+            # Domingo nunca é permitido
+            if date.weekday() == 6:  # 6=domingo
+                raise forms.ValidationError("Domingo não é permitido para agendamentos.")
+            
+            today = timezone.now().date()
+            
+            if self.is_draft:
+                # Para RASCUNHOS: permitir qualquer data do mês atual
+                month_start = today.replace(day=1)
+                if today.month == 12:
+                    month_end = today.replace(year=today.year + 1, month=1, day=1) - timedelta(days=1)
+                else:
+                    month_end = today.replace(month=today.month + 1, day=1) - timedelta(days=1)
+                
+                if not (month_start <= date <= month_end):
+                    raise forms.ValidationError("Para rascunhos, você pode agendar para qualquer data do mês atual.")
+            else:
+                # Para SOLICITAÇÕES FINAIS: apenas próxima semana
+                next_week_start = today + timedelta(days=(7 - today.weekday()))
+                next_week_end = next_week_start + timedelta(days=5)  # Segunda a sábado
+                
+                if not (next_week_start <= date <= next_week_end):
+                    raise forms.ValidationError("Os agendamentos só podem ser realizados para a próxima semana (segunda a sábado).")
         
         return date
     
@@ -154,7 +207,7 @@ class ScheduleRequestForm(forms.ModelForm):
         """Sobrescreve o método save para definir os horários baseados no turno selecionado"""
         instance = super().save(commit=False)
         
-        # Define os horários baseados no turno selecionado
+        # Define os horários baseados no turno selecionado (apenas se turno foi informado)
         shift = self.cleaned_data.get('shift')
         
         if shift == 'morning':
@@ -163,6 +216,7 @@ class ScheduleRequestForm(forms.ModelForm):
         elif shift == 'evening':
             instance.start_time = time(19, 0)  # 7:00PM
             instance.end_time = time(22, 0)    # 10:00 PM
+        # Se não informar turno, deixa os horários como estão (podem ser None)
         
         if commit:
             instance.save()
@@ -177,24 +231,16 @@ class ScheduleRequestForm(forms.ModelForm):
         number_of_students = cleaned_data.get('number_of_students')
         laboratory = cleaned_data.get('laboratory')
         
-        # Verifica se a data está preenchida
-        if not scheduled_date:
-            return cleaned_data
+        # Validações agora são opcionais - apenas se os campos estiverem preenchidos
         
-        # Verifica se a data está na próxima semana
-        today = timezone.now().date()
-        next_week_start = today + timedelta(days=(7 - today.weekday()))
-        next_week_end = next_week_start + timedelta(days=6)
+        # Validação de data já é feita no clean_scheduled_date() com base no is_draft
         
-        if not (next_week_start <= scheduled_date <= next_week_end):
-            self.add_error('scheduled_date', 'Os agendamentos só podem ser realizados para a próxima semana.')
-        
-        # Verifica se o horário de término é posterior ao início
+        # Verifica se o horário de término é posterior ao início (apenas se ambos informados)
         if start_time and end_time and start_time >= end_time:
             self.add_error('end_time', 'O horário de término deve ser posterior ao horário de início.')
         
-        # Verifica se o número de alunos não excede a capacidade do laboratório
-        if laboratory and number_of_students:
+        # Verifica se o número de alunos não excede a capacidade do laboratório (apenas se ambos informados)
+        if laboratory and number_of_students and hasattr(laboratory, 'capacity') and laboratory.capacity:
             if number_of_students > laboratory.capacity:
                 self.add_error('number_of_students', 
                               f'O número de alunos excede a capacidade do laboratório ({laboratory.capacity}).')

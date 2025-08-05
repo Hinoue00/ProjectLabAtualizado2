@@ -139,7 +139,9 @@ def create_schedule_request(request):
     
     if request.method == 'POST':
         logger.info(f"📝 PROCESSANDO FORMULÁRIO DE AGENDAMENTO")
-        form = ScheduleRequestForm(request.POST, request.FILES)
+        # Determinar se será rascunho (quando não é quinta/sexta)
+        is_draft = not is_confirmation_day
+        form = ScheduleRequestForm(request.POST, request.FILES, is_draft=is_draft)
         
         # Atualizar queryset de materiais baseado no laboratório selecionado
         if 'laboratory' in request.POST and request.POST['laboratory']:
@@ -263,7 +265,9 @@ def create_schedule_request(request):
             messages.error(request, 'Por favor, corrija os erros no formulário.')
     else:
         logger.info(f"📄 EXIBINDO FORMULÁRIO DE AGENDAMENTO")
-        form = ScheduleRequestForm()
+        # Determinar se será rascunho (quando não é quinta/sexta)
+        is_draft = not is_confirmation_day
+        form = ScheduleRequestForm(is_draft=is_draft)
     
     # Obter departamentos para o filtro
     from laboratories.models import Department
@@ -420,7 +424,7 @@ def edit_schedule_request(request, pk):
         return redirect('schedule_request_detail', pk=pk)
     
     if request.method == 'POST':
-        form = ScheduleRequestForm(request.POST, request.FILES, instance=schedule_request)
+        form = ScheduleRequestForm(request.POST, request.FILES, instance=schedule_request, is_draft=False)
         if form.is_valid():
             updated_request = form.save(commit=False)
             
@@ -433,7 +437,7 @@ def edit_schedule_request(request, pk):
             messages.success(request, 'Solicitação de agendamento atualizada com sucesso!')
             return redirect('schedule_request_detail', pk=pk)
     else:
-        form = ScheduleRequestForm(instance=schedule_request)
+        form = ScheduleRequestForm(instance=schedule_request, is_draft=False)
     
     context = {
         'form': form,
@@ -562,7 +566,7 @@ def edit_draft_schedule_request(request, draft_id):
     logger.info(f"   Shift: {draft_request.shift}")
     
     if request.method == 'POST':
-        form = ScheduleRequestForm(request.POST, request.FILES, instance=draft_request)
+        form = ScheduleRequestForm(request.POST, request.FILES, instance=draft_request, is_draft=True)
         
         # Atualizar queryset de materiais baseado no laboratório selecionado
         if 'laboratory' in request.POST and request.POST['laboratory']:
@@ -614,62 +618,33 @@ def edit_draft_schedule_request(request, draft_id):
             messages.success(request, 'Rascunho de agendamento atualizado com sucesso!')
             return redirect('view_draft_schedule_requests')
     else:
-        form = ScheduleRequestForm(instance=draft_request)
+        # Não usar instance= porque são modelos diferentes (DraftScheduleRequest vs ScheduleRequest)
+        # Em vez disso, usar initial para preencher os campos
+        initial_data = {
+            'laboratory': draft_request.laboratory.id if draft_request.laboratory else None,
+            'subject': draft_request.subject,
+            'description': draft_request.description,
+            'scheduled_date': draft_request.scheduled_date,
+            'number_of_students': draft_request.number_of_students,
+            'class_semester': draft_request.class_semester,
+            'materials': draft_request.materials,
+            'shift': getattr(draft_request, 'shift', 'evening'),
+            'guide_file': draft_request.guide_file if hasattr(draft_request, 'guide_file') else None,
+        }
         
-        logger.info(f"📋 DADOS DO RASCUNHO PARA PREENCHIMENTO:")
-        logger.info(f"   Laboratory: {draft_request.laboratory.name if draft_request.laboratory else 'None'}")
-        logger.info(f"   Subject: {draft_request.subject}")
-        logger.info(f"   Description: {draft_request.description}")
-        logger.info(f"   Scheduled Date: {draft_request.scheduled_date}")
-        logger.info(f"   Number of Students: {draft_request.number_of_students}")
-        logger.info(f"   Class Semester: {draft_request.class_semester}")
-        logger.info(f"   Materials: {draft_request.materials}")
-        logger.info(f"   Shift: {getattr(draft_request, 'shift', 'N/A')}")
+        logger.info(f"📅 INITIAL DATA PARA EDIÇÃO:")
+        logger.info(f"   scheduled_date: {initial_data['scheduled_date']} (tipo: {type(initial_data['scheduled_date'])})")
+        logger.info(f"   subject: {initial_data['subject']}")
+        logger.info(f"   shift: {initial_data['shift']}")
         
-        # ===== PREENCHER TODOS OS CAMPOS EXPLICITAMENTE =====
+        form = ScheduleRequestForm(initial=initial_data, is_draft=True)
         
-        # Campos básicos do formulário
-        if draft_request.laboratory:
-            form.initial['laboratory'] = draft_request.laboratory.id
-            logger.info(f"🏢 LABORATÓRIO PREENCHIDO: {draft_request.laboratory.name}")
-        
-        if draft_request.subject:
-            form.initial['subject'] = draft_request.subject
-            logger.info(f"📚 DISCIPLINA PREENCHIDA: {draft_request.subject}")
-            
-        if draft_request.description:
-            form.initial['description'] = draft_request.description
-            logger.info(f"📝 DESCRIÇÃO PREENCHIDA")
-            
+        # Garantir que o campo de data tenha o valor correto no widget
         if draft_request.scheduled_date:
-            form.initial['scheduled_date'] = draft_request.scheduled_date
-            logger.info(f"📅 DATA PREENCHIDA: {draft_request.scheduled_date}")
-            
-        if draft_request.number_of_students:
-            form.initial['number_of_students'] = draft_request.number_of_students
-            logger.info(f"👥 NÚMERO DE ALUNOS PREENCHIDO: {draft_request.number_of_students}")
-            
-        if draft_request.class_semester:
-            form.initial['class_semester'] = draft_request.class_semester
-            logger.info(f"🎓 TURMA/SEMESTRE PREENCHIDO: {draft_request.class_semester}")
+            form.fields['scheduled_date'].widget.attrs['value'] = draft_request.scheduled_date.strftime('%Y-%m-%d')
+            logger.info(f"📅 FORÇANDO VALOR DE DATA NO WIDGET: {draft_request.scheduled_date.strftime('%Y-%m-%d')}")
         
-        # Arquivo de roteiro
-        if hasattr(draft_request, 'guide_file') and draft_request.guide_file:
-            # O arquivo já anexado será mostrado através do instance
-            logger.info(f"📄 ARQUIVO DE ROTEIRO EXISTENTE: {draft_request.guide_file.name}")
-            
-        # Materiais em texto livre (separado dos materiais selecionáveis)
-        if draft_request.materials:
-            # Separar materiais em texto livre dos materiais selecionados
-            materials_lines = draft_request.materials.split('\n')
-            free_text_materials = []
-            for line in materials_lines:
-                if 'Materiais selecionados:' not in line:
-                    free_text_materials.append(line)
-            
-            if free_text_materials:
-                form.initial['materials'] = '\n'.join(free_text_materials).strip()
-                logger.info(f"📦 MATERIAIS TEXTO LIVRE PREENCHIDOS")
+        logger.info(f"📋 RASCUNHO CARREGADO PARA EDIÇÃO: {draft_request.subject or 'Sem título'}")
         
         # Configurar queryset de materiais para o laboratório do rascunho
         if draft_request.laboratory:
