@@ -29,7 +29,7 @@ O sistema já está configurado para usar SSH como fallback. Você só precisa c
    PROD_PORT = 2222
    PROD_USER = labadm
    PROD_SSH_KEY = <conteúdo da chave SSH privada>
-   NGROK_WEBHOOK_URL = https://b84dcf83e918.ngrok-free.app
+   NGROK_WEBHOOK_URL = https://614d354b5201.ngrok-free.app
    DEPLOY_TOKEN = lab-deploy-2024-secure-token-xyz123
    ```
 
