@@ -12,6 +12,7 @@ from .forms import UserRegistrationForm, UserApprovalForm
 from .models import User
 from django.conf import settings
 from django.http import JsonResponse
+from django.core.cache import cache
 from whatsapp.services import WhatsAppNotificationService
 
 def login_register_view(request):
@@ -90,6 +91,7 @@ def is_professor(user):
 @login_required
 @user_passes_test(is_technician)
 def pending_approvals(request):
+    from django.core.cache import cache
     # Cache otimizado para lista de usuários pendentes
     cache_key = f'pending_users_{request.user.id}'
     pending_users = cache.get(cache_key)

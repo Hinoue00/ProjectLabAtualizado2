@@ -7,6 +7,9 @@ from .base import *
 
 load_dotenv()
 
+# DEBUG ativado temporariamente para investigar outros erros
+DEBUG = True
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
@@ -24,20 +27,11 @@ DATABASES = {
     }
 }
 
-# Configuração de cache para produção - OTIMIZADA
+# Configuração de cache para produção - CORRIGIDA
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
         'LOCATION': os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/1'),
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'CONNECTION_POOL_KWARGS': {
-                'max_connections': 20,
-                'retry_on_timeout': True,
-            },
-            'SERIALIZER': 'django_redis.serializers.json.JSONSerializer',
-            'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',
-        },
         'TIMEOUT': 300,  # 5 minutos default
         'KEY_PREFIX': 'labconnect',
         'VERSION': 1,
