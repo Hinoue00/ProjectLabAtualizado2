@@ -1057,3 +1057,55 @@ def get_laboratories_by_department(department_filter):
         # Em caso de erro, retornar todos os laboratórios
         logging.getLogger(__name__).error(f"Erro em get_laboratories_by_department: {e}")
         return Laboratory.objects.filter(is_active=True)
+
+@login_required
+@user_passes_test(is_technician)
+def professor_list(request):
+    """View para listar todos os professores - acessível apenas por técnicos"""
+    
+    # Buscar todos os professores ativos e aprovados
+    professors = User.objects.filter(
+        user_type='professor',
+        is_active=True,
+        is_approved=True
+    ).order_by('first_name', 'last_name')
+    
+    # Paginação (opcional)
+    from django.core.paginator import Paginator
+    paginator = Paginator(professors, 20)  # 20 professores por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Estatísticas básicas
+    total_professors = professors.count()
+    
+    # Contar agendamentos por professor (últimos 30 dias)
+    from datetime import timedelta
+    thirty_days_ago = timezone.now().date() - timedelta(days=30)
+    
+    professors_with_stats = []
+    for professor in page_obj:
+        recent_schedules = ScheduleRequest.objects.filter(
+            professor=professor,
+            request_date__gte=thirty_days_ago
+        ).count()
+        
+        approved_schedules = ScheduleRequest.objects.filter(
+            professor=professor,
+            status='approved'
+        ).count()
+        
+        professors_with_stats.append({
+            'professor': professor,
+            'recent_schedules': recent_schedules,
+            'total_approved': approved_schedules
+        })
+    
+    context = {
+        'professors': professors_with_stats,
+        'page_obj': page_obj,
+        'total_professors': total_professors,
+        'title': 'Lista de Professores'
+    }
+    
+    return render(request, 'professor_list.html', context)
