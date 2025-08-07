@@ -116,7 +116,7 @@
                             </td>
                             <td>{{ material.category.name }}</td>
                             <td>
-                                <span class="badge" style="background-color: {{ material.laboratory.color }}; color: white;">
+                                <span class="badge laboratory-badge" style="background-color: {{ material.laboratory.color }};" data-bg-color="{{ material.laboratory.color }}">
                                     {{ material.laboratory.name }}
                                 </span>
                             </td>
@@ -197,4 +197,31 @@
         </div>
     {% endif %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Função para calcular a luminância da cor
+    function getLuminance(color) {
+        // Converte hex para RGB
+        const hex = color.replace('#', '');
+        const r = parseInt(hex.substr(0, 2), 16) / 255;
+        const g = parseInt(hex.substr(2, 2), 16) / 255;
+        const b = parseInt(hex.substr(4, 2), 16) / 255;
+        
+        // Aplica a fórmula de luminância relativa
+        const gamma = (c) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        
+        return 0.2126 * gamma(r) + 0.7152 * gamma(g) + 0.0722 * gamma(b);
+    }
+    
+    // Aplica cor de texto adequada para cada badge de laboratório
+    document.querySelectorAll('.laboratory-badge').forEach(badge => {
+        const bgColor = badge.getAttribute('data-bg-color');
+        const luminance = getLuminance(bgColor);
+        
+        // Se a luminância é alta (cor clara), usa texto escuro; se baixa (cor escura), usa texto claro
+        badge.style.color = luminance > 0.5 ? '#000000' : '#ffffff';
+    });
+});
+</script>
 {% endblock %}

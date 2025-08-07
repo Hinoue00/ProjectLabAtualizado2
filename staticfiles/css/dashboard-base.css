@@ -111,6 +111,7 @@
     font-weight: 500;
     padding: 0.35em 0.65em;
     border-radius: var(--border-radius-sm);
+    color: var(--text-color) !important
 }
 
 .badge.badge-approved {
