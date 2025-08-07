@@ -139,8 +139,12 @@ def create_schedule_request(request):
     
     if request.method == 'POST':
         logger.info(f"📝 PROCESSANDO FORMULÁRIO DE AGENDAMENTO")
-        # Determinar se será rascunho (quando não é quinta/sexta)
-        is_draft = not is_confirmation_day
+        
+        # Verificar se o usuário escolheu salvar como rascunho
+        save_as_draft = request.POST.get('save_as_draft') == 'true'
+        
+        # Determinar se será rascunho: sempre quando escolhido OU quando não é quinta/sexta
+        is_draft = save_as_draft or (not is_confirmation_day)
         form = ScheduleRequestForm(request.POST, request.FILES, is_draft=is_draft)
         
         # Atualizar queryset de materiais baseado no laboratório selecionado
@@ -156,8 +160,39 @@ def create_schedule_request(request):
         if form.is_valid():
             logger.info(f"✅ FORMULÁRIO VÁLIDO")
             
-            if not is_confirmation_day:
-                # Criar rascunho se não for quinta/sexta
+            # Validação específica para envio direto (não rascunho)
+            if not is_draft:
+                scheduled_date = form.cleaned_data.get('scheduled_date')
+                if scheduled_date:
+                    # Verificar se a data está na próxima semana (segunda a sábado)
+                    next_week_start = today + timedelta(days=(7 - today.weekday()))
+                    next_week_end = next_week_start + timedelta(days=5)  # Segunda a sábado
+                    
+                    if not (next_week_start <= scheduled_date <= next_week_end):
+                        logger.warning(f"❌ DATA FORA DA PRÓXIMA SEMANA PARA ENVIO DIRETO")
+                        form.add_error('scheduled_date', 'Para envio direto, a data deve estar na próxima semana (segunda a sábado).')
+                        return render(request, 'create_request.html', {
+                            'form': form,
+                            'departments': departments,
+                            'next_week_start': next_week_start,
+                            'next_week_end': next_week_end,
+                            'is_confirmation_day': is_confirmation_day
+                        })
+                    
+                    # Verificar se não é domingo
+                    if scheduled_date.weekday() == 6:  # 6=domingo
+                        logger.warning(f"❌ TENTATIVA DE AGENDAMENTO EM DOMINGO")
+                        form.add_error('scheduled_date', 'Não é possível fazer agendamentos aos domingos.')
+                        return render(request, 'create_request.html', {
+                            'form': form,
+                            'departments': departments,
+                            'next_week_start': next_week_start,
+                            'next_week_end': next_week_end,
+                            'is_confirmation_day': is_confirmation_day
+                        })
+            
+            if is_draft:
+                # Criar rascunho quando solicitado ou quando não é quinta/sexta
                 draft = DraftScheduleRequest()
                 for field in form.cleaned_data:
                     if hasattr(draft, field):
@@ -191,7 +226,10 @@ def create_schedule_request(request):
                 
                 draft.save()
                 logger.info(f"💾 RASCUNHO SALVO COM SUCESSO - ID: {draft.pk}")
-                messages.success(request, 'Rascunho salvo com sucesso! Você poderá confirmá-lo na quinta ou sexta-feira.')
+                if is_confirmation_day:
+                    messages.success(request, 'Rascunho salvo com sucesso! Você pode confirmá-lo como solicitação quando desejar.')
+                else:
+                    messages.success(request, 'Rascunho salvo com sucesso! Você poderá confirmá-lo na quinta ou sexta-feira.')
                 return redirect('professor_dashboard')
             
             # Continuar com agendamento normal se for quinta/sexta
@@ -265,9 +303,9 @@ def create_schedule_request(request):
             messages.error(request, 'Por favor, corrija os erros no formulário.')
     else:
         logger.info(f"📄 EXIBINDO FORMULÁRIO DE AGENDAMENTO")
-        # Determinar se será rascunho (quando não é quinta/sexta)
-        is_draft = not is_confirmation_day
-        form = ScheduleRequestForm(is_draft=is_draft)
+        # Por padrão, criar formulário com modo rascunho (permite todo o mês)
+        # A validação específica será feita no POST baseado no botão clicado
+        form = ScheduleRequestForm(is_draft=True)
     
     # Obter departamentos para o filtro
     from laboratories.models import Department

@@ -25,6 +25,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Uses development settings by default (`LabConnect.settings.development`)
 - Logging directory `logs/` created automatically
 
+### Chatbot Configuration
+- **CHATBOT_ENABLED**: Set to 'True' to enable AI chatbot functionality (default: 'False')
+- When disabled, chatbot UI is hidden and API endpoints return 503 status
+- Recommended to keep disabled on production servers with limited CPU resources
+
 ## Architecture Overview
 
 ### Core Django Apps

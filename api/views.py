@@ -18,6 +18,10 @@ def llama_assistant(request):
     """
     API endpoint para interagir com o assistente IA via Llama local com streaming.
     """
+    # Verificar se o chatbot está habilitado
+    if not getattr(settings, 'CHATBOT_ENABLED', False):
+        return JsonResponse({'error': 'Chatbot is currently disabled'}, status=503)
+        
     if request.method != 'POST':
         return JsonResponse({'error': 'Only POST requests are allowed'}, status=405)
     
@@ -223,6 +227,10 @@ def get_real_time_context(user_query, user):
 @csrf_exempt
 def assistant_feedback(request):
     """API para feedback do assistente"""
+    # Verificar se o chatbot está habilitado
+    if not getattr(settings, 'CHATBOT_ENABLED', False):
+        return JsonResponse({'error': 'Chatbot is currently disabled'}, status=503)
+        
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -247,6 +255,10 @@ def assistant_feedback(request):
 @login_required
 def assistant_page(request):
     """View para a página do assistente Llama"""
+    # Verificar se o chatbot está habilitado
+    if not getattr(settings, 'CHATBOT_ENABLED', False):
+        return JsonResponse({'error': 'Chatbot is currently disabled'}, status=503)
+        
     # Obter o contexto da página atual (opcional)
     current_path = request.path
     context_info = ""
@@ -276,6 +288,9 @@ def assistant_page(request):
 @login_required
 def test_chatbot_page(request):
     """Página de teste do chatbot"""
+    # Verificar se o chatbot está habilitado
+    if not getattr(settings, 'CHATBOT_ENABLED', False):
+        return JsonResponse({'error': 'Chatbot is currently disabled'}, status=503)
     return render(request, 'test_chatbot.html')
 
 # Função auxiliar para obter o token CSRF (se necessário)

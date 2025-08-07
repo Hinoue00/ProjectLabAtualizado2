@@ -308,7 +308,9 @@
                 {% block content %}{% endblock %}
 
                 {% if user.is_authenticated %}
-                    {% include 'components/chatbot_global.html' %}
+                    {% if settings.CHATBOT_ENABLED %}
+                        {% include 'components/chatbot_global.html' %}
+                    {% endif %}
                 {% endif %}
  
             </div>

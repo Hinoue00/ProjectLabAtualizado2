@@ -185,6 +185,9 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = INVENTORY_AUTOMATION['MAX_FILE_SIZE']
 # Scheduling configuration
 ALLOW_SCHEDULING_ANY_DAY = os.environ.get('ALLOW_SCHEDULING_ANY_DAY', 'True') == 'True'
 
+# Chatbot configuration
+CHATBOT_ENABLED = os.environ.get('CHATBOT_ENABLED', 'False') == 'True'
+
 
 # Configurações de análise
 ANALYSIS_BATCH_SIZE = 50

@@ -31,6 +31,11 @@
 .material-card .form-check {
     margin-bottom: 0.5rem;
 }
+
+/* Cores específicas dos laboratórios */
+.text-purple {
+    color: #6f42c1 !important; /* Bootstrap purple */
+}
 </style>
 {% endblock %}
 
@@ -63,24 +68,32 @@
         </div>
     </div>
 
-    <!-- Draft Warning -->
-    {% if not is_confirmation_day %}
+    <!-- Scheduling Information -->
     <div class="draft-warning d-flex align-items-center mb-4">
         <div class="draft-warning-icon">
-            <i class="bi bi-info-circle"></i>
+            <i class="bi bi-{% if is_confirmation_day %}calendar-check{% else %}info-circle{% endif %}"></i>
         </div>
         <div>
-            <h5 class="mb-2">Aviso de Rascunho</h5>
-            <p class="mb-0">
-                Você está criando um rascunho de agendamento. Só será possível confirmar e enviar 
-                este agendamento na próxima quinta ou sexta-feira. 
-                <a href="{% url 'list_draft_schedule_requests' %}" class="alert-link">
-                    Ver meus rascunhos
-                </a>
-            </p>
+            {% if is_confirmation_day and not is_edit %}
+                <h5 class="mb-2">Opções de Agendamento</h5>
+                <p class="mb-0">
+                    <strong>Rascunho:</strong> Agende para qualquer dia do mês (exceto domingos) e confirme depois.<br>
+                    <strong>Envio Direto:</strong> Envie solicitação para a próxima semana (segunda a sábado).
+                    <a href="{% url 'view_draft_schedule_requests' %}" class="alert-link">
+                        Ver meus rascunhos
+                    </a>
+                </p>
+            {% elif not is_edit %}
+                <h5 class="mb-2">Modo Rascunho</h5>
+                <p class="mb-0">
+                    Salve um rascunho para qualquer dia do mês (exceto domingos). Poderá confirmá-lo na quinta ou sexta-feira.
+                    <a href="{% url 'view_draft_schedule_requests' %}" class="alert-link">
+                        Ver meus rascunhos
+                    </a>
+                </p>
+            {% endif %}
         </div>
     </div>
-    {% endif %}
 
     <!-- Scheduling Request Container -->
     <div class="row">
@@ -89,13 +102,13 @@
                 <!-- Informative Alert -->
                 <div class="alert alert-info m-3" role="alert">
                     <i class="bi bi-info-circle me-2"></i>
-                    Você está 
-                    {% if is_confirmation_day or request.user.is_staff %}
-                        confirmando um agendamento
+                    {% if is_confirmation_day and not is_edit %}
+                        Escolha: <strong>Rascunho</strong> (qualquer dia do mês) ou <strong>Envio Direto</strong> (apenas próxima semana)
+                    {% elif is_edit %}
+                        Editando rascunho de agendamento
                     {% else %}
-                        criando um rascunho
+                        Criando rascunho de agendamento para qualquer dia do mês (exceto domingos)
                     {% endif %}
-                    para a semana de <strong>{{ next_week_start|date:"d/m/Y" }}</strong> a <strong>{{ next_week_end|date:"d/m/Y" }}</strong>
                 </div>
 
                 <!-- Request Form -->
@@ -108,7 +121,7 @@
                     <div class="request-body">
                         <!-- Laboratory Selection -->
                         <div class="form-section mb-5 laboratory-suggestion">
-                            <h5><i class="bi bi-building me-2"></i>Selecione o Laboratório</h5>
+                            <h5><i class="bi bi-geo-alt me-2"></i>Selecione o Laboratório</h5>
                             
                             <div class="mb-4">
                                 <div class="row">
@@ -210,11 +223,8 @@
                                     <label for="{{ form.scheduled_date.id_for_label }}" class="form-label">Data Agendada</label>
                                     {{ form.scheduled_date }}
                                     <div class="form-text">
-                                        {% if is_confirmation_day %}
-                                            Selecione uma data da próxima semana
-                                        {% else %}
-                                            Selecione uma data do mês para seu rascunho
-                                        {% endif %}
+                                        <strong>Rascunho:</strong> Qualquer dia do mês (exceto domingos)<br>
+                                        <strong>Envio Direto:</strong> Apenas próxima semana (segunda a sábado)
                                     </div>
                                 </div>
                             </div>
@@ -268,7 +278,7 @@
                                         </span>
                                         <input type="text" id="materialSearch" class="form-control" placeholder="Buscar materiais...">
                                         <button type="button" class="btn btn-outline-secondary" id="searchAllLabsBtn">
-                                            <i class="bi bi-building me-1"></i>Buscar em Todos os Labs
+                                            <i class="bi bi-search me-1"></i>Buscar em Todos os Labs
                                         </button>
                                     </div>
                                 </div>
@@ -320,13 +330,28 @@
                             <a href="{% url 'professor_dashboard' %}" class="btn btn-outline-secondary mb-2 mb-md-0">
                                 <i class="bi bi-x-lg me-1"></i> Cancelar
                             </a>
-                            <button type="submit" class="btn btn-primary">
-                                {% if is_confirmation_day or request.user.is_staff %}
-                                    <i class="bi bi-calendar-plus me-1"></i> Enviar Agendamento
+                            
+                            <div class="d-flex gap-2 flex-wrap">
+                                {% if is_confirmation_day and not is_edit %}
+                                    <!-- Quinta/Sexta: mostrar ambos os botões -->
+                                    <button type="submit" name="save_as_draft" value="true" class="btn btn-outline-primary mb-2 mb-md-0">
+                                        <i class="bi bi-save me-1"></i> Salvar Rascunho
+                                    </button>
+                                    <button type="submit" name="save_as_draft" value="false" class="btn btn-primary">
+                                        <i class="bi bi-calendar-plus me-1"></i> Enviar Agendamento
+                                    </button>
+                                {% elif is_edit %}
+                                    <!-- Modo edição: apenas salvar -->
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-pencil-square me-1"></i> Atualizar Rascunho
+                                    </button>
                                 {% else %}
-                                    <i class="bi bi-save me-1"></i> Salvar Rascunho
+                                    <!-- Outros dias: apenas rascunho -->
+                                    <button type="submit" name="save_as_draft" value="true" class="btn btn-primary">
+                                        <i class="bi bi-save me-1"></i> Salvar Rascunho
+                                    </button>
                                 {% endif %}
-                            </button>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -339,6 +364,65 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        
+        // ===== FUNÇÃO PARA ÍCONES E CORES DOS LABORATÓRIOS =====
+        function getLabIcon(departmentCodes) {
+            // Converter string de códigos para array
+            const codes = typeof departmentCodes === 'string' ? departmentCodes.split(',').map(c => c.trim()) : [];
+            
+            // Se tem múltiplos departamentos, usar ícone de disciplinariedade
+            if (codes.length > 1) {
+                return 'bi-diagram-3'; // Ícone para múltiplas disciplinas
+            }
+            
+            // Ícone específico por departamento
+            const iconMap = {
+                'exatas': 'bi-calculator',     // Ícone para exatas
+                'saude': 'bi-heart-pulse',     // Ícone para saúde
+                'informatica': 'bi-cpu'        // Ícone para informática
+            };
+            
+            return iconMap[codes[0]] || 'bi-building'; // Fallback para o ícone padrão
+        }
+        
+        function getLabColor(departmentCodes) {
+            // Converter string de códigos para array
+            const codes = typeof departmentCodes === 'string' ? departmentCodes.split(',').map(c => c.trim()) : [];
+            
+            // Se tem múltiplos departamentos, usar cor roxa
+            if (codes.length > 1) {
+                return 'text-purple'; // Roxo para interdisciplinar
+            }
+            
+            // Cor específica por departamento
+            const colorMap = {
+                'exatas': 'text-primary',      // Azul para exatas (mantém)
+                'saude': 'text-danger',        // Vermelho para saúde
+                'informatica': 'text-success'  // Verde para informática
+            };
+            
+            return colorMap[codes[0]] || 'text-primary'; // Fallback para azul
+        }
+        
+        // Aplicar ícones e cores específicos aos laboratórios
+        function updateLabIcons() {
+            const labRows = document.querySelectorAll('.lab-row');
+            labRows.forEach(row => {
+                const departmentCodes = row.dataset.department || '';
+                const icon = row.querySelector('.lab-icon i');
+                if (icon) {
+                    // Remover classes de ícone e cor existentes
+                    icon.className = icon.className.replace(/bi-[a-z0-9\-]+/g, '').replace(/text-[a-z]+/g, '');
+                    // Adicionar novo ícone e cor
+                    const newIconClass = getLabIcon(departmentCodes);
+                    const newColorClass = getLabColor(departmentCodes);
+                    icon.classList.add(newIconClass, newColorClass);
+                }
+            });
+        }
+        
+        // Atualizar ícones quando a página carregar
+        updateLabIcons();
         // Laboratory Selection
         const labSelect = document.getElementById('id_laboratory');
         const labRows = document.querySelectorAll('.lab-row');
@@ -413,6 +497,16 @@
             
             selectedLabName.textContent = labName;
             selectedLabDetails.textContent = `${labDepartment} | ${labCapacity}`;
+            
+            // Update the selected lab icon
+            const selectedLabIcon = document.querySelector('#selectedLabInfo .selected-lab-icon i');
+            if (selectedLabIcon) {
+                const departmentCodes = row.dataset.department || '';
+                selectedLabIcon.className = selectedLabIcon.className.replace(/bi-[a-z0-9\-]+/g, '').replace(/text-[a-z]+/g, '');
+                const newIconClass = getLabIcon(departmentCodes);
+                const newColorClass = getLabColor(departmentCodes);
+                selectedLabIcon.classList.add(newIconClass, newColorClass, 'fs-1');
+            }
             
             // Show the selected lab info
             selectedLabInfo.classList.remove('d-none');
@@ -716,23 +810,29 @@
                 
                 // Nota: Validação de domingos feita apenas no evento 'input' acima
                 
-                if (!isConfirmationDay) {
-                    const confirmMessage = 'Tem certeza que deseja salvar este agendamento como rascunho? ' +
-                                         'Você só poderá confirmá-lo na próxima quinta ou sexta-feira.';
+                // Determinar qual botão foi clicado
+                const clickedButton = e.submitter;
+                const isDraft = clickedButton && clickedButton.getAttribute('name') === 'save_as_draft' && clickedButton.value === 'true';
+                
+                if (isDraft) {
+                    const message = isConfirmationDay ? 
+                        'Tem certeza que deseja salvar como rascunho? Você pode confirmá-lo depois.' :
+                        'Tem certeza que deseja salvar este agendamento como rascunho? Você só poderá confirmá-lo na próxima quinta ou sexta-feira.';
                     
-                    if (!confirm(confirmMessage)) {
+                    if (!confirm(message)) {
                         e.preventDefault();
-                    } else {
-                        // Adicionar efeito de loading no botão
-                        const submitBtn = form.querySelector('button[type="submit"]');
-                        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Salvando...';
-                        submitBtn.disabled = true;
+                        return;
                     }
+                    
+                    // Adicionar efeito de loading no botão de rascunho
+                    clickedButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Salvando...';
+                    clickedButton.disabled = true;
                 } else {
-                    // Adicionar efeito de loading no botão
-                    const submitBtn = form.querySelector('button[type="submit"]');
-                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Enviando...';
-                    submitBtn.disabled = true;
+                    // Adicionar efeito de loading no botão de envio
+                    if (clickedButton) {
+                        clickedButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Enviando...';
+                        clickedButton.disabled = true;
+                    }
                 }
             });
         }
@@ -784,6 +884,24 @@
         
         console.log('✅ Modo de edição configurado com sucesso');
         {% endif %}
+        
+        // ===== ADICIONAR PLACEHOLDERS AOS CAMPOS =====
+        // Adicionar placeholders diretamente no HTML
+        const fieldPlaceholders = {
+            'id_subject': 'Ex: Física I, Química Orgânica, Matemática...',
+            'id_number_of_students': 'Ex: 25',
+            'id_class_semester': 'Ex: 1º Semestre, 3º Período, Turma A',
+            'id_description': 'Descreva brevemente a atividade que será realizada na aula...',
+            'id_materials': 'Liste os materiais necessários para a aula: microscópios, reagentes, equipamentos específicos...'
+        };
+        
+        // Aplicar placeholders
+        Object.keys(fieldPlaceholders).forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.setAttribute('placeholder', fieldPlaceholders[fieldId]);
+            }
+        });
     });
 </script>
 {% endblock %}
