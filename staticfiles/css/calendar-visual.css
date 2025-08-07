@@ -107,6 +107,7 @@
     text-transform: uppercase !important;
     letter-spacing: 1px !important;
     margin-bottom: 4px !important;
+    background-color: transparent !important;
 }
 
 .day-number {
@@ -114,6 +115,7 @@
     font-weight: 700 !important;
     color: var(--text-color, #2c3e50) !important;
     line-height: 1 !important;
+    background-color: transparent !important;
 }
 
 /* === Headers Coloridos por Dia === */

@@ -6,6 +6,10 @@
 <link rel="stylesheet" href="{% static 'css/variables.css' %}">
 <link rel="stylesheet" href="{% static 'css/materials-dark-mode.css' %}">
 <link rel="stylesheet" href="{% static 'css/dark-theme-override.css' %}">
+<link rel="stylesheet" href="{% static 'css/dashboard-base.css' %}">
+<style>
+
+</style>
 {% endblock %}
 
 {% block content %}
@@ -28,7 +32,7 @@
 
     <!-- Informações do Laboratório -->
     <div class="card mb-4">
-        <div class="card-header d-flex align-items-center" style="background-color: {{ laboratory.color }}; color: white;">
+        <div class="card-header d-flex align-items-center" style="background-color: {{ laboratory.color }};">
             <i class="bi bi-building me-2"></i>
             <h5 class="mb-0">Informações do Laboratório</h5>
         </div>

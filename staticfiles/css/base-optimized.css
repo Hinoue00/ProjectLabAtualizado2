@@ -478,7 +478,7 @@ body {
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     transition: all var(--transition-speed);
-    padding: var(--spacing-lg);
+    padding: var(--spacing-small);
     margin-bottom: var(--spacing-lg);
 }
 
