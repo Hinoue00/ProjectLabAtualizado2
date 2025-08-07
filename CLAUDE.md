@@ -30,6 +30,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - When disabled, chatbot UI is hidden and API endpoints return 503 status
 - Recommended to keep disabled on production servers with limited CPU resources
 
+### Production Optimization (Janeiro 2025)
+- **Files Removed**: All test files (`tests.py`), debug commands, temporary files, and development documentation
+- **Requirements Optimized**: Created `requirements-production-light.txt` without heavy AI dependencies
+- **Chatbot Disabled**: Default configuration for production performance
+- **Size Reduction**: Removed ~30+ development/test files for cleaner production deployment
+
 ## Architecture Overview
 
 ### Core Django Apps

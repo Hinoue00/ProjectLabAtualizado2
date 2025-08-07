@@ -1,0 +1,41 @@
+# Requirements otimizados para produção - CPU limitada
+# Versão minimalista sem IA e dependências pesadas
+
+# Framework principal - versões estáveis
+Django==5.2
+djangorestframework==3.16.0
+
+# Banco de dados
+psycopg2-binary==2.9.10
+
+# Interface  
+django-crispy-forms==2.3
+crispy-bootstrap5==2025.4
+
+# APIs e integrações (essenciais)
+requests==2.32.3
+
+# Documentos e relatórios (básico)
+openpyxl==3.1.5
+python-docx==1.1.2
+beautifulsoup4==4.13.3
+
+# Produção e deploy
+gunicorn==23.0.0
+python-dotenv==1.1.0
+
+# Utilitários essenciais
+pillow==11.1.0
+python-dateutil==2.9.0.post0
+pytz==2025.2
+
+# Dependências base do Django
+asgiref==3.8.1
+sqlparse==0.5.3
+tzdata==2025.2
+
+# HTTP e certificados
+urllib3==2.3.0
+charset-normalizer==3.4.1
+certifi==2025.1.31
+idna==3.10
