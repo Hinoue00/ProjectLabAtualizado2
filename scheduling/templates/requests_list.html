@@ -235,18 +235,12 @@
                             <span class="request-detail-label">Disciplina:</span>
                             {{ request.subject }}
                         </div>
-                        <!-- No template de detalhes da solicitação que os laboratoristas veem -->
-                        {% if schedule_request.guide_file %}
-                        <div class="mb-3">
-                            <h6>Roteiro de Aula:</h6>
-                            <a href="{{ schedule_request.guide_file.url }}" class="btn btn-outline-primary btn-sm" target="_blank">
-                                <i class="bi bi-download me-1"></i> Baixar Roteiro
+                        {% if request.guide_file %}
+                        <div class="request-detail-item">
+                            <span class="request-detail-label">Roteiro:</span>
+                            <a href="{{ request.guide_file.url }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                                <i class="bi bi-download me-1"></i> Baixar PDF
                             </a>
-                        </div>
-                        {% else %}
-                        <div class="mb-3">
-                            <h6>Roteiro de Aula:</h6>
-                            <p class="text-muted">Nenhum roteiro anexado.</p>
                         </div>
                         {% endif %}
                     </div>
