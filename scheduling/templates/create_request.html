@@ -294,7 +294,7 @@
 
                         <!-- Attachments Section -->
                         <div class="form-section">
-                            <h5><i class="bi bi-paperclip me-2"></i>Anexos</h5>
+                            <h5><i class="bi bi-paperclip me-2"></i>Roteiro de Aula (Opcional)</h5>
                             
                             <!-- Mostrar arquivo existente se estiver editando -->
                             {% if is_edit and draft_request.guide_file %}
@@ -312,14 +312,19 @@
                             </div>
                             {% endif %}
                             
-                            <div class="custom-file-upload" id="dropArea">
-                                <input type="file" name="attachments" id="id_attachments" multiple class="d-none">
-                                <div class="custom-file-icon">
-                                    <i class="bi bi-cloud-arrow-up"></i>
+                            <div class="mb-3">
+                                {{ form.guide_file.label_tag }}
+                                {{ form.guide_file }}
+                                {% if form.guide_file.help_text %}
+                                <div class="form-text">{{ form.guide_file.help_text }}</div>
+                                {% endif %}
+                                {% if form.guide_file.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.guide_file.errors %}
+                                        {{ error }}
+                                    {% endfor %}
                                 </div>
-                                <h6>Arraste arquivos ou clique para anexar</h6>
-                                <p>Você pode anexar roteiros de aula, imagens ou qualquer outro documento</p>
-                                <div id="filePreview" class="file-preview"></div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>

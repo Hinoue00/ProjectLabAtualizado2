@@ -52,7 +52,7 @@
                             <span class="badge bg-warning rounded-pill">Pendente</span>
                         {% endif %}
                     </div>
-                    <h3 class="stats-value">{{ pending_approvals|add:pending_appointments }}</h3>
+                    <h3 class="stats-value">{{ pending_appointments|default:0 }}</h3>
                     <p class="stats-label">Solicitações pendentes</p>
                 </div>
             </div>
@@ -150,7 +150,7 @@
                                              data-time="{{ appointment.start_time|time:'H:i' }} - {{ appointment.end_time|time:'H:i' }}"
                                              data-date="{{ appointment.scheduled_date|date:'d/m/Y' }}"
                                              data-students="{{ appointment.number_of_students }}"
-                                             data-materials="{{ appointment.required_materials|default:'Não especificado' }}"
+                                             data-materials="{{ appointment.materials|default:'Não especificado'|escapejs }}"
                                              data-description="{{ appointment.description|default:'Sem descrição' }}"
                                              data-status="{{ appointment.get_status_display }}">
                                              

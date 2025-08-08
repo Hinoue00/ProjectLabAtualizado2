@@ -166,6 +166,18 @@
                     </div>
                     {% endif %}
 
+                    {% if request.guide_file %}
+                    <div class="mb-3">
+                        <div class="info-item">
+                            <i class="bi bi-file-earmark-pdf text-danger"></i>
+                            <span><strong>Roteiro:</strong></span>
+                            <a href="{{ request.guide_file.url }}" class="btn btn-outline-primary btn-sm ms-2" target="_blank">
+                                <i class="bi bi-download me-1"></i> Baixar PDF
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <div class="actions">
                         <form method="post" class="d-inline" data-ajax="true" data-realtime-update="true">
                             {% csrf_token %}

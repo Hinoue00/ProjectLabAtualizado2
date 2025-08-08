@@ -22,7 +22,7 @@
                      data-time="{{ appointment.start_time|time:'H:i' }} - {{ appointment.end_time|time:'H:i' }}"
                      data-date="{{ appointment.scheduled_date|date:'d/m/Y' }}"
                      data-students="{{ appointment.number_of_students|default:'N/A' }}"
-                     data-materials="{{ appointment.required_materials|default:'Nenhum material especificado' }}"
+                     data-materials="{{ appointment.materials|default:'Nenhum material especificado'|escapejs }}"
                      data-description="{{ appointment.description|default:'Sem descrição' }}"
                      data-status="{{ appointment.get_status_display }}">
                      

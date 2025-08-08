@@ -238,62 +238,46 @@
                 <h5 class="mb-0">Informações Detalhadas</h5>
             </div>
 
-            <!-- Sección para mostrar archivos adjuntos -->
+            <!-- Seção para mostrar roteiro de aula -->
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="card-title mb-0">
-                        <i class="bi bi-paperclip me-2 text-primary"></i>
-                        Arquivos Anexados
+                        <i class="bi bi-file-earmark-pdf me-2 text-danger"></i>
+                        Roteiro de Aula
                     </h5>
                 </div>
                 <div class="card-body">
-                    {% if schedule_request.attachments.all %}
+                    {% if schedule_request.guide_file %}
                         <div class="row">
-                            {% for attachment in schedule_request.attachments.all %}
-                                <div class="col-md-4 mb-3">
-                                    <div class="card h-100">
-                                        <div class="card-body">
-                                            <div class="d-flex align-items-center mb-3">
-                                                {% if attachment.file_name|lower|endswith:'.pdf' %}
-                                                    <i class="bi bi-file-pdf text-danger fs-2 me-2"></i>
-                                                {% elif attachment.file_name|lower|endswith:'.doc' or attachment.file_name|lower|endswith:'.docx' %}
-                                                    <i class="bi bi-file-word text-primary fs-2 me-2"></i>
-                                                {% elif attachment.file_name|lower|endswith:'.odt' %}
-                                                    <i class="bi bi-file-text text-success fs-2 me-2"></i>
-                                                {% elif attachment.is_image %}
-                                                    <i class="bi bi-file-image text-primary fs-2 me-2"></i>
-                                                {% else %}
-                                                    <i class="bi bi-file-earmark text-secondary fs-2 me-2"></i>
-                                                {% endif %}
-                                                <div>
-                                                    <h6 class="mb-1 text-truncate" title="{{ attachment.file_name }}">{{ attachment.file_name }}</h6>
-                                                    <small class="text-muted">
-                                                        Enviado em: {{ attachment.uploaded_at|date:"d/m/Y H:i" }}
-                                                    </small>
-                                                </div>
+                            <div class="col-md-6">
+                                <div class="card h-100 border-success">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <i class="bi bi-file-earmark-pdf text-danger fs-2 me-3"></i>
+                                            <div>
+                                                <h6 class="mb-1">{{ schedule_request.guide_file.name|basename }}</h6>
+                                                <small class="text-muted">Roteiro anexado pelo professor</small>
                                             </div>
-                                            <div class="d-grid gap-2">
-                                                <a href="{{ attachment.file.url }}" class="btn btn-sm btn-primary" download>
-                                                    <i class="bi bi-download me-1"></i> Baixar
-                                                </a>
-                                                {% if attachment.is_pdf or attachment.is_image %}
-                                                    <a href="{{ attachment.file.url }}" class="btn btn-sm btn-outline-secondary" target="_blank">
-                                                        <i class="bi bi-eye me-1"></i> Visualizar
-                                                    </a>
-                                                {% endif %}
-                                            </div>
+                                        </div>
+                                        <div class="d-grid gap-2">
+                                            <a href="{{ schedule_request.guide_file.url }}" class="btn btn-primary" download>
+                                                <i class="bi bi-download me-1"></i> Baixar PDF
+                                            </a>
+                                            <a href="{{ schedule_request.guide_file.url }}" class="btn btn-outline-secondary" target="_blank">
+                                                <i class="bi bi-eye me-1"></i> Visualizar PDF
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
-                            {% endfor %}
+                            </div>
                         </div>
                     {% else %}
                         <div class="text-center py-4">
                             <div class="mb-3">
                                 <i class="bi bi-file-earmark-x text-muted" style="font-size: 3rem;"></i>
                             </div>
-                            <h5>Nenhum arquivo anexado</h5>
-                            <p class="text-muted">O professor não anexou nenhum arquivo a esta solicitação.</p>
+                            <h5>Nenhum roteiro anexado</h5>
+                            <p class="text-muted">O professor não anexou roteiro de aula a esta solicitação.</p>
                         </div>
                     {% endif %}
                 </div>
@@ -395,13 +379,25 @@
                             </p>
                             <p class="mb-2">
                                 <strong>Departamento:</strong> 
-                                {{ schedule_request.laboratory.department }}
+                                {% if schedule_request.laboratory.departments.all %}
+                                    {% for dept in schedule_request.laboratory.departments.all %}
+                                        <span class="badge bg-primary me-1">{{ dept.name }}</span>
+                                    {% endfor %}
+                                {% elif schedule_request.laboratory.department %}
+                                    {{ schedule_request.laboratory.get_department_display }}
+                                {% else %}
+                                    <span class="text-muted">Não definido</span>
+                                {% endif %}
                             </p>
                         </div>
                         <div class="col-md-6">
                             <h6 class="mb-3">Equipamentos</h6>
                             <p>
-                                {{ schedule_request.laboratory.equipment|default:"Nenhum equipamento específico listado." }}
+                                {% if schedule_request.laboratory.equipment and schedule_request.laboratory.equipment != "None" and schedule_request.laboratory.equipment != "none" %}
+                                    {{ schedule_request.laboratory.equipment }}
+                                {% else %}
+                                    <span class="text-muted">Nenhum equipamento específico listado.</span>
+                                {% endif %}
                             </p>
                         </div>
                     </div>

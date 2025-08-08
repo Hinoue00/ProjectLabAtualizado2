@@ -429,7 +429,14 @@ def delete_draft_schedule_request(request, draft_id):
 @login_required
 def schedule_request_detail(request, pk):
     """Exibe detalhes de uma solicitação de agendamento"""
-    schedule_request = get_object_or_404(ScheduleRequest, pk=pk)
+    schedule_request = get_object_or_404(
+        ScheduleRequest.objects.select_related(
+            'professor', 'laboratory', 'reviewed_by'
+        ).prefetch_related(
+            'laboratory__departments'
+        ), 
+        pk=pk
+    )
     
     # Verifica se o usuário tem permissão para visualizar
     if request.user.user_type == 'professor' and schedule_request.professor != request.user:
@@ -991,7 +998,7 @@ def pending_requests_list(request):
             status='pending'
         ).select_related('professor', 'laboratory').only(
             'id', 'request_date', 'scheduled_date', 'start_time', 'end_time',
-            'subject', 'number_of_students', 'description', 'materials',
+            'subject', 'number_of_students', 'description', 'materials', 'guide_file',
             'professor__first_name', 'professor__last_name', 'professor__email',
             'laboratory__name'
         ).order_by('-request_date')[:50])  # Limitar a 50 mais recentes

@@ -423,6 +423,103 @@
         </div>
     </div>
 </div>
+
+<!-- Modal de Visualização de Agendamento -->
+<div class="modal fade" id="appointmentModal" tabindex="-1" aria-labelledby="appointmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="appointmentModalLabel">
+                    <i class="bi bi-calendar-event"></i>
+                    Detalhes do Agendamento
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="detail-group">
+                            <label class="detail-label">
+                                <i class="bi bi-person"></i>
+                                Professor
+                            </label>
+                            <p class="detail-value" id="modal-professor"></p>
+                        </div>
+                        
+                        <div class="detail-group">
+                            <label class="detail-label">
+                                <i class="bi bi-building"></i>
+                                Laboratório
+                            </label>
+                            <p class="detail-value" id="modal-laboratory"></p>
+                        </div>
+                        
+                        <div class="detail-group">
+                            <label class="detail-label">
+                                <i class="bi bi-book"></i>
+                                Disciplina
+                            </label>
+                            <p class="detail-value" id="modal-subject"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="detail-group">
+                            <label class="detail-label">
+                                <i class="bi bi-calendar3"></i>
+                                Data
+                            </label>
+                            <p class="detail-value" id="modal-date"></p>
+                        </div>
+                        
+                        <div class="detail-group">
+                            <label class="detail-label">
+                                <i class="bi bi-clock"></i>
+                                Horário
+                            </label>
+                            <p class="detail-value" id="modal-time"></p>
+                        </div>
+                        
+                        <div class="detail-group">
+                            <label class="detail-label">
+                                <i class="bi bi-people"></i>
+                                Número de Alunos
+                            </label>
+                            <p class="detail-value" id="modal-students"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="detail-group">
+                    <label class="detail-label">
+                        <i class="bi bi-file-text"></i>
+                        Descrição
+                    </label>
+                    <p class="detail-value" id="modal-description"></p>
+                </div>
+                
+                <div class="detail-group">
+                    <label class="detail-label">
+                        <i class="bi bi-tools"></i>
+                        Materiais Necessários
+                    </label>
+                    <p class="detail-value" id="modal-materials"></p>
+                </div>
+                
+                <div class="detail-group">
+                    <label class="detail-label">
+                        <i class="bi bi-check-circle"></i>
+                        Status
+                    </label>
+                    <span class="badge" id="modal-status-badge"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}

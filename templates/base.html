@@ -148,7 +148,7 @@
                                     Solicitar Agendamento
                                 </a>
                             {% else %}
-                                <a href="{% url 'schedule_requests_list' %}" class="sidebar-dropdown-link {% if '/scheduling/requests/' in request.path %}active{% endif %}">
+                                <a href="{% url 'pending_requests' %}" class="sidebar-dropdown-link {% if '/scheduling/pending/' in request.path %}active{% endif %}">
                                     Solicitações
                                     {% if pending_requests_count > 0 %}
                                         <span class="badge rounded-pill bg-danger ms-1">{{ pending_requests_count }}</span>
