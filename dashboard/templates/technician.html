@@ -150,8 +150,8 @@
                                              data-time="{{ appointment.start_time|time:'H:i' }} - {{ appointment.end_time|time:'H:i' }}"
                                              data-date="{{ appointment.scheduled_date|date:'d/m/Y' }}"
                                              data-students="{{ appointment.number_of_students }}"
-                                             data-materials="{{ appointment.materials|default:'Não especificado'|escapejs }}"
-                                             data-description="{{ appointment.description|default:'Sem descrição' }}"
+                                             data-materials="{{ appointment.materials|default:'Não especificado'|escape }}"
+                                             data-description="{{ appointment.description|default:'Sem descrição'|escape }}"
                                              data-status="{{ appointment.get_status_display }}">
                                              
                                             <div class="appointment-time">
