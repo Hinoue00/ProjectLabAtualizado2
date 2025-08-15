@@ -194,7 +194,7 @@ class ScheduleRequestForm(forms.ModelForm):
                 if not (month_start <= date <= month_end):
                     raise forms.ValidationError("Para rascunhos, você pode agendar para qualquer data do mês atual.")
             else:
-                # Para SOLICITAÇÕES FINAIS: apenas próxima semana
+                # Para SOLICITAÇÕES FINAIS: apenas próxima semana (segunda a sábado)
                 next_week_start = today + timedelta(days=(7 - today.weekday()))
                 next_week_end = next_week_start + timedelta(days=5)  # Segunda a sábado
                 
@@ -223,6 +223,18 @@ class ScheduleRequestForm(forms.ModelForm):
         
         return instance
     
+    def clean_number_of_students(self):
+        """Validação específica do número de alunos"""
+        number_of_students = self.cleaned_data.get('number_of_students')
+        
+        if number_of_students is not None:
+            if number_of_students <= 0:
+                raise forms.ValidationError("O número de alunos deve ser maior que zero.")
+            if number_of_students > 100:
+                raise forms.ValidationError("O número de alunos não pode exceder 100.")
+        
+        return number_of_students
+
     def clean(self):
         cleaned_data = super().clean()
         start_time = cleaned_data.get('start_time')
@@ -243,7 +255,7 @@ class ScheduleRequestForm(forms.ModelForm):
         if laboratory and number_of_students and hasattr(laboratory, 'capacity') and laboratory.capacity:
             if number_of_students > laboratory.capacity:
                 self.add_error('number_of_students', 
-                              f'O número de alunos excede a capacidade do laboratório ({laboratory.capacity}).')
+                              f'O número de alunos ({number_of_students}) excede a capacidade do laboratório ({laboratory.capacity} pessoas).')
         
         return cleaned_data
     

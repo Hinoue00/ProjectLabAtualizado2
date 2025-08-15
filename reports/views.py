@@ -26,6 +26,8 @@ except ImportError:
     pd = None
 
 try:
+    import matplotlib
+    matplotlib.use('Agg')  # Use non-interactive backend
     import matplotlib.pyplot as plt
 except ImportError:
     plt = None
@@ -33,6 +35,13 @@ import io
 import base64
 import tempfile
 from datetime import datetime
+from django.utils import timezone as django_timezone
+
+def safe_datetime_for_excel(dt):
+    """Convert timezone-aware datetime to naive for Excel compatibility."""
+    if dt and hasattr(dt, 'tzinfo') and dt.tzinfo:
+        return dt.replace(tzinfo=None)
+    return dt
 
 @login_required
 @user_passes_test(is_technician)
@@ -116,11 +125,11 @@ def generate_report(request):
             
             # Redirect to appropriate report view
             if report_type == 'scheduling':
-                return redirect('scheduling_report', report_id=report.id, format=export_format)
+                return redirect('reports:scheduling_report', report_id=report.id, format=export_format)
             elif report_type == 'inventory':
-                return redirect('inventory_report', report_id=report.id, format=export_format)
+                return redirect('reports:inventory_report', report_id=report.id, format=export_format)
             elif report_type == 'user_activity':
-                return redirect('user_activity_report', report_id=report.id, format=export_format)
+                return redirect('reports:user_activity_report', report_id=report.id, format=export_format)
     else:
         form = ReportFilterForm()
     
@@ -186,7 +195,7 @@ def scheduling_report(request, report_id, format='pdf'):
     
     # Charts
     charts = []
-    if include_charts:
+    if include_charts and plt is not None:
         # Status distribution chart
         if total_requests > 0:
             plt.figure(figsize=(8, 4))
@@ -273,7 +282,7 @@ def scheduling_report(request, report_id, format='pdf'):
         # Verificar se weasyprint está disponível
         if HTML is None:
             messages.error(request, 'Geração de PDF não disponível. Entre em contato com o administrador.')
-            return redirect('reports:scheduling_report', report_id=report.id)
+            return redirect('reports:scheduling_report', report_id=report.id, format='html')
         
         # Render HTML
         html_string = render_to_string('reports/scheduling_pdf.html', context)
@@ -288,46 +297,50 @@ def scheduling_report(request, report_id, format='pdf'):
         return response
     
     elif format == 'excel':
+        # Verificar se pandas está disponível
+        if pd is None:
+            messages.error(request, 'Exportação para Excel não disponível. Entre em contato com o administrador.')
+            return redirect('reports:scheduling_report', report_id=report.id, format='html')
+        
         # Create Excel file
         output = io.BytesIO()
-        writer = pd.ExcelWriter(output, engine='openpyxl')
         
-        # Schedule data
-        df_schedule = pd.DataFrame([
-            {
-                'ID': s.id,
-                'Data': s.scheduled_date,
-                'Horário': f"{s.start_time} - {s.end_time}",
-                'Laboratório': s.laboratory.name,
-                'Professor': s.professor.get_full_name(),
-                'Status': dict(ScheduleRequest.STATUS_CHOICES).get(s.status),
-                'Finalidade': s.purpose,
-            }
-            for s in schedule_data
-        ])
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            # Schedule data
+            df_schedule = pd.DataFrame([
+                {
+                    'ID': s.id,
+                    'Data': s.scheduled_date,
+                    'Horário': f"{s.start_time} - {s.end_time}",
+                    'Laboratório': s.laboratory.name,
+                    'Professor': s.professor.get_full_name(),
+                    'Status': dict(ScheduleRequest.STATUS_CHOICES).get(s.status),
+                    'Finalidade': s.purpose,
+                }
+                for s in schedule_data
+            ])
+            
+            # Lab usage data
+            df_lab_usage = pd.DataFrame(lab_usage)
+            
+            # Professor usage data
+            df_professor_usage = pd.DataFrame([
+                {
+                    'Professor': f"{item['professor__first_name']} {item['professor__last_name']}",
+                    'Quantidade': item['count']
+                }
+                for item in professor_usage
+            ])
+            
+            # Weekday data
+            df_weekday = pd.DataFrame(weekday_data)
+            
+            # Write to Excel
+            df_schedule.to_excel(writer, sheet_name='Agendamentos', index=False)
+            df_lab_usage.to_excel(writer, sheet_name='Uso por Laboratório', index=False)
+            df_professor_usage.to_excel(writer, sheet_name='Uso por Professor', index=False)
+            df_weekday.to_excel(writer, sheet_name='Uso por Dia da Semana', index=False)
         
-        # Lab usage data
-        df_lab_usage = pd.DataFrame(lab_usage)
-        
-        # Professor usage data
-        df_professor_usage = pd.DataFrame([
-            {
-                'Professor': f"{item['professor__first_name']} {item['professor__last_name']}",
-                'Quantidade': item['count']
-            }
-            for item in professor_usage
-        ])
-        
-        # Weekday data
-        df_weekday = pd.DataFrame(weekday_data)
-        
-        # Write to Excel
-        df_schedule.to_excel(writer, sheet_name='Agendamentos', index=False)
-        df_lab_usage.to_excel(writer, sheet_name='Uso por Laboratório', index=False)
-        df_professor_usage.to_excel(writer, sheet_name='Uso por Professor', index=False)
-        df_weekday.to_excel(writer, sheet_name='Uso por Dia da Semana', index=False)
-        
-        writer.save()
         output.seek(0)
         
         # Create response
@@ -375,7 +388,7 @@ def inventory_report(request, report_id, format='pdf'):
     include_charts = report.filter_params.get('include_charts', True)
     
     # Build query
-    query = Material.objects.all()
+    query = Material.objects.select_related('category', 'laboratory').all()
     
     if laboratory_id:
         query = query.filter(laboratory_id=laboratory_id)
@@ -407,7 +420,7 @@ def inventory_report(request, report_id, format='pdf'):
     
     # Charts
     charts = []
-    if include_charts:
+    if include_charts and plt is not None:
         # Category distribution chart
         if category_distribution:
             plt.figure(figsize=(10, 6))
@@ -493,7 +506,7 @@ def inventory_report(request, report_id, format='pdf'):
         # Verificar se weasyprint está disponível
         if HTML is None:
             messages.error(request, 'Geração de PDF não disponível. Entre em contato com o administrador.')
-            return redirect('reports:inventory_report')
+            return redirect('reports:inventory_report', report_id=report.id, format='html')
         
         # Render HTML
         html_string = render_to_string('reports/inventory_pdf.html', context)
@@ -508,53 +521,57 @@ def inventory_report(request, report_id, format='pdf'):
         return response
     
     elif format == 'excel':
+        # Verificar se pandas está disponível
+        if pd is None:
+            messages.error(request, 'Exportação para Excel não disponível. Entre em contato com o administrador.')
+            return redirect('reports:inventory_report', report_id=report.id, format='html')
+        
         # Create Excel file
         output = io.BytesIO()
-        writer = pd.ExcelWriter(output, engine='openpyxl')
         
-        # Materials data
-        df_materials = pd.DataFrame([
-            {
-                'ID': m.id,
-                'Nome': m.name,
-                'Categoria': m.category.name,
-                'Tipo': m.category.get_material_type_display(),
-                'Laboratório': m.laboratory.name,
-                'Quantidade': m.quantity,
-                'Estoque Mínimo': m.minimum_stock,
-                'Status': 'Baixo' if m.is_low_stock else 'Normal',
-                'Descrição': m.description,
-            }
-            for m in materials
-        ])
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            # Materials data
+            df_materials = pd.DataFrame([
+                {
+                    'ID': m.id,
+                    'Nome': m.name,
+                    'Categoria': m.category.name,
+                    'Tipo': m.category.get_material_type_display(),
+                    'Laboratório': m.laboratory.name,
+                    'Quantidade': m.quantity,
+                    'Estoque Mínimo': m.minimum_stock,
+                    'Status': 'Baixo' if m.is_low_stock else 'Normal',
+                    'Descrição': m.description,
+                }
+                for m in materials
+            ])
+            
+            # Category distribution data
+            df_category = pd.DataFrame([
+                {
+                    'Categoria': item['category__name'],
+                    'Tipo': dict(MaterialCategory.CATEGORY_TYPES).get(item['category__material_type']),
+                    'Quantidade de Materiais': item['count'],
+                    'Quantidade Total': item['total_quantity']
+                }
+                for item in category_distribution
+            ])
+            
+            # Laboratory distribution data
+            df_lab = pd.DataFrame([
+                {
+                    'Laboratório': item['laboratory__name'],
+                    'Quantidade de Materiais': item['count'],
+                    'Quantidade Total': item['total_quantity']
+                }
+                for item in lab_distribution
+            ])
+            
+            # Write to Excel
+            df_materials.to_excel(writer, sheet_name='Materiais', index=False)
+            df_category.to_excel(writer, sheet_name='Por Categoria', index=False)
+            df_lab.to_excel(writer, sheet_name='Por Laboratório', index=False)
         
-        # Category distribution data
-        df_category = pd.DataFrame([
-            {
-                'Categoria': item['category__name'],
-                'Tipo': dict(MaterialCategory.CATEGORY_TYPES).get(item['category__material_type']),
-                'Quantidade de Materiais': item['count'],
-                'Quantidade Total': item['total_quantity']
-            }
-            for item in category_distribution
-        ])
-        
-        # Laboratory distribution data
-        df_lab = pd.DataFrame([
-            {
-                'Laboratório': item['laboratory__name'],
-                'Quantidade de Materiais': item['count'],
-                'Quantidade Total': item['total_quantity']
-            }
-            for item in lab_distribution
-        ])
-        
-        # Write to Excel
-        df_materials.to_excel(writer, sheet_name='Materiais', index=False)
-        df_category.to_excel(writer, sheet_name='Por Categoria', index=False)
-        df_lab.to_excel(writer, sheet_name='Por Laboratório', index=False)
-        
-        writer.save()
         output.seek(0)
         
         # Create response
@@ -662,7 +679,7 @@ def user_activity_report(request, report_id, format='pdf'):
     
     # Charts
     charts = []
-    if include_charts:
+    if include_charts and plt is not None:
         # User type distribution chart
         if user_type_distribution:
             plt.figure(figsize=(8, 4))
@@ -747,7 +764,7 @@ def user_activity_report(request, report_id, format='pdf'):
         # Verificar se weasyprint está disponível
         if HTML is None:
             messages.error(request, 'Geração de PDF não disponível. Entre em contato com o administrador.')
-            return redirect('reports:user_activity_report', report_id=report.id)
+            return redirect('reports:user_activity_report', report_id=report.id, format='html')
         
         # Render HTML
         html_string = render_to_string('reports/user_activity_pdf.html', context)
@@ -762,35 +779,39 @@ def user_activity_report(request, report_id, format='pdf'):
         return response
     
     elif format == 'excel':
+        # Verificar se pandas está disponível
+        if pd is None:
+            messages.error(request, 'Exportação para Excel não disponível. Entre em contato com o administrador.')
+            return redirect('reports:user_activity_report', report_id=report.id, format='html')
+        
         # Create Excel file
         output = io.BytesIO()
-        writer = pd.ExcelWriter(output, engine='openpyxl')
         
-        # Users data
-        df_users = pd.DataFrame([
-            {
-                'ID': u.id,
-                'Nome': u.get_full_name(),
-                'E-mail': u.email,
-                'Tipo': dict(User.USER_TYPE_CHOICES).get(u.user_type),
-                'Telefone': u.phone_number,
-                'Data de Registro': u.registration_date,
-            }
-            for u in users
-        ])
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            # Users data
+            df_users = pd.DataFrame([
+                {
+                    'ID': u.id,
+                    'Nome': u.get_full_name(),
+                    'E-mail': u.email,
+                    'Tipo': dict(User.USER_TYPE_CHOICES).get(u.user_type),
+                    'Telefone': u.phone_number,
+                    'Data de Registro': safe_datetime_for_excel(u.registration_date),  # Convert timezone-aware to naive for Excel
+                }
+                for u in users
+            ])
+            
+            # Professor activity data
+            df_professor = pd.DataFrame(professor_activity)
+            
+            # Technician activity data
+            df_technician = pd.DataFrame(technician_activity)
+            
+            # Write to Excel
+            df_users.to_excel(writer, sheet_name='Usuários', index=False)
+            df_professor.to_excel(writer, sheet_name='Atividade de Professores', index=False)
+            df_technician.to_excel(writer, sheet_name='Atividade de Laboratoristas', index=False)
         
-        # Professor activity data
-        df_professor = pd.DataFrame(professor_activity)
-        
-        # Technician activity data
-        df_technician = pd.DataFrame(technician_activity)
-        
-        # Write to Excel
-        df_users.to_excel(writer, sheet_name='Usuários', index=False)
-        df_professor.to_excel(writer, sheet_name='Atividade de Professores', index=False)
-        df_technician.to_excel(writer, sheet_name='Atividade de Laboratoristas', index=False)
-        
-        writer.save()
         output.seek(0)
         
         # Create response

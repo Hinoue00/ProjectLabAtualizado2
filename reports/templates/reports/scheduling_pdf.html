@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ report.title }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #4a6fa5;
+            padding-bottom: 15px;
+        }
+        
+        .header h1 {
+            color: #4a6fa5;
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .header p {
+            margin: 5px 0;
+            color: #666;
+        }
+        
+        .summary-grid {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        
+        .summary-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            flex: 1;
+            margin: 0 5px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .summary-item h3 {
+            margin: 0 0 10px 0;
+            color: #4a6fa5;
+            font-size: 14px;
+        }
+        
+        .summary-item .number {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section h2 {
+            color: #4a6fa5;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #4a6fa5;
+            color: white;
+            font-weight: bold;
+            font-size: 11px;
+        }
+        
+        td {
+            font-size: 10px;
+        }
+        
+        .status-approved { color: #28a745; font-weight: bold; }
+        .status-rejected { color: #dc3545; font-weight: bold; }
+        .status-pending { color: #ffc107; font-weight: bold; }
+        
+        .charts {
+            page-break-inside: avoid;
+        }
+        
+        .chart {
+            text-align: center;
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+        }
+        
+        .chart h3 {
+            color: #4a6fa5;
+            margin-bottom: 15px;
+        }
+        
+        .chart img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .stats-table {
+            margin-bottom: 20px;
+        }
+        
+        .stats-table th {
+            background-color: #17a2b8;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px solid #dee2e6;
+            padding-top: 15px;
+        }
+        
+        @page {
+            margin: 2cm;
+        }
+        
+        .page-break {
+            page-break-before: always;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ report.title }}</h1>
+        <p>Período: {{ report.date_range_start|date:"d/m/Y" }} a {{ report.date_range_end|date:"d/m/Y" }}</p>
+        <p>Gerado em: {{ report.created_at|date:"d/m/Y H:i" }}</p>
+        <p>Por: {{ report.created_by.get_full_name }}</p>
+    </div>
+
+    <div class="summary-grid">
+        <div class="summary-item">
+            <h3>Total de Agendamentos</h3>
+            <div class="number">{{ total_requests }}</div>
+        </div>
+        <div class="summary-item">
+            <h3>Aprovados</h3>
+            <div class="number status-approved">{{ approved_requests }}</div>
+        </div>
+        <div class="summary-item">
+            <h3>Rejeitados</h3>
+            <div class="number status-rejected">{{ rejected_requests }}</div>
+        </div>
+        <div class="summary-item">
+            <h3>Pendentes</h3>
+            <div class="number status-pending">{{ pending_requests }}</div>
+        </div>
+    </div>
+
+    {% if schedule_data %}
+    <div class="section">
+        <h2>Detalhamento dos Agendamentos</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Horário</th>
+                    <th>Laboratório</th>
+                    <th>Professor</th>
+                    <th>Status</th>
+                    <th>Finalidade</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for schedule in schedule_data %}
+                <tr>
+                    <td>{{ schedule.scheduled_date|date:"d/m/Y" }}</td>
+                    <td>{{ schedule.start_time }} - {{ schedule.end_time }}</td>
+                    <td>{{ schedule.laboratory.name }}</td>
+                    <td>{{ schedule.professor.get_full_name }}</td>
+                    <td class="status-{{ schedule.status }}">
+                        {{ schedule.get_status_display }}
+                    </td>
+                    <td>{{ schedule.purpose|truncatechars:50 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if lab_usage %}
+    <div class="section">
+        <h2>Uso por Laboratório</h2>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Laboratório</th>
+                    <th>Quantidade de Agendamentos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lab in lab_usage %}
+                <tr>
+                    <td>{{ lab.laboratory__name }}</td>
+                    <td>{{ lab.count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if professor_usage %}
+    <div class="section">
+        <h2>Atividade por Professor</h2>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Professor</th>
+                    <th>Quantidade de Agendamentos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prof in professor_usage %}
+                <tr>
+                    <td>{{ prof.professor__first_name }} {{ prof.professor__last_name }}</td>
+                    <td>{{ prof.count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if weekday_data %}
+    <div class="section">
+        <h2>Distribuição por Dia da Semana</h2>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Dia da Semana</th>
+                    <th>Quantidade de Agendamentos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for day in weekday_data %}
+                <tr>
+                    <td>{{ day.weekday }}</td>
+                    <td>{{ day.count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if charts %}
+    <div class="page-break"></div>
+    <div class="section charts">
+        <h2>Gráficos</h2>
+        {% for chart in charts %}
+        <div class="chart">
+            <h3>{{ chart.title }}</h3>
+            <img src="data:image/png;base64,{{ chart.image }}" alt="{{ chart.title }}">
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <p>LabConnect - Sistema de Gestão de Laboratórios</p>
+        <p>Relatório gerado automaticamente em {{ report.created_at|date:"d/m/Y H:i" }}</p>
+    </div>
+</body>
+</html>

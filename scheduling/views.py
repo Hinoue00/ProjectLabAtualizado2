@@ -6,7 +6,8 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from accounts.models import User
 from accounts.views import is_technician, is_professor
-from .models import Laboratory, ScheduleRequest, DraftScheduleRequest, FileAttachment
+from .models import Laboratory, ScheduleRequest, DraftScheduleRequest, FileAttachment, ScheduleRequestComment
+from laboratories.models import Department
 from .forms import ScheduleRequestForm
 from django.conf import settings
 from django.urls import reverse
@@ -14,6 +15,7 @@ from django.http import JsonResponse
 from whatsapp.services import WhatsAppNotificationService
 from inventory.models import Material
 from django.core.cache import cache
+from django.core.paginator import Paginator
 
 
 def invalidate_schedule_caches():
@@ -96,8 +98,8 @@ def schedule_calendar(request):
         if week_days:
             calendar_weeks.append(week_days)
     
-    # Verificar se hoje é quinta ou sexta para mostrar botão de agendamento
-    is_scheduling_day = today.weekday() in [3, 4]  # 3=Thursday, 4=Friday
+    # Verificar se hoje é segunda ou terça para mostrar botão de agendamento
+    is_scheduling_day = today.weekday() in [0, 1]  # 0=Monday, 1=Tuesday
     
     # Obter mês e ano atual para o cabeçalho
     current_month_year = today.strftime('%B %Y').title()
@@ -122,28 +124,28 @@ def create_schedule_request(request):
     logger = logging.getLogger(__name__)
     
     today = timezone.now().date()
-    logger.info(f"🔍 INICIANDO CRIAÇÃO DE AGENDAMENTO - Professor: {request.user.get_full_name()}")
+    logger.info(f"INICIANDO CRIACAO DE AGENDAMENTO - Professor: {request.user.get_full_name()}")
     
-    # Verificar se é quinta ou sexta-feira
-    if today.weekday() not in [3, 4] and not settings.ALLOW_SCHEDULING_ANY_DAY:
-        logger.warning(f"❌ TENTATIVA DE AGENDAMENTO FORA DO DIA PERMITIDO - Dia da semana: {today.weekday()}")
-        messages.warning(request, 'Agendamentos só podem ser feitos às quintas e sextas-feiras.')
+    # Verificar se é segunda ou terça-feira
+    if today.weekday() not in [0, 1] and not settings.ALLOW_SCHEDULING_ANY_DAY:
+        logger.warning(f"TENTATIVA DE AGENDAMENTO FORA DO DIA PERMITIDO - Dia da semana: {today.weekday()}")
+        messages.warning(request, 'Agendamentos só podem ser feitos às segundas e terças-feiras.')
         return redirect('professor_dashboard')
     
-    # Data da próxima semana (segunda a sábado)
+    # Data da próxima semana (segunda a sábado) - agendamentos para semana seguinte
     next_week_start = today + timedelta(days=(7 - today.weekday()))
     next_week_end = next_week_start + timedelta(days=5)  # Segunda a sábado
     
     # Verificar se é dia de confirmação
-    is_confirmation_day = today.weekday() in [3, 4]  # Quinta = 3, Sexta = 4
+    is_confirmation_day = today.weekday() in [0, 1]  # Segunda = 0, Terça = 1
     
     if request.method == 'POST':
-        logger.info(f"📝 PROCESSANDO FORMULÁRIO DE AGENDAMENTO")
+        logger.info(f" PROCESSANDO FORMULÁRIO DE AGENDAMENTO")
         
         # Verificar se o usuário escolheu salvar como rascunho
         save_as_draft = request.POST.get('save_as_draft') == 'true'
         
-        # Determinar se será rascunho: sempre quando escolhido OU quando não é quinta/sexta
+        # Determinar se será rascunho: sempre quando escolhido OU quando não é segunda/terça
         is_draft = save_as_draft or (not is_confirmation_day)
         form = ScheduleRequestForm(request.POST, request.FILES, is_draft=is_draft)
         
@@ -153,12 +155,12 @@ def create_schedule_request(request):
                 lab_id = int(request.POST['laboratory'])
                 from inventory.models import Material
                 form.fields['selected_materials'].queryset = Material.objects.filter(laboratory_id=lab_id)
-                logger.info(f"📦 QUERYSET DE MATERIAIS ATUALIZADO PARA LAB {lab_id}")
+                logger.info(f" QUERYSET DE MATERIAIS ATUALIZADO PARA LAB {lab_id}")
             except (ValueError, TypeError):
-                logger.warning(f"⚠️ ERRO AO PROCESSAR LAB ID: {request.POST.get('laboratory')}")
+                logger.warning(f" ERRO AO PROCESSAR LAB ID: {request.POST.get('laboratory')}")
         
         if form.is_valid():
-            logger.info(f"✅ FORMULÁRIO VÁLIDO")
+            logger.info(f" FORMULÁRIO VÁLIDO")
             
             # Validação específica para envio direto (não rascunho)
             if not is_draft:
@@ -169,7 +171,7 @@ def create_schedule_request(request):
                     next_week_end = next_week_start + timedelta(days=5)  # Segunda a sábado
                     
                     if not (next_week_start <= scheduled_date <= next_week_end):
-                        logger.warning(f"❌ DATA FORA DA PRÓXIMA SEMANA PARA ENVIO DIRETO")
+                        logger.warning(f"DATA FORA DA PROXIMA SEMANA PARA ENVIO DIRETO")
                         form.add_error('scheduled_date', 'Para envio direto, a data deve estar na próxima semana (segunda a sábado).')
                         return render(request, 'create_request.html', {
                             'form': form,
@@ -181,7 +183,7 @@ def create_schedule_request(request):
                     
                     # Verificar se não é domingo
                     if scheduled_date.weekday() == 6:  # 6=domingo
-                        logger.warning(f"❌ TENTATIVA DE AGENDAMENTO EM DOMINGO")
+                        logger.warning(f"TENTATIVA DE AGENDAMENTO EM DOMINGO")
                         form.add_error('scheduled_date', 'Não é possível fazer agendamentos aos domingos.')
                         return render(request, 'create_request.html', {
                             'form': form,
@@ -192,7 +194,7 @@ def create_schedule_request(request):
                         })
             
             if is_draft:
-                # Criar rascunho quando solicitado ou quando não é quinta/sexta
+                # Criar rascunho quando solicitado ou quando não é segunda/terça
                 draft = DraftScheduleRequest()
                 for field in form.cleaned_data:
                     if hasattr(draft, field):
@@ -207,7 +209,7 @@ def create_schedule_request(request):
                     draft.shift = form.cleaned_data['shift']
                     draft.set_times_from_shift()
                 
-                logger.info(f"🔍 DADOS DO RASCUNHO:")
+                logger.info(f" DADOS DO RASCUNHO:")
                 logger.info(f"   Professor: {draft.professor.get_full_name()}")
                 logger.info(f"   Laboratório: {draft.laboratory.name if draft.laboratory else 'NULO'}")
                 logger.info(f"   Subject: {draft.subject}")
@@ -225,19 +227,19 @@ def create_schedule_request(request):
                         draft.materials = f"Materiais selecionados: {materials_text}"
                 
                 draft.save()
-                logger.info(f"💾 RASCUNHO SALVO COM SUCESSO - ID: {draft.pk}")
+                logger.info(f" RASCUNHO SALVO COM SUCESSO - ID: {draft.pk}")
                 if is_confirmation_day:
                     messages.success(request, 'Rascunho salvo com sucesso! Você pode confirmá-lo como solicitação quando desejar.')
                 else:
-                    messages.success(request, 'Rascunho salvo com sucesso! Você poderá confirmá-lo na quinta ou sexta-feira.')
+                    messages.success(request, 'Rascunho salvo com sucesso! Você poderá confirmá-lo na segunda ou terça-feira.')
                 return redirect('professor_dashboard')
             
-            # Continuar com agendamento normal se for quinta/sexta
+            # Continuar com agendamento normal se for segunda/terça
             schedule_request = form.save(commit=False)
             schedule_request.professor = request.user
             
             # Log dos dados antes de salvar
-            logger.info(f"📋 DADOS DO AGENDAMENTO:")
+            logger.info(f" DADOS DO AGENDAMENTO:")
             logger.info(f"   Professor: {schedule_request.professor.get_full_name()}")
             logger.info(f"   Laboratório: {schedule_request.laboratory.name}")
             logger.info(f"   Departamento: {schedule_request.laboratory.department}")
@@ -247,7 +249,7 @@ def create_schedule_request(request):
             
             # Verificar conflitos
             if schedule_request.is_conflicting():
-                logger.warning(f"❌ CONFLITO DE HORÁRIO DETECTADO")
+                logger.warning(f" CONFLITO DE HORÁRIO DETECTADO")
                 messages.error(request, 'Já existe um agendamento aprovado para este laboratório neste horário.')
                 return render(request, 'create_request.html', {
                     'form': form,
@@ -257,10 +259,10 @@ def create_schedule_request(request):
             
             try:
                 # Salvar o agendamento
-                logger.info(f"💾 SALVANDO AGENDAMENTO...")
+                logger.info(f" SALVANDO AGENDAMENTO...")
                 schedule_request.save()
                 invalidate_schedule_caches()  # Invalidar cache
-                logger.info(f"✅ AGENDAMENTO SALVO COM SUCESSO - ID: {schedule_request.pk}")
+                logger.info(f" AGENDAMENTO SALVO COM SUCESSO - ID: {schedule_request.pk}")
                 
                 # Processar materiais selecionados
                 selected_materials = request.POST.getlist('selected_materials')
@@ -273,25 +275,25 @@ def create_schedule_request(request):
                     else:
                         schedule_request.materials = f"Materiais selecionados: {materials_text}"
                     schedule_request.save(update_fields=['materials'])
-                    logger.info(f"📦 MATERIAIS SELECIONADOS SALVOS: {len(selected_materials)} itens")
+                    logger.info(f" MATERIAIS SELECIONADOS SALVOS: {len(selected_materials)} itens")
                 
                 # Verificar se foi realmente salvo
                 verificacao = ScheduleRequest.objects.get(pk=schedule_request.pk)
-                logger.info(f"✅ VERIFICAÇÃO DB: ID {verificacao.pk} encontrado")
+                logger.info(f" VERIFICAÇÃO DB: ID {verificacao.pk} encontrado")
                 
                 # Notificar laboratoristas (se configurado)
                 try:
                     from whatsapp.services import WhatsAppNotificationService
                     WhatsAppNotificationService.notify_schedule_request(schedule_request)
-                    logger.info(f"📱 NOTIFICAÇÃO WHATSAPP ENVIADA")
+                    logger.info(f" NOTIFICAÇÃO WHATSAPP ENVIADA")
                 except Exception as e:
-                    logger.warning(f"⚠️ ERRO AO ENVIAR NOTIFICAÇÃO: {str(e)}")
+                    logger.warning(f" ERRO AO ENVIAR NOTIFICAÇÃO: {str(e)}")
                 
                 messages.success(request, 'Solicitação de agendamento enviada com sucesso! Aguarde a aprovação.')
                 return redirect('professor_dashboard')
                 
             except Exception as e:
-                logger.error(f"❌ ERRO AO SALVAR AGENDAMENTO: {str(e)}")
+                logger.error(f" ERRO AO SALVAR AGENDAMENTO: {str(e)}")
                 messages.error(request, f'Erro ao salvar agendamento: {str(e)}')
                 return render(request, 'create_request.html', {
                     'form': form,
@@ -299,10 +301,10 @@ def create_schedule_request(request):
                     'next_week_end': next_week_end
                 })
         else:
-            logger.warning(f"❌ FORMULÁRIO INVÁLIDO: {form.errors}")
+            logger.warning(f" FORMULÁRIO INVÁLIDO: {form.errors}")
             messages.error(request, 'Por favor, corrija os erros no formulário.')
     else:
-        logger.info(f"📄 EXIBINDO FORMULÁRIO DE AGENDAMENTO")
+        logger.info(f"EXIBINDO FORMULARIO DE AGENDAMENTO")
         # Por padrão, criar formulário com modo rascunho (permite todo o mês)
         # A validação específica será feita no POST baseado no botão clicado
         form = ScheduleRequestForm(is_draft=True)
@@ -325,13 +327,13 @@ def create_schedule_request(request):
 @user_passes_test(is_professor)
 def list_draft_schedule_requests(request):
     """
-    Lista os rascunhos de agendamento para confirmação (apenas quinta/sexta)
+    Lista os rascunhos de agendamento para confirmação (apenas segunda/terça)
     """
     today = timezone.now().date()
     
-    # Verifica se é quinta ou sexta-feira
-    if today.weekday() not in [3, 4]:  # 3=quinta, 4=sexta
-        messages.warning(request, 'Rascunhos só podem ser confirmados às quintas e sextas-feiras.')
+    # Verifica se é segunda ou terça-feira
+    if today.weekday() not in [0, 1]:  # 0=segunda, 1=terça
+        messages.warning(request, 'Rascunhos só podem ser confirmados às segundas e terças-feiras.')
         return redirect('professor_dashboard')
     
     # Busca rascunhos do usuário atual
@@ -358,7 +360,7 @@ def view_draft_schedule_requests(request):
     ).order_by('scheduled_date')
     
     today = timezone.now().date()
-    can_confirm = today.weekday() in [3, 4]  # 3=quinta, 4=sexta
+    can_confirm = today.weekday() in [0, 1]  # 0=segunda, 1=terça
     
     context = {
         'draft_requests': draft_requests,
@@ -376,9 +378,9 @@ def confirm_draft_schedule_request(request, draft_id):
     """
     today = timezone.now().date()
     
-    # Verifica se é quinta ou sexta-feira
-    if today.weekday() not in [3, 4]:  # 3=quinta, 4=sexta
-        messages.warning(request, 'Rascunhos só podem ser confirmados às quintas e sextas-feiras.')
+    # Verifica se é segunda ou terça-feira
+    if today.weekday() not in [0, 1]:  # 0=segunda, 1=terça
+        messages.warning(request, 'Rascunhos só podem ser confirmados às segundas e terças-feiras.')
         return redirect('view_draft_schedule_requests')
     
     draft_request = get_object_or_404(DraftScheduleRequest, id=draft_id, professor=request.user)
@@ -428,12 +430,12 @@ def delete_draft_schedule_request(request, draft_id):
 
 @login_required
 def schedule_request_detail(request, pk):
-    """Exibe detalhes de uma solicitação de agendamento"""
+    """Exibe detalhes de uma solicitação de agendamento com comentários"""
     schedule_request = get_object_or_404(
         ScheduleRequest.objects.select_related(
             'professor', 'laboratory', 'reviewed_by'
         ).prefetch_related(
-            'laboratory__departments'
+            'laboratory__departments', 'comments__author'
         ), 
         pk=pk
     )
@@ -443,10 +445,36 @@ def schedule_request_detail(request, pk):
         messages.error(request, 'Você não tem permissão para visualizar esta solicitação.')
         return redirect('professor_dashboard')
     
-
+    # Processar adição de comentário
+    if request.method == 'POST' and 'add_comment' in request.POST:
+        comment_text = request.POST.get('comment_message', '').strip()
+        if comment_text:
+            ScheduleRequestComment.objects.create(
+                schedule_request=schedule_request,
+                author=request.user,
+                message=comment_text
+            )
+            messages.success(request, 'Comentário adicionado com sucesso!')
+            return redirect('schedule_request_detail', pk=pk)
+        else:
+            messages.error(request, 'O comentário não pode estar vazio.')
+    
+    # Obter todos os comentários
+    comments = schedule_request.comments.all()
+    
+    # Marcar comentários como lidos para o usuário atual
+    unread_comments = comments.filter(is_read=False).exclude(author=request.user)
+    unread_comments.update(is_read=True)
+    
+    # Informações sobre o prazo
+    schedule_request.approval_deadline = schedule_request.get_approval_deadline()
+    schedule_request.days_remaining = schedule_request.days_until_approval_deadline()
+    schedule_request.is_overdue = schedule_request.is_approval_overdue()
     
     context = {
         'schedule_request': schedule_request,
+        'comments': comments,
+        'can_comment': True,  # Tanto professores quanto técnicos podem comentar
     }
     
     return render(request, 'request_detail.html', context)
@@ -462,10 +490,10 @@ def edit_schedule_request(request, pk):
         messages.error(request, 'Apenas solicitações pendentes podem ser editadas.')
         return redirect('schedule_request_detail', pk=pk)
     
-    # Verifica se é uma quinta ou sexta-feira
+    # Verifica se é uma segunda ou terça-feira
     today = timezone.now().date()
-    if today.weekday() not in [3, 4] or settings.ALLOW_SCHEDULING_ANY_DAY:  # 3=quinta, 4=sexta
-        messages.warning(request, 'Agendamentos só podem ser modificados às quintas e sextas-feiras.')
+    if today.weekday() not in [0, 1] or settings.ALLOW_SCHEDULING_ANY_DAY:  # 0=segunda, 1=terça
+        messages.warning(request, 'Agendamentos só podem ser modificados às segundas e terças-feiras.')
         return redirect('schedule_request_detail', pk=pk)
     
     if request.method == 'POST':
@@ -544,7 +572,7 @@ def approve_schedule_request(request, pk):
     
     if schedule_request.status != 'pending':
         messages.error(request, 'Esta solicitação já foi processada.')
-        return redirect('schedule_requests_list')
+        return redirect('pending_requests')
     
     if request.method == 'POST':
         # Verifica conflitos de horário
@@ -559,7 +587,7 @@ def approve_schedule_request(request, pk):
         WhatsAppNotificationService.notify_schedule_approval(schedule_request)
         
         messages.success(request, f'Solicitação de agendamento de {schedule_request.professor.get_full_name()} aprovada com sucesso.')
-        return redirect('schedule_requests_list')
+        return redirect('pending_requests')
     
     context = {
         'schedule_request': schedule_request,
@@ -575,7 +603,7 @@ def reject_schedule_request(request, pk):
     
     if schedule_request.status != 'pending':
         messages.error(request, 'Esta solicitação já foi processada.')
-        return redirect('schedule_requests_list')
+        return redirect('pending_requests')
     
     if request.method == 'POST':
         rejection_reason = request.POST.get('rejection_reason', '')
@@ -587,7 +615,7 @@ def reject_schedule_request(request, pk):
         WhatsAppNotificationService.notify_schedule_rejection(schedule_request)
         
         messages.success(request, f'Solicitação de agendamento de {schedule_request.professor.get_full_name()} rejeitada com sucesso.')
-        return redirect('schedule_requests_list')
+        return redirect('pending_requests')
     
     context = {
         'schedule_request': schedule_request,
@@ -605,7 +633,7 @@ def edit_draft_schedule_request(request, draft_id):
     logger = logging.getLogger(__name__)
     
     draft_request = get_object_or_404(DraftScheduleRequest, id=draft_id, professor=request.user)
-    logger.info(f"📝 EDITANDO RASCUNHO ID: {draft_id}")
+    logger.info(f" EDITANDO RASCUNHO ID: {draft_id}")
     logger.info(f"   Laboratory: {draft_request.laboratory.name if draft_request.laboratory else 'None'}")
     logger.info(f"   Subject: {draft_request.subject}")
     logger.info(f"   Shift: {draft_request.shift}")
@@ -619,9 +647,9 @@ def edit_draft_schedule_request(request, draft_id):
                 lab_id = int(request.POST['laboratory'])
                 from inventory.models import Material
                 form.fields['selected_materials'].queryset = Material.objects.filter(laboratory_id=lab_id)
-                logger.info(f"📦 QUERYSET DE MATERIAIS ATUALIZADO PARA LAB {lab_id}")
+                logger.info(f" QUERYSET DE MATERIAIS ATUALIZADO PARA LAB {lab_id}")
             except (ValueError, TypeError):
-                logger.warning(f"⚠️ ERRO AO PROCESSAR LAB ID: {request.POST.get('laboratory')}")
+                logger.warning(f" ERRO AO PROCESSAR LAB ID: {request.POST.get('laboratory')}")
         
         if form.is_valid():
             # CORREÇÃO: Não usar form.save() pois o form é de ScheduleRequest, não DraftScheduleRequest
@@ -659,7 +687,7 @@ def edit_draft_schedule_request(request, draft_id):
                 draft_request.materials = materials_text_from_form
             
             draft_request.save()
-            logger.info(f"✅ RASCUNHO ATUALIZADO COM SUCESSO - ID: {draft_request.pk}")
+            logger.info(f" RASCUNHO ATUALIZADO COM SUCESSO - ID: {draft_request.pk}")
             messages.success(request, 'Rascunho de agendamento atualizado com sucesso!')
             return redirect('view_draft_schedule_requests')
     else:
@@ -689,7 +717,7 @@ def edit_draft_schedule_request(request, draft_id):
             form.fields['scheduled_date'].widget.attrs['value'] = draft_request.scheduled_date.strftime('%Y-%m-%d')
             logger.info(f"📅 FORÇANDO VALOR DE DATA NO WIDGET: {draft_request.scheduled_date.strftime('%Y-%m-%d')}")
         
-        logger.info(f"📋 RASCUNHO CARREGADO PARA EDIÇÃO: {draft_request.subject or 'Sem título'}")
+        logger.info(f" RASCUNHO CARREGADO PARA EDIÇÃO: {draft_request.subject or 'Sem título'}")
         
         # Configurar queryset de materiais para o laboratório do rascunho
         if draft_request.laboratory:
@@ -717,9 +745,9 @@ def edit_draft_schedule_request(request, draft_id):
                                     laboratory=draft_request.laboratory
                                 )
                                 selected_material_ids.append(material.id)
-                                logger.info(f"📦 MATERIAL ENCONTRADO: {material.name} (ID: {material.id})")
+                                logger.info(f" MATERIAL ENCONTRADO: {material.name} (ID: {material.id})")
                             except Material.DoesNotExist:
-                                logger.warning(f"⚠️ MATERIAL NÃO ENCONTRADO: {name}")
+                                logger.warning(f" MATERIAL NÃO ENCONTRADO: {name}")
                             except Material.MultipleObjectsReturned:
                                 # Se há múltiplos, pegar o primeiro
                                 material = Material.objects.filter(
@@ -728,12 +756,12 @@ def edit_draft_schedule_request(request, draft_id):
                                 ).first()
                                 if material:
                                     selected_material_ids.append(material.id)
-                                    logger.info(f"📦 MATERIAL ENCONTRADO (MÚLTIPLOS): {material.name} (ID: {material.id})")
+                                    logger.info(f" MATERIAL ENCONTRADO (MÚLTIPLOS): {material.name} (ID: {material.id})")
             
             # Definir materiais selecionados no formulário
             if selected_material_ids:
                 form.initial['selected_materials'] = selected_material_ids
-                logger.info(f"✅ MATERIAIS PRÉ-SELECIONADOS: {len(selected_material_ids)} itens")
+                logger.info(f" MATERIAIS PRÉ-SELECIONADOS: {len(selected_material_ids)} itens")
         
         # Configurar turno baseado nos horários ou campo shift
         if hasattr(draft_request, 'shift') and draft_request.shift:
@@ -748,7 +776,7 @@ def edit_draft_schedule_request(request, draft_id):
                 form.initial['shift'] = 'evening'
             logger.info(f"🕐 TURNO DETERMINADO PELO HORÁRIO: {form.initial.get('shift', 'indefinido')}")
         
-        logger.info(f"📋 DADOS INICIAIS DO FORMULÁRIO: {form.initial}")
+        logger.info(f" DADOS INICIAIS DO FORMULÁRIO: {form.initial}")
     
     # Obter departamentos para filtro
     from laboratories.models import Department
@@ -1006,10 +1034,364 @@ def pending_requests_list(request):
         # Cache por 2 minutos
         cache.set(cache_key, pending_requests, 120)
     
+    # Adicionar informações sobre prazo e comentários para cada solicitação
+    today = timezone.now().date()
+    for schedule_req in pending_requests:
+        schedule_req.approval_deadline = schedule_req.get_approval_deadline()
+        schedule_req.days_remaining = schedule_req.days_until_approval_deadline()
+        schedule_req.is_overdue = schedule_req.is_approval_overdue()
+        schedule_req.is_urgent = schedule_req.days_remaining is not None and schedule_req.days_remaining <= 1
+        
+        # Informações sobre comentários
+        comments_count = ScheduleRequestComment.objects.filter(schedule_request=schedule_req).count()
+        unread_count = ScheduleRequestComment.objects.filter(
+            schedule_request=schedule_req,
+            is_read=False
+        ).exclude(author=request.user).count()
+        
+        schedule_req.comments_count = comments_count
+        schedule_req.unread_comments = unread_count
+        schedule_req.has_conversation = comments_count > 0
+    
     context = {
         'pending_requests': pending_requests,
         'title': 'Solicitações Pendentes',
-        'total_count': ScheduleRequest.objects.filter(status='pending').count()
+        'total_count': ScheduleRequest.objects.filter(status='pending').count(),
+        'today': today
     }
     
     return render(request, 'pending_requests.html', context)
+
+
+@login_required
+def add_comment_to_request(request, pk):
+    """API endpoint para adicionar comentário via AJAX"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método não permitido'}, status=405)
+    
+    schedule_request = get_object_or_404(ScheduleRequest, pk=pk)
+    
+    # Verificar permissões
+    if (request.user.user_type == 'professor' and schedule_request.professor != request.user) and \
+       request.user.user_type != 'technician':
+        return JsonResponse({'error': 'Sem permissão'}, status=403)
+    
+    comment_text = request.POST.get('message', '').strip()
+    if not comment_text:
+        return JsonResponse({'error': 'Mensagem não pode estar vazia'}, status=400)
+    
+    # Criar comentário
+    comment = ScheduleRequestComment.objects.create(
+        schedule_request=schedule_request,
+        author=request.user,
+        message=comment_text
+    )
+    
+    return JsonResponse({
+        'success': True,
+        'comment': {
+            'id': comment.id,
+            'author_name': comment.author.get_full_name(),
+            'author_type': comment.author.user_type,
+            'message': comment.message,
+            'created_at': comment.created_at.strftime('%d/%m/%Y %H:%M'),
+            'is_own': comment.author == request.user
+        }
+    })
+
+
+@login_required  
+def get_request_comments(request, pk):
+    """API endpoint para obter comentários via AJAX"""
+    schedule_request = get_object_or_404(ScheduleRequest, pk=pk)
+    
+    # Verificar permissões
+    if (request.user.user_type == 'professor' and schedule_request.professor != request.user) and \
+       request.user.user_type != 'technician':
+        return JsonResponse({'error': 'Sem permissão'}, status=403)
+    
+    comments = schedule_request.comments.select_related('author').all()
+    
+    # Marcar como lidas
+    unread_comments = comments.filter(is_read=False).exclude(author=request.user)
+    unread_comments.update(is_read=True)
+    
+    comments_data = []
+    for comment in comments:
+        comments_data.append({
+            'id': comment.id,
+            'author_name': comment.author.get_full_name(),
+            'author_type': comment.author.user_type,
+            'message': comment.message,
+            'created_at': comment.created_at.strftime('%d/%m/%Y %H:%M'),
+            'is_own': comment.author == request.user
+        })
+    
+    return JsonResponse({'comments': comments_data})
+
+
+@login_required
+@user_passes_test(is_professor)
+def my_schedule_requests(request):
+    """Lista todas as solicitações do professor atual"""
+    professor = request.user
+    
+    # Obter filtro de status
+    status_filter = request.GET.get('status', 'all')
+    
+    # Query base
+    requests_query = ScheduleRequest.objects.filter(professor=professor)
+    
+    # Aplicar filtro de status
+    if status_filter and status_filter != 'all':
+        requests_query = requests_query.filter(status=status_filter)
+    
+    # Buscar solicitações com relacionamentos
+    schedule_requests = requests_query.select_related(
+        'laboratory', 'reviewed_by'
+    ).prefetch_related(
+        'comments__author'
+    ).order_by('-request_date')
+    
+    # Adicionar informações extras para cada solicitação
+    for schedule_req in schedule_requests:
+        # Informações sobre comentários
+        comments_count = schedule_req.comments.count()
+        unread_count = schedule_req.comments.filter(
+            is_read=False
+        ).exclude(author=request.user).count()
+        
+        schedule_req.comments_count = comments_count
+        schedule_req.unread_comments = unread_count
+        schedule_req.has_conversation = comments_count > 0
+        
+        # Informações sobre prazo (se pendente)
+        if schedule_req.status == 'pending':
+            schedule_req.approval_deadline = schedule_req.get_approval_deadline()
+            schedule_req.days_remaining = schedule_req.days_until_approval_deadline()
+            schedule_req.is_overdue = schedule_req.is_approval_overdue()
+    
+    # Contar por status
+    status_counts = {
+        'all': ScheduleRequest.objects.filter(professor=professor).count(),
+        'pending': ScheduleRequest.objects.filter(professor=professor, status='pending').count(),
+        'approved': ScheduleRequest.objects.filter(professor=professor, status='approved').count(),
+        'rejected': ScheduleRequest.objects.filter(professor=professor, status='rejected').count(),
+    }
+    
+    context = {
+        'schedule_requests': schedule_requests,
+        'status_filter': status_filter,
+        'status_counts': status_counts,
+        'title': 'Minhas Solicitações',
+    }
+    
+    return render(request, 'my_requests.html', context)
+
+
+@login_required
+def mark_all_notifications_read(request):
+    """Marcar todas as notificações como lidas"""
+    if request.method == 'POST':
+        # Marcar mensagens como lidas baseado no tipo de usuário
+        if request.user.user_type == 'professor':
+            # Marcar mensagens de técnicos como lidas
+            ScheduleRequestComment.objects.filter(
+                schedule_request__professor=request.user,
+                is_read=False
+            ).exclude(author=request.user).update(is_read=True)
+        
+        elif request.user.user_type == 'technician':
+            # Marcar mensagens de professores como lidas
+            ScheduleRequestComment.objects.filter(
+                schedule_request__status='pending',
+                is_read=False
+            ).exclude(author=request.user).update(is_read=True)
+        
+        return JsonResponse({'success': True})
+
+
+@login_required
+def all_notifications(request):
+    """Página para mostrar todas as notificações do usuário"""
+    notifications = []
+    
+    if request.user.user_type == 'technician':
+        # Unread messages from professors
+        unread_messages = ScheduleRequestComment.objects.filter(
+            schedule_request__status='pending',
+            is_read=False
+        ).exclude(author=request.user).select_related('author', 'schedule_request').order_by('-created_at')
+        
+        # Create notifications for unread messages
+        for message in unread_messages:
+            notifications.append({
+                'title': f'Mensagem de {message.author.get_full_name()}',
+                'message': message.message,
+                'timestamp': message.created_at,
+                'type': 'message',
+                'url': f'/scheduling/request/{message.schedule_request.id}/',
+                'icon': 'bi bi-chat-dots',
+                'is_read': message.is_read
+            })
+        
+        # Pending appointment requests
+        pending_requests = ScheduleRequest.objects.filter(status='pending').order_by('-request_date')
+        for request_obj in pending_requests:
+            notifications.append({
+                'title': 'Solicitação Pendente',
+                'message': f'Agendamento para {request_obj.laboratory.name} por {request_obj.professor.get_full_name()}',
+                'timestamp': request_obj.request_date,
+                'type': 'pending_request',
+                'url': f'/scheduling/request/{request_obj.id}/',
+                'icon': 'bi bi-hourglass-split',
+                'is_read': True  # These don't have read status
+            })
+        
+        # Pending user approvals
+        pending_users = User.objects.filter(is_approved=False).order_by('-date_joined')
+        for user_obj in pending_users:
+            notifications.append({
+                'title': 'Usuário Aguardando Aprovação',
+                'message': f'{user_obj.get_full_name()} ({user_obj.email}) aguarda aprovação',
+                'timestamp': user_obj.date_joined,
+                'type': 'pending_user',
+                'url': '/accounts/pending-users/',
+                'icon': 'bi bi-person-plus',
+                'is_read': True  # These don't have read status
+            })
+    
+    elif request.user.user_type == 'professor':
+        # Unread messages from technicians
+        unread_messages = ScheduleRequestComment.objects.filter(
+            schedule_request__professor=request.user,
+            is_read=False
+        ).exclude(author=request.user).select_related('author', 'schedule_request').order_by('-created_at')
+        
+        # Create notifications for unread messages
+        for message in unread_messages:
+            notifications.append({
+                'title': f'Mensagem do Técnico',
+                'message': message.message,
+                'timestamp': message.created_at,
+                'type': 'message',
+                'url': f'/scheduling/request/{message.schedule_request.id}/',
+                'icon': 'bi bi-chat-dots',
+                'is_read': message.is_read
+            })
+        
+        # Recent status updates (approved/rejected)
+        recent_reviews = ScheduleRequest.objects.filter(
+            professor=request.user,
+            status__in=['approved', 'rejected'],
+            review_date__isnull=False
+        ).order_by('-review_date')
+        
+        for review in recent_reviews:
+            status_text = 'aprovada' if review.status == 'approved' else 'rejeitada'
+            notifications.append({
+                'title': f'Solicitação {status_text}',
+                'message': f'Sua solicitação para {review.laboratory.name} foi {status_text}',
+                'timestamp': review.review_date,
+                'type': 'status_update',
+                'url': f'/scheduling/request/{review.id}/',
+                'icon': 'bi bi-check-circle' if review.status == 'approved' else 'bi bi-x-circle',
+                'is_read': True  # Status updates are considered read when viewed
+            })
+    
+    # Sort notifications by timestamp (most recent first)
+    notifications.sort(key=lambda x: x['timestamp'] or timezone.now(), reverse=True)
+    
+    # Pagination
+    paginator = Paginator(notifications, 20)  # Show 20 notifications per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'scheduling/all_notifications.html', {
+        'page_obj': page_obj,
+        'notifications': page_obj.object_list
+    })
+
+
+@login_required
+@user_passes_test(is_technician)
+def technician_edit_schedule(request, pk):
+    """Permite ao técnico editar um agendamento aprovado"""
+    schedule_request = get_object_or_404(ScheduleRequest, pk=pk)
+    
+    # Verificar se o agendamento está pendente
+    if schedule_request.status != 'pending':
+        messages.error(request, 'Apenas agendamentos pendentes podem ser editados.')
+        return redirect('pending_requests')
+    
+    if request.method == 'POST':
+        form = ScheduleRequestForm(request.POST, request.FILES, instance=schedule_request)
+        form.is_draft = False  # Não é rascunho
+        
+        if form.is_valid():
+            # Verificar se houve mudanças
+            original_data = {
+                'laboratory': schedule_request.laboratory,
+                'scheduled_date': schedule_request.scheduled_date,
+                'start_time': schedule_request.start_time,
+                'end_time': schedule_request.end_time,
+                'subject': schedule_request.subject,
+                'description': schedule_request.description,
+                'number_of_students': schedule_request.number_of_students,
+            }
+            
+            # Salvar o agendamento editado
+            updated_schedule = form.save(commit=False)
+            updated_schedule.reviewed_by = request.user
+            updated_schedule.review_date = timezone.now()
+            updated_schedule.save()
+            
+            # Verificar quais campos foram alterados
+            changes = []
+            if original_data['laboratory'] != updated_schedule.laboratory:
+                changes.append(f"Laboratório alterado de '{original_data['laboratory'].name}' para '{updated_schedule.laboratory.name}'")
+            if original_data['scheduled_date'] != updated_schedule.scheduled_date:
+                changes.append(f"Data alterada de {original_data['scheduled_date'].strftime('%d/%m/%Y')} para {updated_schedule.scheduled_date.strftime('%d/%m/%Y')}")
+            if original_data['start_time'] != updated_schedule.start_time:
+                changes.append(f"Horário de início alterado de {original_data['start_time'].strftime('%H:%M')} para {updated_schedule.start_time.strftime('%H:%M')}")
+            if original_data['end_time'] != updated_schedule.end_time:
+                changes.append(f"Horário de término alterado de {original_data['end_time'].strftime('%H:%M')} para {updated_schedule.end_time.strftime('%H:%M')}")
+            if original_data['number_of_students'] != updated_schedule.number_of_students:
+                changes.append(f"Número de alunos alterado de {original_data['number_of_students']} para {updated_schedule.number_of_students}")
+            
+            # Criar mensagem automática para o professor se houve mudanças
+            if changes:
+                change_message = "O técnico fez as seguintes alterações no seu agendamento:\n\n" + "\n".join(f"• {change}" for change in changes)
+                
+                ScheduleRequestComment.objects.create(
+                    schedule_request=updated_schedule,
+                    author=request.user,
+                    message=change_message,
+                    is_read=False
+                )
+                
+                messages.success(request, f'Agendamento editado com sucesso. O professor foi notificado automaticamente sobre as alterações.')
+            else:
+                messages.info(request, 'Nenhuma alteração foi detectada.')
+            
+            return redirect('pending_requests')
+    else:
+        form = ScheduleRequestForm(instance=schedule_request)
+        form.is_draft = False
+        
+        # Configurar materiais do laboratório
+        if schedule_request.laboratory:
+            form.fields['selected_materials'].queryset = Material.objects.filter(
+                laboratory=schedule_request.laboratory
+            )
+    
+    context = {
+        'form': form,
+        'schedule_request': schedule_request,
+        'is_edit': True,
+        'is_technician_edit': True,
+        'title': f'Editar Agendamento - {schedule_request.professor.get_full_name()}',
+        'departments': Department.objects.filter(is_active=True) if Department.objects.exists() else [],
+    }
+    
+    return render(request, 'scheduling/technician_edit_schedule.html', context)

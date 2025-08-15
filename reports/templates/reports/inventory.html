@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ report.title }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ report.title }}</h1>
+    
+    <div class="btn-group">
+        <a href="{% url 'reports:reports_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+        
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="bi bi-download"></i> Exportar
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'reports:inventory_report' report.id 'pdf' %}">
+                    <i class="bi bi-file-earmark-pdf"></i> PDF
+                </a></li>
+                <li><a class="dropdown-item" href="{% url 'reports:inventory_report' report.id 'excel' %}">
+                    <i class="bi bi-file-earmark-excel"></i> Excel
+                </a></li>
+                <li><a class="dropdown-item" href="{% url 'reports:inventory_report' report.id 'csv' %}">
+                    <i class="bi bi-file-earmark-text"></i> CSV
+                </a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card border-success h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-box-seam display-4 text-success mb-3"></i>
+                <h5 class="card-title">Total de Materiais</h5>
+                <p class="card-text display-6">{{ total_materials }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card border-danger h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-exclamation-triangle display-4 text-danger mb-3"></i>
+                <h5 class="card-title">Estoque Baixo</h5>
+                <p class="card-text display-6 text-danger">{{ low_stock_materials }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card border-primary h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-check-circle display-4 text-primary mb-3"></i>
+                <h5 class="card-title">Estoque Normal</h5>
+                <p class="card-text display-6">{{ total_materials|add:"-"|add:low_stock_materials }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">Informações do Relatório</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Gerado em:</dt>
+                    <dd class="col-sm-8">{{ report.created_at|date:"d/m/Y H:i" }}</dd>
+                    
+                    <dt class="col-sm-4">Por:</dt>
+                    <dd class="col-sm-8">{{ report.created_by.get_full_name }}</dd>
+                    
+                    {% if report.filter_params.laboratory_id %}
+                    <dt class="col-sm-4">Laboratório:</dt>
+                    <dd class="col-sm-8">{{ laboratory_name }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        {% if charts %}
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">Status de Estoque</h5>
+            </div>
+            <div class="card-body text-center">
+                {% for chart in charts %}
+                    {% if "Status de Estoque" in chart.title %}
+                    <img src="data:image/png;base64,{{ chart.image }}" alt="{{ chart.title }}" class="img-fluid">
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if materials %}
+<div class="card mb-4">
+    <div class="card-header bg-success text-white">
+        <h5 class="card-title mb-0">Inventário Detalhado</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Nome</th>
+                        <th>Categoria</th>
+                        <th>Laboratório</th>
+                        <th class="text-center">Quantidade</th>
+                        <th class="text-center">Estoque Mín.</th>
+                        <th>Status</th>
+                        <th>Descrição</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for material in materials %}
+                    <tr {% if material.is_low_stock %}class="table-danger"{% endif %}>
+                        <td><strong>{{ material.name }}</strong></td>
+                        <td>{{ material.category.name }}</td>
+                        <td>{{ material.laboratory.name }}</td>
+                        <td class="text-center">
+                            <span class="badge {% if material.is_low_stock %}bg-danger{% else %}bg-success{% endif %} rounded-pill">
+                                {{ material.quantity }}
+                            </span>
+                        </td>
+                        <td class="text-center">{{ material.minimum_stock }}</td>
+                        <td>
+                            {% if material.is_low_stock %}
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-exclamation-triangle"></i> Baixo
+                                </span>
+                            {% else %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Normal
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>{{ material.description|truncatechars:60 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    {% if category_distribution %}
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0">Distribuição por Categoria</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Categoria</th>
+                                <th>Tipo</th>
+                                <th class="text-center">Qtd. Materiais</th>
+                                <th class="text-center">Qtd. Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category in category_distribution %}
+                            <tr>
+                                <td>{{ category.category__name }}</td>
+                                <td>{{ category.category__material_type|title }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary rounded-pill">{{ category.count }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-info rounded-pill">{{ category.total_quantity|default:"-" }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if lab_distribution %}
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0">Distribuição por Laboratório</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Laboratório</th>
+                                <th class="text-center">Qtd. Materiais</th>
+                                <th class="text-center">Qtd. Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lab in lab_distribution %}
+                            <tr>
+                                <td>{{ lab.laboratory__name }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary rounded-pill">{{ lab.count }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-info rounded-pill">{{ lab.total_quantity|default:"-" }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if charts %}
+<div class="row">
+    {% for chart in charts %}
+        {% if "Categoria" in chart.title %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">{{ chart.title }}</h5>
+                </div>
+                <div class="card-body text-center">
+                    <img src="data:image/png;base64,{{ chart.image }}" alt="{{ chart.title }}" class="img-fluid">
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if "Laboratório" in chart.title %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">{{ chart.title }}</h5>
+                </div>
+                <div class="card-body text-center">
+                    <img src="data:image/png;base64,{{ chart.image }}" alt="{{ chart.title }}" class="img-fluid">
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if low_stock_materials > 0 %}
+<div class="alert alert-danger" role="alert">
+    <i class="bi bi-exclamation-triangle"></i>
+    <strong>Atenção!</strong> Existem {{ low_stock_materials }} material{% if low_stock_materials > 1 %}is{% endif %} 
+    com estoque baixo que precisa{% if low_stock_materials == 1 %}m{% endif %} de reposição.
+</div>
+{% endif %}
+
+{% endblock %}

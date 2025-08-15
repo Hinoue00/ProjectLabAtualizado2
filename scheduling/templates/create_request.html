@@ -13,14 +13,8 @@
     overflow-y: auto;
 }
 
-.material-card {
-    border: 1px solid #dee2e6;
-    transition: all 0.2s;
-}
-
-.material-card:hover {
-    border-color: #007bff;
-    box-shadow: 0 2px 8px rgba(0,123,255,0.1);
+.list-group-item:hover {
+    background-color: var(--bs-light);
 }
 
 .form-check-input:checked ~ .form-check-label {
@@ -28,8 +22,30 @@
     color: #007bff;
 }
 
-.material-card .form-check {
-    margin-bottom: 0.5rem;
+.list-group-item .form-check {
+    margin-bottom: 0;
+}
+
+.list-group-item .form-check-label {
+    cursor: pointer;
+    margin-bottom: 0;
+}
+
+/* Material list specific styles */
+#materialsList .list-group-item {
+    padding: 0.75rem 1rem;
+    border-left: none;
+    border-right: none;
+}
+
+#materialsList .list-group-item:first-child {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+#materialsList .list-group-item:last-child {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
 }
 
 /* Cores específicas dos laboratórios */
@@ -576,31 +592,37 @@
             const materialsList = document.getElementById('materialsList');
             currentLabMaterials = materials; // Store current materials for search
             
-            let html = '<div class="row">';
+            let html = '<div class="list-group">';
             
             materials.forEach(material => {
                 const stockClass = material.is_low_stock ? 'text-danger' : 'text-success';
                 const stockIcon = material.is_low_stock ? 'exclamation-triangle' : 'check-circle';
                 
                 html += `
-                    <div class="col-md-6 col-lg-4 mb-3">
-                        <div class="card material-card h-100">
-                            <div class="card-body">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" 
-                                           name="selected_materials" value="${material.id}" 
-                                           id="material_${material.id}">
-                                    <label class="form-check-label" for="material_${material.id}">
-                                        <strong>${material.name}</strong>
-                                    </label>
-                                </div>
-                                <p class="small text-muted mb-2">${material.description || 'Sem descrição'}</p>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="badge bg-light text-dark">${material.category}</small>
-                                    <small class="${stockClass}">
-                                        <i class="bi bi-${stockIcon} me-1"></i>
-                                        ${material.quantity}/${material.minimum_stock}
-                                    </small>
+                    <div class="list-group-item list-group-item-action">
+                        <div class="d-flex align-items-center">
+                            <div class="form-check me-3">
+                                <input class="form-check-input" type="checkbox" 
+                                       name="selected_materials" value="${material.id}" 
+                                       id="material_${material.id}">
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <label class="form-check-label fw-bold mb-1" for="material_${material.id}">
+                                            ${material.name}
+                                        </label>
+                                        <div class="small text-muted">${material.description || 'Sem descrição'}</div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="small">
+                                            <span class="badge bg-light text-dark me-2">${material.category}</span>
+                                            <span class="${stockClass}">
+                                                <i class="bi bi-${stockIcon} me-1"></i>
+                                                ${material.quantity}/${material.minimum_stock}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

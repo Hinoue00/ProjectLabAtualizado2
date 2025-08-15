@@ -14,4 +14,11 @@ urlpatterns = [
     path('profile/change-password/', views.change_password, name='change_password'),
     path('', views.dashboard_redirect, name='dashboard_redirect'),
     path('check-approval-status/', views.check_approval_status, name='check_approval_status'),
+    
+    # URLs para reset de senha
+    path('forgot-password/', views.forgot_password_view, name='forgot_password'),
+    path('password-reset/<str:token>/', views.password_reset_view, name='password_reset'),
+    path('password-reset-requests/', views.password_reset_requests_view, name='password_reset_requests'),
+    path('approve-password-reset/<int:request_id>/', views.approve_password_reset, name='approve_password_reset'),
+    path('reject-password-reset/<int:request_id>/', views.reject_password_reset, name='reject_password_reset'),
 ]

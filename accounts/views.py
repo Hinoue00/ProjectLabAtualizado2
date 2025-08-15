@@ -8,8 +8,8 @@ from django.contrib import messages
 from django.utils import timezone
 from scheduling.forms import PasswordChangeForm, ProfileUpdateForm
 from scheduling.models import ScheduleRequest
-from .forms import UserRegistrationForm, UserApprovalForm
-from .models import User
+from .forms import UserRegistrationForm, UserApprovalForm, ForgotPasswordForm, PasswordResetForm
+from .models import User, PasswordResetRequest
 from django.conf import settings
 from django.http import JsonResponse
 from django.core.cache import cache
@@ -27,10 +27,20 @@ def login_register_view(request):
     if request.method == 'POST' and 'password' in request.POST and 'username' in request.POST:
         email = request.POST['username']  # O campo ainda é chamado 'username' no formulário
         password = request.POST['password']
+        remember_me = request.POST.get('remember')
         user = authenticate(request, email=email, password=password)
         
         if user is not None:
             login(request, user)
+            
+            # Implementar funcionalidade "lembrar-me"
+            if not remember_me:
+                # Se não marcou "lembrar-me", sessão expira ao fechar o navegador
+                request.session.set_expiry(0)
+            else:
+                # Se marcou "lembrar-me", sessão dura 30 dias
+                request.session.set_expiry(30 * 24 * 60 * 60)  # 30 dias em segundos
+            
             next_url = request.GET.get('next', 'dashboard_redirect')
             return redirect(next_url)
         else:
@@ -297,5 +307,235 @@ def check_approval_status(request):
             'is_approved': request.user.is_approved
         })
     return JsonResponse({'is_approved': False}, status=401)
+
+
+# Views para Reset de Senha
+
+def forgot_password_view(request):
+    """View para solicitar reset de senha."""
+    if request.method == 'POST':
+        form = ForgotPasswordForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            user = User.objects.get(email=email, is_approved=True)
+            
+            # Verificar se já existe uma solicitação pendente
+            existing_request = PasswordResetRequest.objects.filter(
+                email=email,
+                status__in=['pending', 'approved']
+            ).first()
+            
+            if existing_request:
+                messages.warning(
+                    request, 
+                    'Já existe uma solicitação de reset de senha pendente para este email.'
+                )
+                return redirect('forgot_password')
+            
+            # Criar nova solicitação
+            import secrets
+            from datetime import timedelta
+            
+            token = secrets.token_urlsafe(32)
+            expires_at = timezone.now() + timedelta(hours=24)  # Expira em 24 horas
+            
+            reset_request = PasswordResetRequest.objects.create(
+                email=email,
+                user=user,
+                token=token,
+                expires_at=expires_at
+            )
+            
+            # Enviar notificação WhatsApp para técnicos
+            try:
+                whatsapp_service = WhatsAppNotificationService()
+                
+                # Buscar todos os técnicos
+                technicians = User.objects.filter(
+                    user_type='technician', 
+                    is_approved=True,
+                    phone_number__isnull=False
+                ).exclude(phone_number='')
+                
+                for technician in technicians:
+                    message = f"""
+🔑 *Nova Solicitação de Reset de Senha*
+
+👤 Usuário: {user.get_full_name()}
+📧 Email: {email}
+🕐 Data: {reset_request.requested_at.strftime('%d/%m/%Y %H:%M')}
+
+Para aprovar o reset, acesse o dashboard do sistema.
+                    """.strip()
+                    
+                    whatsapp_service.send_message(
+                        phone_number=technician.phone_number,
+                        message=message
+                    )
+                
+                messages.success(
+                    request,
+                    'Solicitação enviada com sucesso! Os técnicos foram notificados via WhatsApp.'
+                )
+                
+            except Exception as e:
+                messages.success(
+                    request,
+                    'Solicitação enviada com sucesso! Os técnicos serão notificados.'
+                )
+            
+            return redirect('login')
+    else:
+        form = ForgotPasswordForm()
+    
+    return render(request, 'accounts/forgot_password.html', {'form': form})
+
+
+def password_reset_view(request, token):
+    """View para definir nova senha após aprovação do técnico."""
+    try:
+        reset_request = PasswordResetRequest.objects.get(
+            token=token,
+            status='approved'
+        )
+        
+        # Verificar se não expirou
+        if reset_request.is_expired:
+            reset_request.status = 'expired'
+            reset_request.save()
+            messages.error(request, 'Este link de reset de senha expirou.')
+            return redirect('forgot_password')
+            
+    except PasswordResetRequest.DoesNotExist:
+        messages.error(request, 'Link de reset inválido ou expirado.')
+        return redirect('forgot_password')
+    
+    if request.method == 'POST':
+        form = PasswordResetForm(request.POST)
+        form.initial['email'] = reset_request.email
+        
+        if form.is_valid():
+            # Atualizar senha do usuário
+            user = reset_request.user
+            user.set_password(form.cleaned_data['password1'])
+            user.save()
+            
+            # Marcar solicitação como concluída
+            reset_request.status = 'completed'
+            reset_request.save()
+            
+            messages.success(
+                request,
+                'Senha alterada com sucesso! Você pode fazer login com a nova senha.'
+            )
+            return redirect('login')
+    else:
+        form = PasswordResetForm(initial={'email': reset_request.email})
+    
+    context = {
+        'form': form,
+        'reset_request': reset_request
+    }
+    return render(request, 'accounts/password_reset.html', context)
+
+
+@login_required
+@user_passes_test(is_technician)
+def password_reset_requests_view(request):
+    """View para técnicos gerenciarem solicitações de reset."""
+    pending_requests = PasswordResetRequest.objects.filter(
+        status='pending'
+    ).order_by('-requested_at')
+    
+    return render(request, 'accounts/password_reset_requests.html', {
+        'pending_requests': pending_requests
+    })
+
+
+@login_required
+@user_passes_test(is_technician)
+def approve_password_reset(request, request_id):
+    """Aprovam uma solicitação de reset de senha."""
+    try:
+        reset_request = PasswordResetRequest.objects.get(
+            id=request_id,
+            status='pending'
+        )
+        
+        # Aprovar a solicitação
+        reset_request.approve(request.user)
+        
+        # Enviar link via WhatsApp
+        try:
+            whatsapp_service = WhatsAppNotificationService()
+            reset_url = request.build_absolute_uri(
+                f"/accounts/password-reset/{reset_request.token}/"
+            )
+            
+            message = f"""
+🔑 *Solicitação de Reset de Senha Aprovada*
+
+Olá {reset_request.user.get_full_name()},
+
+Sua solicitação de reset de senha foi aprovada!
+
+🔗 Clique no link abaixo para definir sua nova senha:
+{reset_url}
+
+⚠️ Este link expira em 24 horas.
+
+Se você não solicitou este reset, ignore esta mensagem.
+            """.strip()
+            
+            whatsapp_service.send_message(
+                phone_number=reset_request.user.phone_number,
+                message=message
+            )
+            
+            reset_request.whatsapp_sent = True
+            reset_request.whatsapp_sent_at = timezone.now()
+            reset_request.save()
+            
+            messages.success(
+                request,
+                f'Solicitação aprovada! Link enviado via WhatsApp para {reset_request.user.get_full_name()}.'
+            )
+            
+        except Exception as e:
+            messages.warning(
+                request,
+                f'Solicitação aprovada, mas houve erro ao enviar WhatsApp: {str(e)}'
+            )
+            
+    except PasswordResetRequest.DoesNotExist:
+        messages.error(request, 'Solicitação não encontrada.')
+    
+    return redirect('password_reset_requests')
+
+
+@login_required
+@user_passes_test(is_technician)
+def reject_password_reset(request, request_id):
+    """Rejeita uma solicitação de reset de senha."""
+    try:
+        reset_request = PasswordResetRequest.objects.get(
+            id=request_id,
+            status='pending'
+        )
+        
+        reset_request.status = 'rejected'
+        reset_request.approved_by = request.user
+        reset_request.approved_at = timezone.now()
+        reset_request.save()
+        
+        messages.success(
+            request,
+            f'Solicitação de {reset_request.user.get_full_name()} foi rejeitada.'
+        )
+        
+    except PasswordResetRequest.DoesNotExist:
+        messages.error(request, 'Solicitação não encontrada.')
+    
+    return redirect('password_reset_requests')
 
 

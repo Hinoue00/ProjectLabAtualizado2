@@ -36,19 +36,28 @@
                 <p class="page-subtitle-improved">Bem-vindo ao seu painel.</p>
             </div>
             
-            <!-- Botão de agendamento à direita -->
+            <!-- Botões de agendamento à direita -->
             <div class="header-actions">
                 {% if is_scheduling_day %}
-                <a href="{% url 'create_schedule_request' %}" class="btn-schedule-improved btn-primary">
+                <a href="{% url 'create_schedule_request' %}" class="btn-schedule-improved btn-primary me-2">
                     <i class="bi bi-plus-circle me-2"></i>
                     <span class="btn-text">Solicitar Agendamento</span>
                 </a>
                 {% else %}
-                <a href="#" class="btn-schedule-improved btn-disabled" disabled>
+                <a href="#" class="btn-schedule-improved btn-disabled me-2" disabled>
                     <i class="bi bi-calendar-x me-2"></i>
                     <span class="btn-text">Agendamento Indisponível</span>
                 </a>
                 {% endif %}
+                
+                <!-- Botão de Rascunho (sempre disponível) -->
+                <a href="{% url 'view_draft_schedule_requests' %}" class="btn-schedule-improved btn-outline-secondary">
+                    <i class="bi bi-file-earmark-text me-2"></i>
+                    <span class="btn-text">Rascunhos</span>
+                    {% if draft_count > 0 %}
+                        <span class="badge bg-primary ms-2">{{ draft_count }}</span>
+                    {% endif %}
+                </a>
             </div>
         </div>
         
@@ -56,7 +65,21 @@
         {% if not is_scheduling_day %}
         <div class="alert alert-warning mt-3 scheduling-warning">
             <i class="bi bi-info-circle me-2"></i>
-            <strong>Atenção:</strong> Agendamentos só podem ser feitos às quintas e sextas-feiras para a semana seguinte.
+            <strong>Atenção:</strong> Agendamentos só podem ser feitos às segundas e terças-feiras para a próxima semana.
+        </div>
+        {% endif %}
+        
+        <!-- Aviso de mensagens não lidas -->
+        {% if unread_messages_count > 0 %}
+        <div class="alert alert-info mt-3 d-flex align-items-center">
+            <i class="bi bi-chat-dots me-2" style="font-size: 1.2rem;"></i>
+            <div class="flex-grow-1">
+                <strong>Nova{{ unread_messages_count|pluralize:"s" }} mensagem{{ unread_messages_count|pluralize:"s" }}!</strong>
+                Você tem {{ unread_messages_count }} mensagem{{ unread_messages_count|pluralize:"s" }} não lida{{ unread_messages_count|pluralize:"s" }} de técnicos.
+            </div>
+            <a href="{% url 'my_schedule_requests' %}?status=pending" class="btn btn-info btn-sm ms-3">
+                <i class="bi bi-eye"></i> Ver Mensagens
+            </a>
         </div>
         {% endif %}
     </div>
@@ -242,7 +265,7 @@
                 
                 {% if upcoming_classes.count > 5 %}
                 <div class="card-footer text-center">
-                    <a href="{% url 'schedule_requests_list' %}" class="card-footer-link">
+                    <a href="{% url 'my_schedule_requests' %}" class="card-footer-link">
                         <i class="bi bi-arrow-right"></i>
                         Ver todas as aulas
                     </a>

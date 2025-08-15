@@ -1,7 +1,7 @@
 # accounts/admin.py
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User
+from .models import User, PasswordResetRequest
 
 class CustomUserAdmin(UserAdmin):
     list_display = ('username', 'email', 'first_name', 'last_name', 'user_type', 'is_approved', 'registration_date')
@@ -26,3 +26,20 @@ class CustomUserAdmin(UserAdmin):
     approve_users.short_description = "Aprovar usuários selecionados"
 
 admin.site.register(User, CustomUserAdmin)
+
+
+@admin.register(PasswordResetRequest)
+class PasswordResetRequestAdmin(admin.ModelAdmin):
+    list_display = ('email', 'user', 'status', 'requested_at', 'approved_by', 'whatsapp_sent')
+    list_filter = ('status', 'whatsapp_sent', 'requested_at', 'approved_at')
+    search_fields = ('email', 'user__first_name', 'user__last_name')
+    readonly_fields = ('token', 'requested_at', 'approved_at', 'whatsapp_sent_at')
+    ordering = ('-requested_at',)
+    
+    fieldsets = (
+        (None, {'fields': ('email', 'user', 'status')}),
+        ('Aprovação', {'fields': ('approved_by', 'approved_at')}),
+        ('WhatsApp', {'fields': ('whatsapp_sent', 'whatsapp_sent_at')}),
+        ('Segurança', {'fields': ('token', 'expires_at')}),
+        ('Datas', {'fields': ('requested_at',)}),
+    )

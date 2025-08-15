@@ -79,6 +79,7 @@
                     <option value="approved">Aprovados</option>
                     <option value="pending">Pendentes</option>
                     <option value="rejected">Rejeitados</option>
+                    <option value="cancelled">Cancelados</option>
                 </select>
             </div>
         </div>
@@ -485,7 +486,7 @@ function renderSelectedDayEvents() {
             </div>
             <div class="mobile-event-status">
                 <span class="status-badge ${event.status}">
-                    ${event.status === 'approved' ? 'Aprovado' : event.status === 'pending' ? 'Pendente' : 'Recusado'}
+                    ${event.status === 'approved' ? 'Aprovado' : event.status === 'pending' ? 'Pendente' : event.status === 'rejected' ? 'Rejeitado' : event.status === 'cancelled' ? 'Cancelado' : ''}
                 </span>
             </div>
         `;
@@ -536,7 +537,7 @@ function renderSelectedDayEvents() {
             <div class="event-detail">
                 <h6><i class="bi bi-info-circle"></i> Status</h6>
                 <p><span class="badge bg-${event.status === 'approved' ? 'success' : event.status === 'pending' ? 'warning' : 'danger'}">
-                    ${event.status === 'approved' ? 'Aprovado' : event.status === 'pending' ? 'Pendente' : 'Recusado'}
+                    ${event.status === 'approved' ? 'Aprovado' : event.status === 'pending' ? 'Pendente' : event.status === 'rejected' ? 'Rejeitado' : event.status === 'cancelled' ? 'Cancelado' : ''}
                 </span></p>
             </div>
         `;

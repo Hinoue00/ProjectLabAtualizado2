@@ -53,10 +53,6 @@ class Material(models.Model):
             return 100
         return min((self.quantity / self.minimum_stock) * 100, 100)
     
-    analyzed_data = models.JSONField(null=True, blank=True, 
-                                    help_text="Dados da análise por NLP")
-    suggested_category = models.CharField(max_length=50, blank=True, null=True, default="",
-                                        help_text="Categoria sugerida pelo sistema")
     
     def save(self, *args, **kwargs):
         # Usar docling para analisar descrição e sugerir categoria

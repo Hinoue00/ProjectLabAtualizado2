@@ -293,7 +293,3 @@ def test_chatbot_page(request):
         return JsonResponse({'error': 'Chatbot is currently disabled'}, status=503)
     return render(request, 'test_chatbot.html')
 
-# Função auxiliar para obter o token CSRF (se necessário)
-def get_csrf_token(request):
-    from django.middleware.csrf import get_token
-    return get_token(request)

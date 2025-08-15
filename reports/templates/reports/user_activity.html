@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ report.title }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ report.title }}</h1>
+    
+    <div class="btn-group">
+        <a href="{% url 'reports:reports_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+        
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-info dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="bi bi-download"></i> Exportar
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'reports:user_activity_report' report.id 'pdf' %}">
+                    <i class="bi bi-file-earmark-pdf"></i> PDF
+                </a></li>
+                <li><a class="dropdown-item" href="{% url 'reports:user_activity_report' report.id 'excel' %}">
+                    <i class="bi bi-file-earmark-excel"></i> Excel
+                </a></li>
+                <li><a class="dropdown-item" href="{% url 'reports:user_activity_report' report.id 'csv' %}">
+                    <i class="bi bi-file-earmark-text"></i> CSV
+                </a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card border-info h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-people display-4 text-info mb-3"></i>
+                <h5 class="card-title">Total de Usuários</h5>
+                <p class="card-text display-6">{{ users.count }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card border-primary h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-person-badge display-4 text-primary mb-3"></i>
+                <h5 class="card-title">Professores Ativos</h5>
+                <p class="card-text display-6">{{ professor_activity|length }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card border-success h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-tools display-4 text-success mb-3"></i>
+                <h5 class="card-title">Técnicos Ativos</h5>
+                <p class="card-text display-6">{{ technician_activity|length }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">Informações do Relatório</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Período:</dt>
+                    <dd class="col-sm-8">{{ report.date_range_start|date:"d/m/Y" }} a {{ report.date_range_end|date:"d/m/Y" }}</dd>
+                    
+                    <dt class="col-sm-4">Gerado em:</dt>
+                    <dd class="col-sm-8">{{ report.created_at|date:"d/m/Y H:i" }}</dd>
+                    
+                    <dt class="col-sm-4">Por:</dt>
+                    <dd class="col-sm-8">{{ report.created_by.get_full_name }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        {% if charts %}
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0">Distribuição de Usuários</h5>
+            </div>
+            <div class="card-body text-center">
+                {% for chart in charts %}
+                    {% if "Tipo de Usuário" in chart.title %}
+                    <img src="data:image/png;base64,{{ chart.image }}" alt="{{ chart.title }}" class="img-fluid">
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if user_type_distribution %}
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="card-title mb-0">Distribuição por Tipo de Usuário</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for user_type in user_type_distribution %}
+            <div class="col-md-6 mb-3">
+                <div class="card {% if user_type.user_type == 'professor' %}border-primary{% else %}border-success{% endif %}">
+                    <div class="card-body text-center">
+                        {% if user_type.user_type == 'professor' %}
+                            <i class="bi bi-person-badge display-4 text-primary mb-3"></i>
+                            <h5 class="card-title text-primary">Professores</h5>
+                        {% else %}
+                            <i class="bi bi-tools display-4 text-success mb-3"></i>
+                            <h5 class="card-title text-success">Técnicos</h5>
+                        {% endif %}
+                        <p class="card-text">
+                            <span class="display-6">{{ user_type.count }}</span>
+                            <small class="text-muted d-block">
+                                ({% widthratio user_type.count users.count 100 %}% do total)
+                            </small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if users %}
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="card-title mb-0">Lista de Usuários</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Nome</th>
+                        <th>E-mail</th>
+                        <th>Tipo</th>
+                        <th>Telefone</th>
+                        <th>Data de Registro</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td><strong>{{ user.get_full_name }}</strong></td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% if user.user_type == 'professor' %}
+                                <span class="badge bg-primary">
+                                    <i class="bi bi-person-badge"></i> Professor
+                                </span>
+                            {% else %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-tools"></i> Técnico
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.phone_number|default:"-" }}</td>
+                        <td>{{ user.registration_date|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    {% if user_registrations %}
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0">Registros por Período</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Mês</th>
+                                        <th class="text-center">Novos Registros</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for registration in user_registrations %}
+                                    <tr>
+                                        <td>{{ registration.month }}</td>
+                                        <td class="text-center">
+                                            <span class="badge bg-primary rounded-pill">{{ registration.count }}</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        {% if charts %}
+                            {% for chart in charts %}
+                                {% if "Tempo" in chart.title %}
+                                <div class="text-center">
+                                    <img src="data:image/png;base64,{{ chart.image }}" alt="{{ chart.title }}" class="img-fluid">
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row">
+    {% if professor_activity %}
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Atividade dos Professores</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Professor</th>
+                                <th class="text-center">Agendamentos</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in professor_activity %}
+                            <tr>
+                                <td>{{ activity.name }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary rounded-pill">{{ activity.count }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if technician_activity %}
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">Atividade dos Técnicos</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Técnico</th>
+                                <th class="text-center">Solicitações Revisadas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in technician_activity %}
+                            <tr>
+                                <td>{{ activity.name }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-success rounded-pill">{{ activity.count }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if charts %}
+<div class="row">
+    {% for chart in charts %}
+        {% if "Professores" in chart.title %}
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">{{ chart.title }}</h5>
+                </div>
+                <div class="card-body text-center">
+                    <img src="data:image/png;base64,{{ chart.image }}" alt="{{ chart.title }}" class="img-fluid">
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}

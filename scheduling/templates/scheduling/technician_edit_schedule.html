@@ -1,0 +1,536 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load scheduling_filters %}
+
+{% block title %}Editar Agendamento | LabConnect{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/create-request-optimized.css' %}">
+<style>
+.materials-grid {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.list-group-item:hover {
+    background-color: var(--bs-light);
+}
+
+.form-check-input:checked ~ .form-check-label {
+    font-weight: bold;
+    color: #007bff;
+}
+
+.list-group-item .form-check {
+    margin-bottom: 0;
+}
+
+.list-group-item .form-check-label {
+    cursor: pointer;
+    margin-bottom: 0;
+}
+
+/* Cores específicas dos laboratórios */
+.text-purple {
+    color: #6f42c1 !important; /* Bootstrap purple */
+}
+
+/* Material list specific styles */
+#materialsList .list-group-item {
+    padding: 0.75rem 1rem;
+    border-left: none;
+    border-right: none;
+}
+
+#materialsList .list-group-item:first-child {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+#materialsList .list-group-item:last-child {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.edit-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.edit-warning-icon {
+    width: 40px;
+    height: 40px;
+    background-color: #ffc107;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    margin-right: 1rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="page-title">
+                    <i class="bi bi-pencil-square me-2 text-warning"></i>
+                    Editar Agendamento
+                </h1>
+                <p class="page-subtitle">
+                    Professor: <strong>{{ schedule_request.professor.get_full_name }}</strong>
+                </p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <a href="{% url 'pending_requests' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Warning -->
+    <div class="edit-warning d-flex align-items-center mb-4">
+        <div class="edit-warning-icon">
+            <i class="bi bi-exclamation-triangle"></i>
+        </div>
+        <div>
+            <h5 class="mb-2">Edição de Agendamento Aprovado</h5>
+            <p class="mb-0">
+                <strong>Atenção:</strong> Todas as alterações feitas serão automaticamente notificadas ao professor através do sistema de mensagens. 
+                Use esta funcionalidade para otimizar o agendamento em benefício da aula.
+            </p>
+        </div>
+    </div>
+
+    <!-- Edit Form Container -->
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="schedule-request-container">
+                <!-- Current Info Alert -->
+                <div class="alert alert-info m-3" role="alert">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Agendamento atual:</strong> 
+                    {{ schedule_request.laboratory.name }} - 
+                    {{ schedule_request.scheduled_date|date:"d/m/Y" }} - 
+                    {{ schedule_request.start_time|time:"H:i" }} às {{ schedule_request.end_time|time:"H:i" }}
+                </div>
+
+                <!-- Edit Form -->
+                <form method="post" id="scheduleEditForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Hidden lab selection field -->
+                    {{ form.laboratory.as_hidden }}
+
+                    <div class="request-body">
+                        <!-- Laboratory Selection -->
+                        <div class="form-section mb-5 laboratory-suggestion">
+                            <h5><i class="bi bi-geo-alt me-2"></i>Laboratório</h5>
+                            
+                            <div class="mb-4">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                            <input type="text" id="labSearch" class="form-control" placeholder="Buscar laboratório...">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <select id="departmentFilter" class="form-select">
+                                            <option value="all">Todos os departamentos</option>
+                                            {% for dept in departments %}
+                                                <option value="{{ dept.code }}">{{ dept.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="lab-selection-container">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Laboratório</th>
+                                                <th>Departamento</th>
+                                                <th>Capacidade</th>
+                                                <th>Ação</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="labsTableBody">
+                                            {% for laboratory in form.laboratory.field.queryset %}
+                                            <tr class="lab-row" data-laboratory-id="{{ laboratory.id }}" data-department="{{ laboratory|department_codes|join:',' }}">
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="lab-icon me-2">
+                                                            <i class="bi bi-building {% if laboratory.id == schedule_request.laboratory.id %}text-warning{% else %}text-primary{% endif %}"></i>
+                                                        </div>
+                                                        <span>{{ laboratory.name }}
+                                                            {% if laboratory.id == schedule_request.laboratory.id %}
+                                                                <span class="badge bg-warning text-dark ms-2">Atual</span>
+                                                            {% endif %}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td>{{ laboratory.get_departments_display }}</td>
+                                                <td>{{ laboratory.capacity }} pessoas</td>
+                                                <td>
+                                                    <button type="button" class="btn btn-sm {% if laboratory.id == schedule_request.laboratory.id %}btn-warning{% else %}btn-outline-primary{% endif %} select-lab-btn">
+                                                        {% if laboratory.id == schedule_request.laboratory.id %}Atual{% else %}Selecionar{% endif %}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted py-3">
+                                                    <i class="bi bi-building"></i>
+                                                    <p class="mb-0">Nenhum laboratório disponível</p>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div id="selectedLabInfo" class="mt-4 p-3 rounded">
+                                    <div class="d-flex align-items-start">
+                                        <div class="selected-lab-icon me-3 p-3 rounded">
+                                            <i class="bi bi-building-check fs-1"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1">Laboratório selecionado:</h6>
+                                            <div id="selectedLabName">{{ schedule_request.laboratory.name }}</div>
+                                            <div class="mt-2">
+                                                <small class="text-muted">Capacidade: </small>
+                                                <span id="selectedLabCapacity">{{ schedule_request.laboratory.capacity }}</span>
+                                                <small class="text-muted"> pessoas</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Basic Information -->
+                        <div class="form-section mb-5">
+                            <h5><i class="bi bi-info-circle me-2"></i>Informações Básicas</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label for="{{ form.subject.id_for_label }}" class="form-label">Disciplina</label>
+                                    {{ form.subject }}
+                                    {% if form.subject.errors %}
+                                        <div class="text-danger small mt-1">
+                                            <i class="bi bi-exclamation-triangle me-1"></i>
+                                            {% for error in form.subject.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Informe a disciplina ou o assunto da aula</div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-4">
+                                    <label for="{{ form.scheduled_date.id_for_label }}" class="form-label">Data Agendada</label>
+                                    {{ form.scheduled_date }}
+                                    {% if form.scheduled_date.errors %}
+                                        <div class="text-danger small mt-1">
+                                            <i class="bi bi-exclamation-triangle me-1"></i>
+                                            {% for error in form.scheduled_date.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Selecione a nova data para o agendamento</div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label for="{{ form.shift.id_for_label }}" class="form-label">Turno</label>
+                                    {{ form.shift }}
+                                    <div class="form-text">Escolha o período do dia para sua aula</div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-4">
+                                    <label for="{{ form.number_of_students.id_for_label }}" class="form-label">Número de Alunos</label>
+                                    {{ form.number_of_students }}
+                                    {% if form.number_of_students.errors %}
+                                        <div class="text-danger small mt-1">
+                                            <i class="bi bi-exclamation-triangle me-1"></i>
+                                            {% for error in form.number_of_students.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Quantidade de alunos que participarão da aula</div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-12 mb-4">
+                                    <label for="{{ form.description.id_for_label }}" class="form-label">Descrição da Atividade</label>
+                                    {{ form.description }}
+                                    <div class="form-text">Descreva brevemente a atividade que será realizada</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Materials Section -->
+                        <div id="laboratoryMaterialsSection" class="form-section mb-5">
+                            <h5><i class="bi bi-box-seam me-2"></i>Materiais do Laboratório</h5>
+                            
+                            <div class="mb-3">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input type="text" id="materialSearch" class="form-control" placeholder="Buscar materiais...">
+                                </div>
+                            </div>
+                            
+                            <div id="materialsList" class="materials-grid">
+                                <div class="text-center text-muted py-4">
+                                    <div class="spinner-border" role="status">
+                                        <span class="visually-hidden">Carregando materiais...</span>
+                                    </div>
+                                    <p class="mt-2">Carregando materiais do laboratório...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-check-lg me-2"></i>Salvar Alterações
+                            </button>
+                            <a href="{% url 'pending_requests' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-lg me-2"></i>Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Usar o mesmo JavaScript do create_request.html, mas adaptado para edição
+document.addEventListener('DOMContentLoaded', function() {
+    let currentLabMaterials = [];
+    
+    const labRows = document.querySelectorAll('.lab-row');
+    const labSearch = document.getElementById('labSearch');
+    const departmentFilter = document.getElementById('departmentFilter');
+    
+    // Inicializar com laboratório atual selecionado
+    const currentLabId = {{ schedule_request.laboratory.id }};
+    document.querySelector('input[name="laboratory"]').value = currentLabId;
+    
+    // Carregar materiais do laboratório atual
+    loadLaboratoryMaterials(currentLabId);
+    
+    // Event listeners para seleção de laboratório
+    labRows.forEach((row, index) => {
+        const selectBtn = row.querySelector('.select-lab-btn');
+        selectBtn.addEventListener('click', function() {
+            const labId = row.getAttribute('data-laboratory-id');
+            const labName = row.querySelector('td:nth-child(1) span').textContent.trim();
+            const labCapacity = row.querySelector('td:nth-child(3)').textContent.split(' ')[0];
+            
+            // Update hidden field
+            document.querySelector('input[name="laboratory"]').value = labId;
+            
+            // Update selected lab info
+            document.getElementById('selectedLabName').textContent = labName;
+            document.getElementById('selectedLabCapacity').textContent = labCapacity;
+            
+            // Update button states
+            labRows.forEach(r => {
+                const btn = r.querySelector('.select-lab-btn');
+                const icon = r.querySelector('i');
+                if (r.getAttribute('data-laboratory-id') === labId) {
+                    btn.className = 'btn btn-sm btn-warning select-lab-btn';
+                    btn.textContent = 'Atual';
+                    icon.className = 'bi bi-building text-warning';
+                } else {
+                    btn.className = 'btn btn-sm btn-outline-primary select-lab-btn';
+                    btn.textContent = 'Selecionar';
+                    icon.className = 'bi bi-building text-primary';
+                }
+            });
+            
+            // Load laboratory materials
+            loadLaboratoryMaterials(labId);
+        });
+    });
+    
+    // Load laboratory materials function
+    function loadLaboratoryMaterials(labId) {
+        const materialsSection = document.getElementById('laboratoryMaterialsSection');
+        const materialsList = document.getElementById('materialsList');
+        
+        if (!labId) {
+            materialsSection.style.display = 'none';
+            return;
+        }
+        
+        materialsList.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+                <p class="mt-2">Carregando materiais...</p>
+            </div>
+        `;
+        
+        materialsSection.style.display = 'block';
+        
+        // Fetch materials from API
+        fetch(`/scheduling/api/laboratory-materials/${labId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.materials && data.materials.length > 0) {
+                    renderMaterials(data.materials);
+                } else {
+                    materialsList.innerHTML = `
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-box-seam fs-1"></i>
+                            <p class="mb-0">Nenhum material cadastrado neste laboratório</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading materials:', error);
+                materialsList.innerHTML = `
+                    <div class="text-center text-danger py-4">
+                        <i class="bi bi-exclamation-triangle fs-1"></i>
+                        <p>Erro ao carregar materiais</p>
+                    </div>
+                `;
+            });
+    }
+    
+    // Render materials list
+    function renderMaterials(materials) {
+        const materialsList = document.getElementById('materialsList');
+        currentLabMaterials = materials;
+        
+        let html = '<div class="list-group">';
+        
+        materials.forEach(material => {
+            const stockClass = material.is_low_stock ? 'text-danger' : 'text-success';
+            const stockIcon = material.is_low_stock ? 'exclamation-triangle' : 'check-circle';
+            
+            html += `
+                <div class="list-group-item list-group-item-action">
+                    <div class="d-flex align-items-center">
+                        <div class="form-check me-3">
+                            <input class="form-check-input" type="checkbox" 
+                                   name="selected_materials" value="${material.id}" 
+                                   id="material_${material.id}">
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <label class="form-check-label fw-bold mb-1" for="material_${material.id}">
+                                        ${material.name}
+                                    </label>
+                                    <div class="small text-muted">${material.description || 'Sem descrição'}</div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="small">
+                                        <span class="badge bg-light text-dark me-2">${material.category}</span>
+                                        <span class="${stockClass}">
+                                            <i class="bi bi-${stockIcon} me-1"></i>
+                                            ${material.quantity}/${material.minimum_stock}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        materialsList.innerHTML = html;
+        
+        // Marcar materiais já selecionados
+        setTimeout(() => {
+            const selectedMaterialIds = {{ form.initial.selected_materials|default:"[]"|safe }};
+            selectedMaterialIds.forEach(materialId => {
+                const checkbox = document.querySelector(`input[name="selected_materials"][value="${materialId}"]`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            });
+        }, 100);
+    }
+    
+    // Material search functionality
+    const materialSearch = document.getElementById('materialSearch');
+    if (materialSearch) {
+        materialSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            filterMaterials(currentLabMaterials, searchTerm);
+        });
+    }
+    
+    function filterMaterials(materials, searchTerm) {
+        if (!searchTerm) {
+            renderMaterials(materials);
+            return;
+        }
+        
+        const filtered = materials.filter(material => 
+            material.name.toLowerCase().includes(searchTerm) ||
+            (material.description && material.description.toLowerCase().includes(searchTerm))
+        );
+        renderMaterials(filtered);
+    }
+    
+    // Lab filtering
+    function filterLabs() {
+        const searchTerm = labSearch.value.toLowerCase();
+        const selectedDept = departmentFilter.value;
+        let visibleCount = 0;
+        
+        labRows.forEach(row => {
+            const labName = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+            const deptCodes = row.getAttribute('data-department').split(',');
+            
+            const matchesSearch = labName.includes(searchTerm);
+            const matchesDept = selectedDept === 'all' || deptCodes.includes(selectedDept);
+            
+            if (matchesSearch && matchesDept) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        const noLabsFound = document.getElementById('noLabsFound');
+        if (noLabsFound) {
+            noLabsFound.classList.toggle('d-none', visibleCount > 0);
+        }
+    }
+    
+    if (labSearch) {
+        labSearch.addEventListener('input', filterLabs);
+    }
+    
+    if (departmentFilter) {
+        departmentFilter.addEventListener('change', filterLabs);
+    }
+    
+    // Initialize
+    filterLabs();
+});
+</script>
+{% endblock %}

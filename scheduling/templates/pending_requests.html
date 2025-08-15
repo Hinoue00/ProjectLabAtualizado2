@@ -187,6 +187,10 @@
                             </button>
                         </form>
                         
+                        <a href="{% url 'technician_edit_schedule' request.id %}" class="btn btn-warning btn-sm">
+                            <i class="bi bi-pencil-square me-1"></i> Editar
+                        </a>
+                        
                         <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal{{ request.id }}">
                             <i class="bi bi-x-circle me-1"></i> Rejeitar
                         </button>

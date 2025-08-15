@@ -69,3 +69,53 @@ class User(AbstractUser):
         allowed_domains = ['cogna.com.br', 'kroton.com.br']
         
         return domain in allowed_domains
+
+
+class PasswordResetRequest(models.Model):
+    """Modelo para solicitações de reset de senha."""
+    
+    STATUS_CHOICES = (
+        ('pending', 'Pendente'),
+        ('approved', 'Aprovada'),
+        ('completed', 'Concluída'),
+        ('rejected', 'Rejeitada'),
+        ('expired', 'Expirada'),
+    )
+    
+    email = models.EmailField(verbose_name='Email')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    token = models.CharField(max_length=100, unique=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    requested_at = models.DateTimeField(auto_now_add=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    approved_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='password_resets_approved'
+    )
+    expires_at = models.DateTimeField()
+    whatsapp_sent = models.BooleanField(default=False)
+    whatsapp_sent_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        verbose_name = 'Solicitação de Reset de Senha'
+        verbose_name_plural = 'Solicitações de Reset de Senha'
+        ordering = ['-requested_at']
+    
+    def __str__(self):
+        return f"Reset de senha para {self.email} - {self.get_status_display()}"
+    
+    @property
+    def is_expired(self):
+        from django.utils import timezone
+        return timezone.now() > self.expires_at
+    
+    def approve(self, approved_by_user):
+        """Aprova a solicitação de reset."""
+        from django.utils import timezone
+        self.status = 'approved'
+        self.approved_by = approved_by_user
+        self.approved_at = timezone.now()
+        self.save()

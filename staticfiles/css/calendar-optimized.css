@@ -86,6 +86,11 @@
     border-radius: 22px;
 }
 
+.calendar-nav-btn i {
+    background-color: transparent !important;
+
+}
+
 /* Filtros */
 .calendar-filters {
     padding: 1.25rem 1.5rem;
@@ -101,6 +106,7 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    background-color: transparent !important;
 }
 
 .filter-label {
@@ -108,6 +114,7 @@
     color: var(--calendar-text);
     margin: 0;
     font-size: 0.9rem;
+    background-color: transparent !important;
 }
 
 .filter-select {
@@ -221,6 +228,11 @@
     border-left-color: var(--calendar-danger);
 }
 
+.calendar-event.status-cancelled {
+    background: #f5f5f5;
+    border-left-color: #6c757d;
+}
+
 /* === VISUALIZAÇÃO MOBILE === */
 .calendar-mobile {
     display: block;
@@ -230,7 +242,6 @@
 /* Mini calendário do mês */
 .mobile-month-overview {
     padding: 1rem 1.5rem;
-    background: white;
     border-bottom: 1px solid var(--calendar-border);
 }
 
@@ -352,6 +363,10 @@
     background: var(--calendar-danger);
 }
 
+.mobile-event-card.status-cancelled::before {
+    background: #6c757d;
+}
+
 .mobile-event-card:hover {
     border-color: var(--calendar-primary);
     transform: translateY(-2px);
@@ -416,6 +431,11 @@
 .status-badge.rejected {
     background: #f8d7da;
     color: #721c24;
+}
+
+.status-badge.cancelled {
+    background: #e9ecef;
+    color: #495057;
 }
 
 .no-events {
@@ -749,6 +769,11 @@
     border-color: var(--danger-color);
 }
 
+[data-theme="dark"] .calendar-event.status-cancelled {
+    background: rgba(108, 117, 125, 0.2);
+    border-color: #6c757d;
+}
+
 /* Melhorar textos pequenos nos eventos do calendário */
 [data-theme="dark"] .calendar-event .event-text {
     color: var(--text-color);
@@ -758,6 +783,11 @@
 [data-theme="dark"] .calendar-event .event-time {
     color: #87ceeb;
     font-weight: 600;
+    background-color: transparent !important;
+}
+
+[data-theme="dark"] .calendar-event .event-title {
+    background-color: transparent !important;
 }
 
 [data-theme="dark"] .calendar-event .event-lab {

@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ report.title }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ report.title }}</h1>
+    
+    <div class="btn-group">
+        <a href="{% url 'reports:reports_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+        
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="bi bi-download"></i> Exportar
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'reports:scheduling_report' report.id 'pdf' %}">
+                    <i class="bi bi-file-earmark-pdf"></i> PDF
+                </a></li>
+                <li><a class="dropdown-item" href="{% url 'reports:scheduling_report' report.id 'excel' %}">
+                    <i class="bi bi-file-earmark-excel"></i> Excel
+                </a></li>
+                <li><a class="dropdown-item" href="{% url 'reports:scheduling_report' report.id 'csv' %}">
+                    <i class="bi bi-file-earmark-text"></i> CSV
+                </a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-primary h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-calendar-check display-4 text-primary mb-3"></i>
+                <h5 class="card-title">Total</h5>
+                <p class="card-text display-6">{{ total_requests }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card border-success h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-check-circle display-4 text-success mb-3"></i>
+                <h5 class="card-title">Aprovados</h5>
+                <p class="card-text display-6">{{ approved_requests }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card border-danger h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-x-circle display-4 text-danger mb-3"></i>
+                <h5 class="card-title">Rejeitados</h5>
+                <p class="card-text display-6">{{ rejected_requests }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card border-warning h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-clock display-4 text-warning mb-3"></i>
+                <h5 class="card-title">Pendentes</h5>
+                <p class="card-text display-6">{{ pending_requests }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Informações do Relatório</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Período:</dt>
+                    <dd class="col-sm-8">{{ report.date_range_start|date:"d/m/Y" }} a {{ report.date_range_end|date:"d/m/Y" }}</dd>
+                    
+                    <dt class="col-sm-4">Gerado em:</dt>
+                    <dd class="col-sm-8">{{ report.created_at|date:"d/m/Y H:i" }}</dd>
+                    
+                    <dt class="col-sm-4">Por:</dt>
+                    <dd class="col-sm-8">{{ report.created_by.get_full_name }}</dd>
+                    
+                    {% if report.filter_params.laboratory_id %}
+                    <dt class="col-sm-4">Laboratório:</dt>
+                    <dd class="col-sm-8">{{ laboratory_name }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        {% if charts %}
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">Gráfico de Status</h5>
+            </div>
+            <div class="card-body text-center">
+                {% for chart in charts %}
+                    {% if "Status" in chart.title %}
+                    <img src="data:image/png;base64,{{ chart.image }}" alt="{{ chart.title }}" class="img-fluid">
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if schedule_data %}
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="card-title mb-0">Agendamentos Detalhados</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Data</th>
+                        <th>Horário</th>
+                        <th>Laboratório</th>
+                        <th>Professor</th>
+                        <th>Status</th>
+                        <th>Finalidade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for schedule in schedule_data %}
+                    <tr>
+                        <td>{{ schedule.scheduled_date|date:"d/m/Y" }}</td>
+                        <td>{{ schedule.start_time }} - {{ schedule.end_time }}</td>
+                        <td>{{ schedule.laboratory.name }}</td>
+                        <td>{{ schedule.professor.get_full_name }}</td>
+                        <td>
+                            {% if schedule.status == 'approved' %}
+                                <span class="badge bg-success">{{ schedule.get_status_display }}</span>
+                            {% elif schedule.status == 'rejected' %}
+                                <span class="badge bg-danger">{{ schedule.get_status_display }}</span>
+                            {% else %}
+                                <span class="badge bg-warning">{{ schedule.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ schedule.purpose|truncatechars:50 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    {% if lab_usage %}
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0">Uso por Laboratório</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Laboratório</th>
+                                <th class="text-center">Agendamentos</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lab in lab_usage %}
+                            <tr>
+                                <td>{{ lab.laboratory__name }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary rounded-pill">{{ lab.count }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if professor_usage %}
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0">Atividade por Professor</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Professor</th>
+                                <th class="text-center">Agendamentos</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prof in professor_usage %}
+                            <tr>
+                                <td>{{ prof.professor__first_name }} {{ prof.professor__last_name }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-info rounded-pill">{{ prof.count }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if weekday_data %}
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="card-title mb-0">Distribuição por Dia da Semana</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Dia da Semana</th>
+                                <th class="text-center">Agendamentos</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in weekday_data %}
+                            <tr>
+                                <td>{{ day.weekday }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary rounded-pill">{{ day.count }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-6">
+                {% if charts %}
+                    {% for chart in charts %}
+                        {% if "Semana" in chart.title %}
+                        <div class="text-center">
+                            <img src="data:image/png;base64,{{ chart.image }}" alt="{{ chart.title }}" class="img-fluid">
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if charts %}
+<div class="row">
+    {% for chart in charts %}
+        {% if "Laboratórios" in chart.title %}
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">{{ chart.title }}</h5>
+                </div>
+                <div class="card-body text-center">
+                    <img src="data:image/png;base64,{{ chart.image }}" alt="{{ chart.title }}" class="img-fluid">
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notificações - LabConnect{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notification-item {
+        border-left: 4px solid transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .notification-item.unread {
+        border-left-color: var(--bs-primary);
+        background-color: rgba(var(--bs-primary-rgb), 0.05);
+    }
+    
+    .notification-item.read {
+        border-left-color: var(--bs-secondary);
+        opacity: 0.8;
+    }
+    
+    .notification-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 1.2rem;
+    }
+    
+    .notification-icon.message {
+        background-color: rgba(var(--bs-info-rgb), 0.1);
+        color: var(--bs-info);
+    }
+    
+    .notification-icon.pending {
+        background-color: rgba(var(--bs-warning-rgb), 0.1);
+        color: var(--bs-warning);
+    }
+    
+    .notification-icon.status {
+        background-color: rgba(var(--bs-success-rgb), 0.1);
+        color: var(--bs-success);
+    }
+    
+    .notification-icon.rejected {
+        background-color: rgba(var(--bs-danger-rgb), 0.1);
+        color: var(--bs-danger);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-bell me-2"></i>
+                    Todas as Notificações
+                </h1>
+                
+                {% if notifications %}
+                <button class="btn btn-outline-primary btn-sm" onclick="markAllNotificationsRead()">
+                    <i class="bi bi-check-all me-1"></i>
+                    Marcar todas como lidas
+                </button>
+                {% endif %}
+            </div>
+            
+            {% if notifications %}
+                <div class="card shadow-sm">
+                    <div class="list-group list-group-flush">
+                        {% for notification in notifications %}
+                        <div class="list-group-item notification-item {% if not notification.is_read %}unread{% else %}read{% endif %}">
+                            <div class="d-flex align-items-start">
+                                <div class="notification-icon 
+                                    {% if notification.type == 'message' %}message
+                                    {% elif notification.type == 'pending_request' or notification.type == 'pending_user' %}pending
+                                    {% elif notification.type == 'status_update' and 'aprovada' in notification.title %}status
+                                    {% elif notification.type == 'status_update' and 'rejeitada' in notification.title %}rejected
+                                    {% endif %}">
+                                    <i class="{{ notification.icon }}"></i>
+                                </div>
+                                
+                                <div class="flex-grow-1 ms-3">
+                                    <div class="d-flex w-100 justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1 fw-bold">{{ notification.title }}</h6>
+                                            <p class="mb-1">{{ notification.message }}</p>
+                                            {% if notification.timestamp %}
+                                                <small class="text-muted">
+                                                    <i class="bi bi-clock me-1"></i>
+                                                    {{ notification.timestamp|date:"d/m/Y H:i" }}
+                                                </small>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="d-flex align-items-center">
+                                            {% if not notification.is_read %}
+                                                <span class="badge bg-primary rounded-pill me-2">Nova</span>
+                                            {% endif %}
+                                            
+                                            <a href="{{ notification.url }}" class="btn btn-outline-primary btn-sm">
+                                                <i class="bi bi-arrow-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Paginação -->
+                {% if page_obj.has_other_pages %}
+                <nav aria-label="Navegação de páginas" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1" aria-label="Primeira">
+                                    <span aria-hidden="true">&laquo;&laquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Anterior">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Próxima">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Última">
+                                    <span aria-hidden="true">&raquo;&raquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                
+            {% else %}
+                <div class="card shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <div class="mb-4">
+                            <i class="bi bi-bell-slash text-muted" style="font-size: 4rem;"></i>
+                        </div>
+                        <h5 class="text-muted mb-3">Nenhuma notificação encontrada</h5>
+                        <p class="text-muted">Você não possui notificações no momento.</p>
+                        
+                        <div class="mt-4">
+                            <a href="{% url 'dashboard_redirect' %}" class="btn btn-primary">
+                                <i class="bi bi-house me-2"></i>
+                                Voltar ao Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function markAllNotificationsRead() {
+    fetch('/scheduling/api/mark-notifications-read/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reload page to reflect changes
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error marking notifications as read:', error);
+    });
+}
+</script>
+{% endblock %}

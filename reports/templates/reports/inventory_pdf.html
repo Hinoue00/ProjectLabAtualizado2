@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ report.title }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 15px;
+        }
+        
+        .header h1 {
+            color: #28a745;
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .header p {
+            margin: 5px 0;
+            color: #666;
+        }
+        
+        .summary-grid {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        
+        .summary-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            flex: 1;
+            margin: 0 5px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .summary-item h3 {
+            margin: 0 0 10px 0;
+            color: #28a745;
+            font-size: 14px;
+        }
+        
+        .summary-item .number {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .alert {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section h2 {
+            color: #28a745;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #28a745;
+            color: white;
+            font-weight: bold;
+            font-size: 11px;
+        }
+        
+        td {
+            font-size: 10px;
+        }
+        
+        .low-stock { 
+            background-color: #f8d7da; 
+            color: #721c24;
+        }
+        
+        .normal-stock { 
+            background-color: #d4edda; 
+            color: #155724;
+        }
+        
+        .charts {
+            page-break-inside: avoid;
+        }
+        
+        .chart {
+            text-align: center;
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+        }
+        
+        .chart h3 {
+            color: #28a745;
+            margin-bottom: 15px;
+        }
+        
+        .chart img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .stats-table {
+            margin-bottom: 20px;
+        }
+        
+        .stats-table th {
+            background-color: #17a2b8;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px solid #dee2e6;
+            padding-top: 15px;
+        }
+        
+        @page {
+            margin: 2cm;
+        }
+        
+        .page-break {
+            page-break-before: always;
+        }
+        
+        .quantity-cell {
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ report.title }}</h1>
+        <p>Gerado em: {{ report.created_at|date:"d/m/Y H:i" }}</p>
+        <p>Por: {{ report.created_by.get_full_name }}</p>
+        {% if report.filter_params.laboratory_id %}
+        <p>Laboratório: {{ report.laboratory.name }}</p>
+        {% endif %}
+    </div>
+
+    <div class="summary-grid">
+        <div class="summary-item">
+            <h3>Total de Materiais</h3>
+            <div class="number">{{ total_materials }}</div>
+        </div>
+        <div class="summary-item">
+            <h3>Estoque Baixo</h3>
+            <div class="number alert">{{ low_stock_materials }}</div>
+        </div>
+        <div class="summary-item">
+            <h3>Estoque Normal</h3>
+            <div class="number">{{ total_materials|add:"-"|add:low_stock_materials }}</div>
+        </div>
+    </div>
+
+    {% if materials %}
+    <div class="section">
+        <h2>Inventário Detalhado</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Categoria</th>
+                    <th>Laboratório</th>
+                    <th>Quantidade</th>
+                    <th>Estoque Mín.</th>
+                    <th>Status</th>
+                    <th>Descrição</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for material in materials %}
+                <tr class="{% if material.is_low_stock %}low-stock{% else %}normal-stock{% endif %}">
+                    <td><strong>{{ material.name }}</strong></td>
+                    <td>{{ material.category.name }}</td>
+                    <td>{{ material.laboratory.name }}</td>
+                    <td class="quantity-cell">{{ material.quantity }}</td>
+                    <td class="quantity-cell">{{ material.minimum_stock }}</td>
+                    <td>
+                        {% if material.is_low_stock %}
+                            <span class="alert">Baixo</span>
+                        {% else %}
+                            Normal
+                        {% endif %}
+                    </td>
+                    <td>{{ material.description|truncatechars:60 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if category_distribution %}
+    <div class="section">
+        <h2>Distribuição por Categoria</h2>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Categoria</th>
+                    <th>Tipo</th>
+                    <th>Quantidade de Materiais</th>
+                    <th>Quantidade Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in category_distribution %}
+                <tr>
+                    <td>{{ category.category__name }}</td>
+                    <td>{{ category.category__material_type|title }}</td>
+                    <td class="quantity-cell">{{ category.count }}</td>
+                    <td class="quantity-cell">{{ category.total_quantity|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if lab_distribution %}
+    <div class="section">
+        <h2>Distribuição por Laboratório</h2>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Laboratório</th>
+                    <th>Quantidade de Materiais</th>
+                    <th>Quantidade Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lab in lab_distribution %}
+                <tr>
+                    <td>{{ lab.laboratory__name }}</td>
+                    <td class="quantity-cell">{{ lab.count }}</td>
+                    <td class="quantity-cell">{{ lab.total_quantity|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if stock_status %}
+    <div class="section">
+        <h2>Status de Estoque</h2>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Quantidade de Materiais</th>
+                    <th>Percentual</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for status in stock_status %}
+                <tr>
+                    <td>{{ status.status }}</td>
+                    <td class="quantity-cell">{{ status.count }}</td>
+                    <td class="quantity-cell">
+                        {% widthratio status.count total_materials 100 %}%
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if charts %}
+    <div class="page-break"></div>
+    <div class="section charts">
+        <h2>Gráficos</h2>
+        {% for chart in charts %}
+        <div class="chart">
+            <h3>{{ chart.title }}</h3>
+            <img src="data:image/png;base64,{{ chart.image }}" alt="{{ chart.title }}">
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <p>LabConnect - Sistema de Gestão de Laboratórios</p>
+        <p>Relatório de Inventário gerado automaticamente em {{ report.created_at|date:"d/m/Y H:i" }}</p>
+    </div>
+</body>
+</html>

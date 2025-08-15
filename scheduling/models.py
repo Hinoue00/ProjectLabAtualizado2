@@ -11,6 +11,7 @@ class ScheduleRequest(models.Model):
         ('pending', 'Pendente'),
         ('approved', 'Aprovado'),
         ('rejected', 'Rejeitado'),
+        ('cancelled', 'Cancelado'),
     )
     
     professor = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'user_type': 'professor'})
@@ -24,7 +25,7 @@ class ScheduleRequest(models.Model):
     class_semester = models.CharField(max_length=50, verbose_name="Semestre/Turma", blank=True, null=True)
     materials = models.TextField(verbose_name="Materiais necessários", blank=True, null=True)
     
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='pending')
     request_date = models.DateTimeField(auto_now_add=True)
     review_date = models.DateTimeField(blank=True, null=True)
     reviewed_by = models.ForeignKey(
@@ -116,13 +117,51 @@ class ScheduleRequest(models.Model):
         
         return False
     
+    def get_approval_deadline(self):
+        """
+        Retorna o prazo limite para aprovação (sexta-feira da semana da solicitação)
+        """
+        # Obter a data da solicitação
+        request_date = self.request_date.date() if self.request_date else timezone.now().date()
+        
+        # Calcular a sexta-feira da mesma semana
+        days_until_friday = 4 - request_date.weekday()  # 4=sexta
+        if days_until_friday < 0:  # Se já passou da sexta-feira
+            days_until_friday += 7  # Próxima sexta
+        
+        deadline = request_date + timezone.timedelta(days=days_until_friday)
+        return deadline
+    
+    def is_approval_overdue(self):
+        """
+        Verifica se o prazo de aprovação passou (sexta-feira)
+        """
+        if self.status != 'pending':
+            return False
+        
+        today = timezone.now().date()
+        deadline = self.get_approval_deadline()
+        return today > deadline
+    
+    def days_until_approval_deadline(self):
+        """
+        Retorna quantos dias restam até o prazo de aprovação
+        """
+        if self.status != 'pending':
+            return None
+        
+        today = timezone.now().date()
+        deadline = self.get_approval_deadline()
+        days_remaining = (deadline - today).days
+        return max(0, days_remaining)  # Não retornar valores negativos
+    
     def can_be_requested(self):
         """Verifica se a solicitação atende aos requisitos (dia e semana)"""
         today = timezone.now().date()
         
-        # Só pode solicitar às quintas e sextas
-        if today.weekday() not in [3, 4]:  # 3=quinta, 4=sexta
-            return False, "Agendamentos só podem ser solicitados às quintas e sextas-feiras."
+        # Só pode solicitar às segundas e terças
+        if today.weekday() not in [0, 1]:  # 0=segunda, 1=terça
+            return False, "Agendamentos só podem ser solicitados às segundas e terças-feiras."
         
         # Só pode solicitar para a próxima semana
         next_week_start = today + timezone.timedelta(days=(7 - today.weekday()))
@@ -139,7 +178,7 @@ class ScheduleRequest(models.Model):
         
         # Log detalhado para debug
         if not self.pk:  # Nova criação
-            logger.info(f"🟢 CRIANDO NOVO AGENDAMENTO:")
+            logger.info(f"CRIANDO NOVO AGENDAMENTO:")
             logger.info(f"   Professor: {self.professor.get_full_name()} (ID: {self.professor.id})")
             logger.info(f"   Laboratório: {self.laboratory.name} (ID: {self.laboratory.id})")
             logger.info(f"   Departamento Lab: {self.laboratory.department}")
@@ -148,23 +187,45 @@ class ScheduleRequest(models.Model):
             logger.info(f"   Status: {self.status}")
             logger.info(f"   Disciplina: {self.subject}")
         else:
-            logger.info(f"🔄 ATUALIZANDO AGENDAMENTO ID {self.pk}")
+            logger.info(f"ATUALIZANDO AGENDAMENTO ID {self.pk}")
             logger.info(f"   Status: {self.status}")
         
         # Salvar normalmente
         super().save(*args, **kwargs)
         
         # Log após salvar
-        logger.info(f"✅ AGENDAMENTO SALVO COM SUCESSO - ID: {self.pk}")
+        logger.info(f"AGENDAMENTO SALVO COM SUCESSO - ID: {self.pk}")
         
         # Debug adicional para verificar se está sendo salvo no DB
         try:
             saved_obj = ScheduleRequest.objects.get(pk=self.pk)
-            logger.info(f"✅ CONFIRMADO NO DB - ID: {saved_obj.pk}, Status: {saved_obj.status}")
+            logger.info(f"CONFIRMADO NO DB - ID: {saved_obj.pk}, Status: {saved_obj.status}")
         except ScheduleRequest.DoesNotExist:
-            logger.error(f"❌ ERRO: Agendamento não encontrado no DB após salvar!")
+            logger.error(f"ERRO: Agendamento não encontrado no DB após salvar!")
 
     
+class ScheduleRequestComment(models.Model):
+    """
+    Comentários/mensagens entre técnicos e professores sobre uma solicitação
+    """
+    schedule_request = models.ForeignKey(
+        ScheduleRequest, 
+        on_delete=models.CASCADE, 
+        related_name='comments'
+    )
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    message = models.TextField(verbose_name="Mensagem")
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)  # Para marcar como lida
+    
+    class Meta:
+        ordering = ['created_at']
+        verbose_name = "Comentário do Agendamento"
+        verbose_name_plural = "Comentários dos Agendamentos"
+    
+    def __str__(self):
+        return f"Comentário de {self.author.get_full_name()} - {self.created_at}"
+
 # Adicione no arquivo scheduling/models.py
 
 class DraftScheduleRequest(models.Model):

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ report.title }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #6f42c1;
+            padding-bottom: 15px;
+        }
+        
+        .header h1 {
+            color: #6f42c1;
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .header p {
+            margin: 5px 0;
+            color: #666;
+        }
+        
+        .summary-grid {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        
+        .summary-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            flex: 1;
+            margin: 0 5px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .summary-item h3 {
+            margin: 0 0 10px 0;
+            color: #6f42c1;
+            font-size: 14px;
+        }
+        
+        .summary-item .number {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section h2 {
+            color: #6f42c1;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #6f42c1;
+            color: white;
+            font-weight: bold;
+            font-size: 11px;
+        }
+        
+        td {
+            font-size: 10px;
+        }
+        
+        .user-professor { 
+            background-color: #e7f3ff; 
+        }
+        
+        .user-technician { 
+            background-color: #f0f8f0; 
+        }
+        
+        .charts {
+            page-break-inside: avoid;
+        }
+        
+        .chart {
+            text-align: center;
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+        }
+        
+        .chart h3 {
+            color: #6f42c1;
+            margin-bottom: 15px;
+        }
+        
+        .chart img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .stats-table {
+            margin-bottom: 20px;
+        }
+        
+        .stats-table th {
+            background-color: #17a2b8;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px solid #dee2e6;
+            padding-top: 15px;
+        }
+        
+        @page {
+            margin: 2cm;
+        }
+        
+        .page-break {
+            page-break-before: always;
+        }
+        
+        .activity-number {
+            text-align: center;
+            font-weight: bold;
+            color: #6f42c1;
+        }
+        
+        .email-cell {
+            word-break: break-all;
+            max-width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ report.title }}</h1>
+        <p>Período: {{ report.date_range_start|date:"d/m/Y" }} a {{ report.date_range_end|date:"d/m/Y" }}</p>
+        <p>Gerado em: {{ report.created_at|date:"d/m/Y H:i" }}</p>
+        <p>Por: {{ report.created_by.get_full_name }}</p>
+    </div>
+
+    <div class="summary-grid">
+        <div class="summary-item">
+            <h3>Total de Usuários</h3>
+            <div class="number">{{ users.count }}</div>
+        </div>
+        <div class="summary-item">
+            <h3>Professores Ativos</h3>
+            <div class="number">{{ professor_activity|length }}</div>
+        </div>
+        <div class="summary-item">
+            <h3>Técnicos Ativos</h3>
+            <div class="number">{{ technician_activity|length }}</div>
+        </div>
+    </div>
+
+    {% if user_type_distribution %}
+    <div class="section">
+        <h2>Distribuição por Tipo de Usuário</h2>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Tipo de Usuário</th>
+                    <th>Quantidade</th>
+                    <th>Percentual</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user_type in user_type_distribution %}
+                <tr>
+                    <td>{% if user_type.user_type == 'professor' %}Professor{% else %}Técnico{% endif %}</td>
+                    <td class="activity-number">{{ user_type.count }}</td>
+                    <td class="activity-number">
+                        {% widthratio user_type.count users.count 100 %}%
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if users %}
+    <div class="section">
+        <h2>Lista de Usuários</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>Tipo</th>
+                    <th>Telefone</th>
+                    <th>Data de Registro</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr class="{% if user.user_type == 'professor' %}user-professor{% else %}user-technician{% endif %}">
+                    <td><strong>{{ user.get_full_name }}</strong></td>
+                    <td class="email-cell">{{ user.email }}</td>
+                    <td>{% if user.user_type == 'professor' %}Professor{% else %}Técnico{% endif %}</td>
+                    <td>{{ user.phone_number|default:"-" }}</td>
+                    <td>{{ user.registration_date|date:"d/m/Y" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if user_registrations %}
+    <div class="section">
+        <h2>Registros por Período</h2>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Mês</th>
+                    <th>Novos Registros</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for registration in user_registrations %}
+                <tr>
+                    <td>{{ registration.month }}</td>
+                    <td class="activity-number">{{ registration.count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if professor_activity %}
+    <div class="section">
+        <h2>Atividade dos Professores</h2>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Professor</th>
+                    <th>Agendamentos Solicitados</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for activity in professor_activity %}
+                <tr>
+                    <td>{{ activity.name }}</td>
+                    <td class="activity-number">{{ activity.count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if technician_activity %}
+    <div class="section">
+        <h2>Atividade dos Técnicos</h2>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Técnico</th>
+                    <th>Solicitações Revisadas</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for activity in technician_activity %}
+                <tr>
+                    <td>{{ activity.name }}</td>
+                    <td class="activity-number">{{ activity.count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if charts %}
+    <div class="page-break"></div>
+    <div class="section charts">
+        <h2>Gráficos</h2>
+        {% for chart in charts %}
+        <div class="chart">
+            <h3>{{ chart.title }}</h3>
+            <img src="data:image/png;base64,{{ chart.image }}" alt="{{ chart.title }}">
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <p>LabConnect - Sistema de Gestão de Laboratórios</p>
+        <p>Relatório de Atividade de Usuários gerado automaticamente em {{ report.created_at|date:"d/m/Y H:i" }}</p>
+    </div>
+</body>
+</html>

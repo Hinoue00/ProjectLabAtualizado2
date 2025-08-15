@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from accounts.views import is_technician, is_professor
 from django.utils import timezone
 from datetime import timedelta, date # Adicionar date
-from scheduling.models import DraftScheduleRequest, ScheduleRequest
+from scheduling.models import DraftScheduleRequest, ScheduleRequest, ScheduleRequestComment
 from inventory.models import Material
 from accounts.models import User
 from laboratories.models import Laboratory, Department # Importar Laboratory
@@ -117,7 +117,7 @@ def technician_dashboard(request):
     pending_appointments_count = cache.get('pending_appointments_count')
     if pending_appointments_count is None:
         pending_appointments_count = ScheduleRequest.objects.filter(status='pending').count()
-        cache.set('pending_appointments_count', pending_appointments_count, 60)  # Cache por 1 minuto
+        cache.set('pending_appointments_count', pending_appointments_count, 300)  # Cache por 5 minutos
     
     # Get pending approvals - OTIMIZADO
     pending_approvals = ScheduleRequest.objects.filter(
@@ -379,8 +379,8 @@ def professor_dashboard(request):
     # PREPARAR CONTEXTO
     # ==========================================
     
-    # Verificar se é dia de agendamento (quinta = 3, sexta = 4)
-    is_scheduling_day = today.weekday() in [3, 4]
+    # Verificar se é dia de agendamento (segunda = 0, terça = 1)
+    is_scheduling_day = today.weekday() in [0, 1]
     
     # Estatísticas do professor
     pending_count = ScheduleRequest.objects.filter(professor=professor, status='pending').count()
@@ -420,6 +420,12 @@ def professor_dashboard(request):
     else:
         week_change = 100 if this_week_count > 0 else 0
     
+    # Contar mensagens não lidas do técnico
+    unread_messages_count = ScheduleRequestComment.objects.filter(
+        schedule_request__professor=professor,
+        is_read=False
+    ).exclude(author=professor).count()
+    
     context = {
         'calendar_data': calendar_data,
         'current_week_start': start_of_week,
@@ -441,6 +447,7 @@ def professor_dashboard(request):
         'week_change': week_change,
         'upcoming_classes': upcoming_classes,
         'draft_requests': draft_requests,
+        'unread_messages_count': unread_messages_count,
         
         # Compatibility
         'start_of_week': start_of_week,
