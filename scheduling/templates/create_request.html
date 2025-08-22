@@ -296,6 +296,9 @@
                                         <button type="button" class="btn btn-outline-secondary" id="searchAllLabsBtn">
                                             <i class="bi bi-search me-1"></i>Buscar em Todos os Labs
                                         </button>
+                                        <button type="button" class="btn btn-outline-info" id="viewStorageBtn" data-bs-toggle="modal" data-bs-target="#storageMaterialsModal">
+                                            <i class="bi bi-archive me-1"></i>Ver Materiais em Estoque
+                                        </button>
                                     </div>
                                 </div>
                                 
@@ -931,4 +934,173 @@
         });
     });
 </script>
+
+<!-- Modal de Materiais em Estoque -->
+<div class="modal fade" id="storageMaterialsModal" tabindex="-1" aria-labelledby="storageMaterialsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="storageMaterialsModalLabel">
+                    <i class="bi bi-archive me-2"></i>Materiais Disponíveis em Estoque
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Aqui estão listados os materiais disponíveis nos laboratórios de estoque. Você pode visualizar o que está disponível para sua aula.
+                </div>
+                
+                <div id="storageMaterialsContent">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <p class="mt-2">Buscando materiais em estoque...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Script para carregar materiais de estoque
+document.addEventListener('DOMContentLoaded', function() {
+    const viewStorageBtn = document.getElementById('viewStorageBtn');
+    const storageMaterialsContent = document.getElementById('storageMaterialsContent');
+    
+    if (viewStorageBtn) {
+        viewStorageBtn.addEventListener('click', function() {
+            // Buscar materiais de estoque via API
+            fetch('{% url "storage_materials_api" %}')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayStorageMaterials(data);
+                    } else {
+                        showStorageError('Erro ao carregar materiais de estoque.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar materiais:', error);
+                    showStorageError('Erro de conexão ao buscar materiais.');
+                });
+        });
+    }
+    
+    function displayStorageMaterials(data) {
+        if (Object.keys(data.materials_by_lab).length === 0) {
+            storageMaterialsContent.innerHTML = `
+                <div class="text-center text-muted">
+                    <i class="bi bi-archive fs-1"></i>
+                    <p>Nenhum material encontrado nos laboratórios de estoque.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '';
+        
+        // Mostrar estatística no topo
+        html += `
+            <div class="mb-3">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle me-1"></i>
+                    ${data.storage_labs_count} laboratório${data.storage_labs_count > 1 ? 's' : ''} de estoque encontrado${data.storage_labs_count > 1 ? 's' : ''}
+                </small>
+            </div>
+        `;
+        
+        // Criar accordion para cada laboratório
+        html += '<div class="accordion" id="storageAccordion">';
+        
+        let labIndex = 0;
+        for (const [labName, materials] of Object.entries(data.materials_by_lab)) {
+            const collapseId = `collapse${labIndex}`;
+            const isFirst = labIndex === 0;
+            
+            html += `
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading${labIndex}">
+                        <button class="accordion-button ${isFirst ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" 
+                                data-bs-target="#${collapseId}" aria-expanded="${isFirst}" aria-controls="${collapseId}">
+                            <i class="bi bi-building me-2"></i>
+                            ${labName}
+                            <span class="badge bg-primary ms-2">${materials.length} materiais</span>
+                        </button>
+                    </h2>
+                    <div id="${collapseId}" class="accordion-collapse collapse ${isFirst ? 'show' : ''}" 
+                         aria-labelledby="heading${labIndex}" data-bs-parent="#storageAccordion">
+                        <div class="accordion-body">
+                            <div class="row">
+            `;
+            
+            materials.forEach(material => {
+                let statusBadge = '';
+                if (material.is_expired) {
+                    statusBadge = '<span class="badge bg-danger ms-1">Vencido</span>';
+                } else if (material.is_near_expiration) {
+                    statusBadge = '<span class="badge bg-warning ms-1">Próx. Vencimento</span>';
+                }
+                
+                html += `
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body p-3">
+                                <h6 class="card-title mb-1">
+                                    ${material.name}
+                                    ${statusBadge}
+                                </h6>
+                                <p class="card-text small text-muted mb-2">
+                                    <i class="bi bi-tag me-1"></i>${material.category}
+                                </p>
+                                <p class="card-text small mb-2">
+                                    <i class="bi bi-box me-1"></i>Quantidade: <strong>${material.quantity}</strong>
+                                </p>
+                                ${material.expiration_date ? `
+                                    <p class="card-text small mb-2">
+                                        <i class="bi bi-calendar-event me-1"></i>Validade: ${material.expiration_date}
+                                    </p>
+                                ` : ''}
+                                ${material.description ? `
+                                    <p class="card-text small text-muted">
+                                        ${material.description.substring(0, 100)}${material.description.length > 100 ? '...' : ''}
+                                    </p>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            labIndex++;
+        }
+        
+        html += '</div>';
+        
+        storageMaterialsContent.innerHTML = html;
+    }
+    
+    function showStorageError(message) {
+        storageMaterialsContent.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                ${message}
+            </div>
+        `;
+    }
+});
+</script>
+
 {% endblock %}

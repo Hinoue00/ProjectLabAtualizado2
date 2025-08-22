@@ -193,6 +193,15 @@
         color: #dc3545;
         font-weight: 600;
     }
+
+    .alert-expiration {
+        border-left: 4px solid #ffc107;
+    }
+    
+    .alert-expiration-title {
+        color: #ffc107;
+        font-weight: 600;
+    }
     
     /* Animações */
     @keyframes pulse {

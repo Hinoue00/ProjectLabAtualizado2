@@ -273,3 +273,123 @@ Para mais informações, entre em contato com o laboratório ou crie uma nova so
         """.strip()
         
         WhatsAppNotificationService.send_notification(professor.phone_number, message)
+    
+    @staticmethod
+    def notify_professor_message(comment):
+        """
+        Notifica técnicos quando um professor envia uma mensagem
+        
+        Args:
+            comment: O comentário/mensagem do professor
+        """
+        if not getattr(settings, 'WHATSAPP_ENABLED', False):
+            return
+        
+        # Buscar técnicos para notificar (filtrar por departamento do laboratório)
+        from accounts.models import User
+        department = comment.schedule_request.laboratory.department.lower()
+        
+        technicians = User.objects.filter(
+            user_type='technician', 
+            is_approved=True
+        )
+        
+        # Filtrar por departamento se o usuário tiver departamento configurado
+        filtered_technicians = [tech for tech in technicians if 
+                                tech.lab_department and tech.lab_department.lower() in department]
+        
+        # Se não houver técnicos do departamento específico, notificar todos
+        if not filtered_technicians:
+            filtered_technicians = technicians
+        
+        # Preparar a mensagem
+        message = f"""
+*Nova Mensagem no LabConnect*
+
+O professor {comment.author.get_full_name()} enviou uma mensagem sobre a solicitação de agendamento:
+
+*Laboratório:* {comment.schedule_request.laboratory.name}
+*Data:* {comment.schedule_request.scheduled_date.strftime('%d/%m/%Y')}
+*Disciplina:* {comment.schedule_request.subject}
+
+*Mensagem:*
+{comment.message}
+
+Acesse o sistema LabConnect para responder.
+        """.strip()
+        
+        # Enviar para cada técnico filtrado
+        for technician in filtered_technicians:
+            if technician.phone_number:
+                WhatsAppNotificationService.send_notification(technician.phone_number, message)
+    
+    @staticmethod
+    def notify_technician_message(comment):
+        """
+        Notifica o professor quando um técnico envia uma mensagem
+        
+        Args:
+            comment: O comentário/mensagem do técnico
+        """
+        if not getattr(settings, 'WHATSAPP_ENABLED', False):
+            return
+        
+        professor = comment.schedule_request.professor
+        if not professor.phone_number:
+            return
+        
+        message = f"""
+*Nova Mensagem no LabConnect*
+
+O técnico enviou uma mensagem sobre sua solicitação de agendamento:
+
+*Laboratório:* {comment.schedule_request.laboratory.name}
+*Data:* {comment.schedule_request.scheduled_date.strftime('%d/%m/%Y')}
+*Disciplina:* {comment.schedule_request.subject}
+
+*Mensagem:*
+{comment.message}
+
+Acesse o sistema LabConnect para ver mais detalhes.
+        """.strip()
+        
+        WhatsAppNotificationService.send_notification(professor.phone_number, message)
+    
+    @staticmethod
+    def notify_exception_schedule(schedule_request):
+        """
+        Notifica o professor quando um técnico cria um agendamento de exceção para ele
+        
+        Args:
+            schedule_request: O agendamento de exceção criado
+        """
+        if not getattr(settings, 'WHATSAPP_ENABLED', False):
+            return
+        
+        professor = schedule_request.professor
+        if not professor.phone_number:
+            return
+        
+        technician_name = schedule_request.created_by_technician.get_full_name() if schedule_request.created_by_technician else "Técnico"
+        
+        message = f"""
+*🚨 Agendamento de Exceção Criado - LabConnect*
+
+O técnico {technician_name} criou um agendamento de exceção para você:
+
+*Laboratório:* {schedule_request.laboratory.name}
+*Data:* {schedule_request.scheduled_date.strftime('%d/%m/%Y')}
+*Horário:* {schedule_request.start_time.strftime('%H:%M')} - {schedule_request.end_time.strftime('%H:%M')}
+*Disciplina:* {schedule_request.subject}
+
+*⚠️ Motivo da Exceção:*
+{schedule_request.exception_reason}
+
+*Status:* ✅ Aprovado automaticamente
+
+Este agendamento foi criado fora dos horários regulares. Entre em contato com o técnico se tiver dúvidas.
+
+Acesse o sistema LabConnect para mais detalhes.
+        """.strip()
+        
+        WhatsAppNotificationService.send_notification(professor.phone_number, message)

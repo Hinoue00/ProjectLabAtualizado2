@@ -26,4 +26,6 @@ urlpatterns = [
     path('api/mark-notifications-read/', views.mark_all_notifications_read, name='mark_notifications_read'),
     path('notifications/', views.all_notifications, name='all_notifications'),
     path('technician-edit/<int:pk>/', views.technician_edit_schedule, name='technician_edit_schedule'),
+    path('create-exception/', views.create_exception_schedule, name='create_exception_schedule'),
+    path('api/storage-materials/', views.storage_materials_api, name='storage_materials_api'),
 ]

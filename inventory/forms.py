@@ -10,14 +10,16 @@ docling_service = DoclingService() if getattr(settings, 'DOCLING_ENABLED', False
 class MaterialForm(forms.ModelForm):
     class Meta:
         model = Material
-        fields = ['name', 'category', 'description', 'quantity', 'minimum_stock', 'laboratory']
+        fields = ['name', 'category', 'description', 'quantity', 'minimum_stock', 'laboratory', 'expiration_date', 'batch_number']
         labels = {
             'name': 'Nome do Material',
             'category': 'Categoria',
             'description': 'Descrição',
             'quantity': 'Quantidade',
             'minimum_stock': 'Estoque Mínimo',
-            'laboratory': 'Laboratório'
+            'laboratory': 'Laboratório',
+            'expiration_date': 'Data de Validade',
+            'batch_number': 'Número do Lote'
         }
         help_texts = {
             'name': 'Digite o nome do material (ex: Microscópio, Papel A4, etc.)',
@@ -25,7 +27,9 @@ class MaterialForm(forms.ModelForm):
             'description': 'Descrição detalhada do material (opcional)',
             'quantity': 'Quantidade atual disponível em estoque',
             'minimum_stock': 'Quantidade mínima antes de emitir alertas de estoque baixo',
-            'laboratory': 'Laboratório onde o material está localizado'
+            'laboratory': 'Laboratório onde o material está localizado',
+            'expiration_date': 'Data de validade (opcional)',
+            'batch_number': 'Número do lote do produto (opcional)'
         }
         widgets = {
             'name': forms.TextInput(attrs={
@@ -47,6 +51,14 @@ class MaterialForm(forms.ModelForm):
                 'min': 1,
                 'placeholder': '1'
             }),
+            'expiration_date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'batch_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ex: LOTE-2024-001 (opcional)'
+            }),
         }
         
     def __init__(self, *args, **kwargs):
@@ -66,6 +78,20 @@ class MaterialForm(forms.ModelForm):
         # Adicionar texto de ajuda personalizado
         self.fields['category'].empty_label = "Selecione uma categoria"
         self.fields['laboratory'].empty_label = "Selecione um laboratório"
+
+    def clean(self):
+        cleaned_data = super().clean()
+        expiration_date = cleaned_data.get('expiration_date')
+        
+        # Validar se a data de validade não é no passado (se informada)
+        if expiration_date:
+            from django.utils import timezone
+            if expiration_date < timezone.now().date():
+                raise forms.ValidationError({
+                    'expiration_date': 'A data de validade não pode ser no passado.'
+                })
+
+        return cleaned_data
 
 class MaterialCategoryForm(forms.ModelForm):
     class Meta:

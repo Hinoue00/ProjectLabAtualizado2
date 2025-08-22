@@ -37,6 +37,19 @@ class ScheduleRequest(models.Model):
         limit_choices_to={'user_type': 'technician'}
     )
     rejection_reason = models.TextField(blank=True, null=True)
+    
+    # Campos para agendamentos de exceção
+    is_exception = models.BooleanField(default=False, verbose_name="Agendamento de Exceção")
+    exception_reason = models.TextField(blank=True, null=True, verbose_name="Motivo da Exceção")
+    created_by_technician = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='created_exception_requests',
+        limit_choices_to={'user_type': 'technician'},
+        verbose_name="Criado pelo Técnico"
+    )
 
     guide_file = models.FileField(
         upload_to='lab_guides/',
@@ -155,10 +168,15 @@ class ScheduleRequest(models.Model):
         days_remaining = (deadline - today).days
         return max(0, days_remaining)  # Não retornar valores negativos
     
-    def can_be_requested(self):
+    def can_be_requested(self, user=None, is_exception=False):
         """Verifica se a solicitação atende aos requisitos (dia e semana)"""
         today = timezone.now().date()
         
+        # Se for agendamento de exceção e usuário é técnico, permitir qualquer dia/horário
+        if is_exception and user and user.user_type == 'technician':
+            return True, ""
+        
+        # Regras normais para professores
         # Só pode solicitar às segundas e terças
         if today.weekday() not in [0, 1]:  # 0=segunda, 1=terça
             return False, "Agendamentos só podem ser solicitados às segundas e terças-feiras."

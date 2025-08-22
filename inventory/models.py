@@ -36,6 +36,11 @@ class Material(models.Model):
     laboratory = models.ForeignKey(Laboratory, on_delete=models.CASCADE, related_name='materials')
     analyzed_data = models.JSONField(null=True, blank=True, help_text="Dados da análise por NLP")
     suggested_category = models.CharField(max_length=50, blank=True, help_text="Categoria sugerida pelo sistema")
+    
+    # Campos de validade (opcionais para todos os tipos)
+    expiration_date = models.DateField(null=True, blank=True, verbose_name="Data de Validade", help_text="Data de vencimento do material (opcional)")
+    batch_number = models.CharField(max_length=50, blank=True, verbose_name="Número do Lote", help_text="Identificação do lote (opcional)")
+    
     created_at = models.DateTimeField(auto_now_add=True, null=True)  # Adicionar também um campo para criação
     updated_at = models.DateTimeField(auto_now=True, null=True)  # Campo que está faltando
 
@@ -52,6 +57,49 @@ class Material(models.Model):
         if self.minimum_stock == 0:
             return 100
         return min((self.quantity / self.minimum_stock) * 100, 100)
+    
+    @property
+    def is_expired(self):
+        """Verifica se o material está vencido"""
+        if not self.expiration_date:
+            return False
+        from django.utils import timezone
+        return self.expiration_date < timezone.now().date()
+    
+    @property
+    def days_to_expiration(self):
+        """Retorna quantos dias restam até o vencimento"""
+        if not self.expiration_date:
+            return None
+        from django.utils import timezone
+        delta = self.expiration_date - timezone.now().date()
+        return delta.days
+    
+    @property
+    def is_near_expiration(self):
+        """Verifica se o material está próximo do vencimento (3 meses)"""
+        if not self.expiration_date:
+            return False
+        days_remaining = self.days_to_expiration
+        return days_remaining is not None and 0 <= days_remaining <= 90  # 3 meses = ~90 dias
+    
+    @property
+    def expiration_status(self):
+        """Retorna status da validade: 'expired', 'near_expiration', 'valid', 'no_expiration'"""
+        if not self.expiration_date:
+            return 'no_expiration'
+        
+        if self.is_expired:
+            return 'expired'
+        elif self.is_near_expiration:
+            return 'near_expiration'
+        else:
+            return 'valid'
+    
+    @property
+    def requires_expiration_date(self):
+        """Verifica se o material requer data de validade"""
+        return self.category.material_type in ['consumable', 'perishable']
     
     
     def save(self, *args, **kwargs):

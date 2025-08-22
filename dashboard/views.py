@@ -99,7 +99,7 @@ def technician_dashboard(request):
                 'end_of_week': end_of_week.strftime('%Y-%m-%d'),      # 🔧 Formato esperado pelo JS
             }
             
-            logging.getLogger('dashboard').info(f"AJAX response sent successfully - tamanho HTML: {len(response_data.get('calendar_html', ''))}")
+            logging.getLogger('dashboard').info(f"AJAX response sent successfully - tamanho HTML: {len(response_data.get('calendar_html', ''))}, department_filter: {department_filter}")
             
             # Criar resposta com headers específicos para evitar truncamento
             response = JsonResponse(response_data, json_dumps_params={'ensure_ascii': False})
@@ -132,11 +132,24 @@ def technician_dashboard(request):
     # Como is_low_stock é uma @property, precisamos usar query diferente
     from django.db.models import F
     
-    # Buscar materiais onde quantity < minimum_stock
-    materials_in_alert = Material.objects.filter(
-        quantity__lt=F('minimum_stock')
-    )
+    # Buscar materiais onde quantity < minimum_stock - aplicar filtro de departamento
+    materials_in_alert_query = Material.objects.filter(quantity__lt=F('minimum_stock'))
+    materials_near_expiration_query = Material.objects.filter(
+        expiration_date__isnull=False,
+        expiration_date__lte=today + timedelta(days=90),
+        expiration_date__gte=today
+    ).select_related('category', 'laboratory')
+    
+    # Aplicar filtro de departamento se necessário
+    if department_filter != 'all':
+        filtered_labs = get_laboratories_by_department(department_filter)
+        materials_in_alert_query = materials_in_alert_query.filter(laboratory__in=filtered_labs)
+        materials_near_expiration_query = materials_near_expiration_query.filter(laboratory__in=filtered_labs)
+    
+    materials_in_alert = materials_in_alert_query
     materials_in_alert_count = materials_in_alert.count()
+    materials_near_expiration = materials_near_expiration_query
+    materials_near_expiration_count = materials_near_expiration.count()
     
     # Active professors count
     active_professors = User.objects.filter(
@@ -162,8 +175,14 @@ def technician_dashboard(request):
     else:
         percentage_change = 100 if current_week_count > 0 else 0
     
-    # Materials stats
-    materials_stats = Material.objects.aggregate(
+    # Materials stats - aplicar filtro de departamento se necessário
+    materials_query = Material.objects.all()
+    if department_filter != 'all':
+        filtered_labs = get_laboratories_by_department(department_filter)
+        materials_query = materials_query.filter(laboratory__in=filtered_labs)
+        logging.getLogger('dashboard').info(f"Filtered materials by department {department_filter}: {materials_query.count()} materials found")
+    
+    materials_stats = materials_query.aggregate(
         total_materials=Count('id'),
         total_laboratories=Count('laboratory', distinct=True)
     )
@@ -206,6 +225,8 @@ def technician_dashboard(request):
         'pending_requests': pending_approvals,  # Para compatibilidade com template
         'materials_in_alert': materials_in_alert,
         'materials_in_alert_count': materials_in_alert_count,
+        'materials_near_expiration': materials_near_expiration,
+        'materials_near_expiration_count': materials_near_expiration_count,
         'active_professors': active_professors,
         'active_professors_count': active_professors_count,
         'current_count': current_week_count,

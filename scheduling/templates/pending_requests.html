@@ -128,10 +128,18 @@
                                 <small class="text-muted">{{ request.professor.email }}</small>
                             </div>
                         </div>
-                        <span class="badge bg-warning">
-                            <i class="bi bi-clock me-1"></i>
-                            {{ request.request_date|timesince }} atrás
-                        </span>
+                        <div class="d-flex flex-column align-items-end gap-2">
+                            {% if request.is_exception %}
+                            <span class="badge bg-danger">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                EXCEÇÃO
+                            </span>
+                            {% endif %}
+                            <span class="badge bg-warning">
+                                <i class="bi bi-clock me-1"></i>
+                                {{ request.request_date|timesince }} atrás
+                            </span>
+                        </div>
                     </div>
 
                     <div class="request-info">

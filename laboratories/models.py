@@ -43,6 +43,13 @@ class Laboratory(models.Model):
     description = models.TextField(blank=True, null=True, verbose_name="Descrição")
     is_active = models.BooleanField(default=True, verbose_name="Ativo")
     
+    # Campo para indicar se é um laboratório de estoque/armazenamento
+    is_storage = models.BooleanField(
+        default=False, 
+        verbose_name="Estoque/Armazenamento", 
+        help_text="Marque se este laboratório é usado apenas para armazenar materiais (não disponível para agendamento)"
+    )
+    
     # 🔧 MANTER CAMPO ANTIGO (transitório)
     DEPARTMENT_CHOICES = (
         ('exatas', 'Exatas'),
@@ -99,7 +106,8 @@ class Laboratory(models.Model):
     
     def __str__(self):
         dept_names = self.get_departments_display()
-        return f"{self.name} ({dept_names})"
+        storage_suffix = " [ESTOQUE]" if self.is_storage else ""
+        return f"{self.name} ({dept_names}){storage_suffix}"
     
     def get_departments_display(self):
         """Retorna string com nomes dos departamentos"""

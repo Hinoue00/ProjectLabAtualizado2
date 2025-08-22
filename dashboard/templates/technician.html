@@ -59,34 +59,41 @@
         </div>
         
         <div class="col-md-3 mb-4">
-            <div class="card stats-card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="stats-icon">
-                            <i class="bi bi-exclamation-triangle"></i>
+            <a href="{% url 'material_list' %}" class="text-decoration-none">
+                <div class="card stats-card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div class="stats-icon">
+                                <i class="bi bi-exclamation-triangle"></i>
+                            </div>
+                            {% if materials_in_alert.count > 0 %}
+                                <span class="badge bg-danger rounded-pill">Alerta</span>
+                            {% endif %}
                         </div>
-                        {% if materials_in_alert.count > 0 %}
-                            <span class="badge bg-danger rounded-pill">Alerta</span>
-                        {% endif %}
+                        <h3 class="stats-value">{{ materials_in_alert.count }}</h3>
+                        <p class="stats-label">Materiais estoque baixo</p>
                     </div>
-                    <h3 class="stats-value">{{ materials_in_alert.count }}</h3>
-                    <p class="stats-label">Materiais em alerta</p>
                 </div>
-            </div>
+            </a>
         </div>
         
         <div class="col-md-3 mb-4">
-            <div class="card stats-card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="stats-icon">
-                            <i class="bi bi-people"></i>
+            <a href="{% url 'material_list' %}" class="text-decoration-none">
+                <div class="card stats-card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div class="stats-icon">
+                                <i class="bi bi-calendar-x"></i>
+                            </div>
+                            {% if materials_near_expiration.count > 0 %}
+                                <span class="badge bg-warning rounded-pill">Validade</span>
+                            {% endif %}
                         </div>
+                        <h3 class="stats-value">{{ materials_near_expiration.count }}</h3>
+                        <p class="stats-label">Materiais próx. vencimento</p>
                     </div>
-                    <h3 class="stats-value">{{ active_professors.count }}</h3>
-                    <p class="stats-label">Professores ativos</p>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 
@@ -242,10 +249,30 @@
         <div class="col-lg-4 mb-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-transparent">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-hourglass-split"></i>
-                        Solicitações Pendentes
-                    </h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-hourglass-split"></i>
+                            Solicitações Pendentes
+                        </h5>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-plus-circle"></i> Ações
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'pending_requests' %}">
+                                        <i class="bi bi-list-task"></i> Ver Todas
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-warning" href="{% url 'create_exception_schedule' %}">
+                                        <i class="bi bi-exclamation-triangle"></i> Criar Agendamento de Exceção
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="card-body p-0">

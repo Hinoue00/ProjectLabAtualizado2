@@ -233,6 +233,34 @@
     border-left-color: #6c757d;
 }
 
+/* Estilos específicos para agendamentos de exceção */
+.calendar-event.is-exception {
+    background: linear-gradient(135deg, #fff3cd 0%, #fff8db 100%);
+    border-left: 4px solid #fd7e14;
+    border-radius: 0 8px 8px 0;
+    position: relative;
+    animation: exception-pulse 2s infinite;
+}
+
+.calendar-event.is-exception::before {
+    content: '⚠️';
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    font-size: 0.7rem;
+}
+
+.calendar-event.is-exception:hover {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(253, 126, 20, 0.3);
+}
+
+@keyframes exception-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(253, 126, 20, 0.4); }
+    50% { box-shadow: 0 0 0 4px rgba(253, 126, 20, 0.1); }
+}
+
 /* === VISUALIZAÇÃO MOBILE === */
 .calendar-mobile {
     display: block;
@@ -365,6 +393,29 @@
 
 .mobile-event-card.status-cancelled::before {
     background: #6c757d;
+}
+
+.mobile-event-card.is-exception::before {
+    background: #fd7e14;
+}
+
+.mobile-event-card.is-exception {
+    background: linear-gradient(135deg, #fff3cd 0%, #fff8db 100%);
+    border: 2px solid #fd7e14;
+    position: relative;
+}
+
+.mobile-event-card.is-exception::after {
+    content: '⚠️ EXCEÇÃO';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #fd7e14;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: bold;
 }
 
 .mobile-event-card:hover {

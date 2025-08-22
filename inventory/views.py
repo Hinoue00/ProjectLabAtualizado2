@@ -89,6 +89,16 @@ def material_list(request):
     from django.db.models import F
     materials_in_alert = Material.objects.filter(quantity__lt=F('minimum_stock'))
     
+    # Materiais próximos do vencimento (3 meses)
+    from django.utils import timezone
+    from datetime import timedelta
+    three_months_from_now = timezone.now().date() + timedelta(days=90)
+    materials_near_expiration = Material.objects.filter(
+        expiration_date__isnull=False,
+        expiration_date__lte=three_months_from_now,
+        expiration_date__gte=timezone.now().date()
+    ).select_related('category', 'laboratory')
+    
     context = {
         'materials': page_obj,
         'search_query': search_query,
@@ -96,6 +106,7 @@ def material_list(request):
         'laboratory_filter': laboratory_filter,
         'stock_status': stock_status,
         'materials_in_alert': materials_in_alert,
+        'materials_near_expiration': materials_near_expiration,
         **filter_data,
         'page_obj': page_obj,
         'paginator': paginator,

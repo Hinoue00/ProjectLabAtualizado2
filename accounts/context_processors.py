@@ -109,20 +109,37 @@ def sidebar_context(request):
     
     context['notifications'] = notifications[:10]  # Limit to 10 most recent
     
-    # Count only unread messages for the notification badge
+    # Count total notifications for the badge (unread messages + pending items)
     if request.user.user_type == 'technician':
-        unread_count = ScheduleRequestComment.objects.filter(
+        # Count unread messages from professors
+        unread_messages = ScheduleRequestComment.objects.filter(
             schedule_request__status='pending',
             is_read=False
         ).exclude(author=request.user).count()
+        
+        # Add pending requests and pending users to the count
+        total_count = unread_messages + pending_requests + pending_users
+        
     elif request.user.user_type == 'professor':
-        unread_count = ScheduleRequestComment.objects.filter(
+        # Count unread messages from technicians
+        unread_messages = ScheduleRequestComment.objects.filter(
             schedule_request__professor=request.user,
             is_read=False
         ).exclude(author=request.user).count()
+        
+        # Count recent status updates (approved/rejected) not yet acknowledged
+        recent_status_updates = ScheduleRequest.objects.filter(
+            professor=request.user,
+            status__in=['approved', 'rejected'],
+            review_date__isnull=False,
+            review_date__gte=timezone.now() - timezone.timedelta(days=7)  # Last 7 days
+        ).count()
+        
+        total_count = unread_messages + recent_status_updates
+        
     else:
-        unread_count = 0
+        total_count = 0
     
-    context['notifications_count'] = unread_count
+    context['notifications_count'] = total_count
     
     return context

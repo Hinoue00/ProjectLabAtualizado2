@@ -159,6 +159,39 @@
                             <div class="invalid-feedback">{{ form.laboratory.errors.0 }}</div>
                             {% endif %}
                         </div>
+
+                        <!-- Campos de Validade (Opcionais) -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.expiration_date.id_for_label }}" class="form-label">
+                                    <i class="bi bi-calendar-event me-2 text-info"></i>Data de Validade
+                                </label>
+                                <input type="date" 
+                                       name="{{ form.expiration_date.name }}" 
+                                       id="{{ form.expiration_date.id_for_label }}" 
+                                       class="form-control {% if form.expiration_date.errors %}is-invalid{% endif %}" 
+                                       value="{{ form.expiration_date.value|default:'' }}">
+                                <div class="form-text">Data de vencimento do material (opcional)</div>
+                                {% if form.expiration_date.errors %}
+                                <div class="invalid-feedback">{{ form.expiration_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.batch_number.id_for_label }}" class="form-label">
+                                    <i class="bi bi-hash me-2 text-info"></i>Número do Lote
+                                </label>
+                                <input type="text" 
+                                       name="{{ form.batch_number.name }}" 
+                                       id="{{ form.batch_number.id_for_label }}" 
+                                       class="form-control {% if form.batch_number.errors %}is-invalid{% endif %}" 
+                                       value="{{ form.batch_number.value|default:'' }}" 
+                                       placeholder="Ex: LOTE-2024-001 (opcional)">
+                                <div class="form-text">Número do lote do produto (opcional)</div>
+                                {% if form.batch_number.errors %}
+                                <div class="invalid-feedback">{{ form.batch_number.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="form-footer">
@@ -205,6 +238,15 @@
                     <p>
                         Associe materiais aos laboratórios onde são utilizados ou armazenados, 
                         permitindo um controle mais eficiente do inventário por localização.
+                    </p>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-title">Validade e Lote</div>
+                    <p>
+                        Adicione informações de validade e lote quando aplicável. Útil para:
+                        reagentes químicos, medicamentos, materiais biológicos e outros 
+                        produtos com prazo de validade.
                     </p>
                 </div>
                 

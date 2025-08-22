@@ -52,11 +52,33 @@
     </div>
     
     <div class="col-md-4">
+        <div class="card border-warning h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-calendar-x display-4 text-warning mb-3"></i>
+                <h5 class="card-title">Próx. Vencimento</h5>
+                <p class="card-text display-6 text-warning">{{ near_expiration_materials }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
         <div class="card border-primary h-100">
             <div class="card-body text-center">
                 <i class="bi bi-check-circle display-4 text-primary mb-3"></i>
                 <h5 class="card-title">Estoque Normal</h5>
                 <p class="card-text display-6">{{ total_materials|add:"-"|add:low_stock_materials }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card border-dark h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-x-circle display-4 text-dark mb-3"></i>
+                <h5 class="card-title">Vencidos</h5>
+                <p class="card-text display-6 text-dark">{{ expired_materials }}</p>
             </div>
         </div>
     </div>
@@ -119,6 +141,7 @@
                         <th class="text-center">Quantidade</th>
                         <th class="text-center">Estoque Mín.</th>
                         <th>Status</th>
+                        <th>Validade</th>
                         <th>Descrição</th>
                     </tr>
                 </thead>
@@ -143,6 +166,28 @@
                                 <span class="badge bg-success">
                                     <i class="bi bi-check-circle"></i> Normal
                                 </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if material.expiration_date %}
+                                {% if material.is_expired %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-x-circle"></i> Vencido
+                                    </span>
+                                    <br><small>{{ material.expiration_date|date:"d/m/Y" }}</small>
+                                {% elif material.is_near_expiration %}
+                                    <span class="badge bg-warning">
+                                        <i class="bi bi-exclamation-triangle"></i> {{ material.days_to_expiration }} dias
+                                    </span>
+                                    <br><small>{{ material.expiration_date|date:"d/m/Y" }}</small>
+                                {% else %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Válido
+                                    </span>
+                                    <br><small>{{ material.expiration_date|date:"d/m/Y" }}</small>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">N/A</span>
                             {% endif %}
                         </td>
                         <td>{{ material.description|truncatechars:60 }}</td>
@@ -268,6 +313,22 @@
     <i class="bi bi-exclamation-triangle"></i>
     <strong>Atenção!</strong> Existem {{ low_stock_materials }} material{% if low_stock_materials > 1 %}is{% endif %} 
     com estoque baixo que precisa{% if low_stock_materials == 1 %}m{% endif %} de reposição.
+</div>
+{% endif %}
+
+{% if near_expiration_materials > 0 %}
+<div class="alert alert-warning" role="alert">
+    <i class="bi bi-calendar-x"></i>
+    <strong>Alerta de Validade!</strong> Existem {{ near_expiration_materials }} material{% if near_expiration_materials > 1 %}is{% endif %} 
+    que vence{% if near_expiration_materials == 1 %}m{% endif %} nos próximos 3 meses.
+</div>
+{% endif %}
+
+{% if expired_materials > 0 %}
+<div class="alert alert-dark" role="alert">
+    <i class="bi bi-x-circle"></i>
+    <strong>Materiais Vencidos!</strong> Existem {{ expired_materials }} material{% if expired_materials > 1 %}is{% endif %} 
+    já vencido{% if expired_materials > 1 %}s{% endif %} que precisam ser substituídos.
 </div>
 {% endif %}
 

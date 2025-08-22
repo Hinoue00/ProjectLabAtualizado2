@@ -144,12 +144,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Variáveis globais
     let currentDate = new Date();
     let selectedDate = new Date();
-    let events = {{ events|safe|default:"[]" }};
+    let events = {{ events_json|safe|default:"[]" }};
     let selectedLab = 'all';
     let selectedDepartment = 'all';
     let selectedStatus = 'all';
     
-    console.log('Eventos carregados:', events.length);
+    console.log('🗓️ CALENDAR DEBUG:');
+    console.log('- Eventos carregados:', events.length);
+    console.log('- Tipo da variável events:', typeof events);
+    console.log('- Array de eventos:', events);
+    
+    if (events.length === 0) {
+        console.log('⚠️ Nenhum evento encontrado - calendário pode aparecer vazio');
+    }
     
     // Elementos DOM
     const monthYearElement = document.getElementById('calendar-month-year');
@@ -299,10 +306,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Atualizar calendário
     function updateCalendar() {
+        console.log('🔄 Atualizando calendário...');
         updateMonthYear();
         renderDesktopCalendar();
         renderMobileCalendar();
         renderSelectedDayEvents();
+        console.log('✅ Calendário atualizado');
     }
     
     function updateMonthYear() {
@@ -313,7 +322,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Renderizar calendário desktop
     function renderDesktopCalendar() {
-        if (!calendarGrid) return;
+        console.log('🖥️ Renderizando calendário desktop...');
+        console.log('📊 Estado do calendarGrid:', {
+            elemento: calendarGrid,
+            innerHTML: calendarGrid ? calendarGrid.innerHTML.substring(0, 100) : 'null',
+            childCount: calendarGrid ? calendarGrid.children.length : 0
+        });
+        
+        if (!calendarGrid) {
+            console.error('❌ Elemento calendarGrid não encontrado!');
+            return;
+        }
         
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
@@ -546,12 +565,36 @@ function renderSelectedDayEvents() {
         modal.show();
     }
 
-    // Inicialização
+    // Inicialização com debug detalhado
+    console.log('🚀 Iniciando calendário...');
+    console.log('📅 Verificando elementos do DOM:', {
+        calendarGrid: document.querySelector('.calendar-grid'),
+        calendarGridById: document.getElementById('calendar-grid'),
+        mobileCalendar: document.querySelector('.calendar-mobile'),
+        desktopCalendar: document.querySelector('.calendar-desktop'),
+        filters: document.querySelector('.calendar-filters')
+    });
+    
+    console.log('📊 Dados disponíveis:', {
+        eventsCount: events.length,
+        currentDate: currentDate,
+        windowWidth: window.innerWidth
+    });
+    
+    // Verificar CSS
+    const gridElement = document.getElementById('calendar-grid');
+    if (gridElement) {
+        const computedStyle = window.getComputedStyle(gridElement);
+        console.log('🎨 CSS do calendar-grid:', {
+            display: computedStyle.display,
+            gridTemplateColumns: computedStyle.gridTemplateColumns,
+            visibility: computedStyle.visibility
+        });
+    }
+    
     updateLabFilter();
-    updateMonthYear();
-    renderDesktopCalendar();
-    renderMobileCalendar();
-    renderSelectedDayEvents();
+    updateCalendar(); // Isso já chama todas as funções de render
+    console.log('✅ Calendário inicializado');
 
 }); // Fecha o DOMContentLoaded
 </script>

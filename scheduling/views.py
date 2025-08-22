@@ -3,12 +3,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.utils import timezone
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from accounts.models import User
 from accounts.views import is_technician, is_professor
 from .models import Laboratory, ScheduleRequest, DraftScheduleRequest, FileAttachment, ScheduleRequestComment
 from laboratories.models import Department
-from .forms import ScheduleRequestForm
+from .forms import ScheduleRequestForm, ExceptionScheduleRequestForm
 from django.conf import settings
 from django.urls import reverse
 from django.http import JsonResponse
@@ -72,6 +72,7 @@ def schedule_calendar(request):
             'status': schedule.status,  # pending, approved, rejected
             'description': schedule.description or '',
             'number_of_students': schedule.number_of_students or 0,  # CAMPO CORRETO
+            'is_exception': schedule.is_exception,  # CAMPO PARA AGENDAMENTOS DE EXCEÇÃO
         })
     
     # Organiza as datas para o calendário (manter compatibilidade)
@@ -104,11 +105,16 @@ def schedule_calendar(request):
     # Obter mês e ano atual para o cabeçalho
     current_month_year = today.strftime('%B %Y').title()
     
+    # Converter eventos para JSON de forma segura
+    import json
+    events_json = json.dumps(events, ensure_ascii=False)
+    
     context = {
         'calendar_weeks': calendar_weeks,
         'laboratories': laboratories,
         'departments': departments,
-        'events': events,  # CRÍTICO: Esta era a variável que estava faltando!
+        'events': events,
+        'events_json': events_json,  # JSON seguro para JavaScript
         'is_scheduling_day': is_scheduling_day,
         'today': today,
         'current_month_year': current_month_year,
@@ -449,11 +455,25 @@ def schedule_request_detail(request, pk):
     if request.method == 'POST' and 'add_comment' in request.POST:
         comment_text = request.POST.get('comment_message', '').strip()
         if comment_text:
-            ScheduleRequestComment.objects.create(
+            comment = ScheduleRequestComment.objects.create(
                 schedule_request=schedule_request,
                 author=request.user,
                 message=comment_text
             )
+            
+            # Enviar notificação WhatsApp baseada no tipo de usuário
+            try:
+                if request.user.user_type == 'professor':
+                    # Professor enviou mensagem -> notificar técnicos
+                    WhatsAppNotificationService.notify_professor_message(comment)
+                elif request.user.user_type == 'technician':
+                    # Técnico enviou mensagem -> notificar professor
+                    WhatsAppNotificationService.notify_technician_message(comment)
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Erro ao enviar notificação WhatsApp para mensagem: {str(e)}")
+            
             messages.success(request, 'Comentário adicionado com sucesso!')
             return redirect('schedule_request_detail', pk=pk)
         else:
@@ -849,6 +869,7 @@ def calendar_data_api(request):
             'status': schedule.status,
             'description': schedule.description or '',
             'number_of_students': schedule.number_of_students or 0,  # CAMPO CORRETO
+            'is_exception': schedule.is_exception,  # CAMPO PARA AGENDAMENTOS DE EXCEÇÃO
         })
     
     # Organizar dados por semanas e dias
@@ -1086,6 +1107,19 @@ def add_comment_to_request(request, pk):
         author=request.user,
         message=comment_text
     )
+    
+    # Enviar notificação WhatsApp baseada no tipo de usuário
+    try:
+        if request.user.user_type == 'professor':
+            # Professor enviou mensagem -> notificar técnicos
+            WhatsAppNotificationService.notify_professor_message(comment)
+        elif request.user.user_type == 'technician':
+            # Técnico enviou mensagem -> notificar professor
+            WhatsAppNotificationService.notify_technician_message(comment)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Erro ao enviar notificação WhatsApp para mensagem: {str(e)}")
     
     return JsonResponse({
         'success': True,
@@ -1395,3 +1429,110 @@ def technician_edit_schedule(request, pk):
     }
     
     return render(request, 'scheduling/technician_edit_schedule.html', context)
+
+
+@login_required
+@user_passes_test(is_technician)
+def create_exception_schedule(request):
+    """
+    View para técnicos criarem agendamentos de exceção para professores
+    em dias/horários não liberados normalmente
+    """
+    if request.method == 'POST':
+        form = ExceptionScheduleRequestForm(request.POST, request.FILES, technician=request.user)
+        if form.is_valid():
+            try:
+                # Salvar o agendamento de exceção
+                schedule_request = form.save(commit=False)
+                
+                # Definir horários baseados no período selecionado
+                period = form.cleaned_data.get('period')
+                if period == 'matutino':
+                    schedule_request.start_time = time(7, 0)  # 7:00
+                    schedule_request.end_time = time(12, 0)   # 12:00
+                elif period == 'noturno':
+                    schedule_request.start_time = time(19, 0)  # 19:00
+                    schedule_request.end_time = time(23, 0)    # 23:00
+                
+                # Marcar como agendamento de exceção (caso o form não tenha feito)
+                schedule_request.is_exception = True
+                schedule_request.created_by_technician = request.user
+                schedule_request.status = 'approved'  # Exceções são automaticamente aprovadas
+                schedule_request.reviewed_by = request.user
+                schedule_request.review_date = timezone.now()
+                
+                schedule_request.save()
+                
+                # Enviar notificação WhatsApp para o professor
+                try:
+                    WhatsAppNotificationService.notify_exception_schedule(schedule_request)
+                except Exception as e:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.warning(f"Erro ao enviar notificação WhatsApp para agendamento de exceção: {str(e)}")
+                
+                messages.success(
+                    request, 
+                    f'Agendamento de exceção criado com sucesso para {schedule_request.professor.get_full_name()}! '
+                    f'O professor foi notificado sobre este agendamento excepcional.'
+                )
+                return redirect('pending_requests')
+                
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Erro ao criar agendamento de exceção: {str(e)}")
+                messages.error(request, 'Erro ao criar agendamento de exceção. Tente novamente.')
+    else:
+        form = ExceptionScheduleRequestForm(technician=request.user)
+    
+    # Obter departamentos para filtro
+    departments = Department.objects.filter(is_active=True).order_by('name')
+    
+    context = {
+        'form': form,
+        'departments': departments,
+        'title': 'Criar Agendamento de Exceção',
+        'is_exception': True,
+    }
+    
+    return render(request, 'scheduling/create_exception_schedule.html', context)
+
+
+@login_required
+@user_passes_test(is_professor)
+def storage_materials_api(request):
+    """API para buscar materiais disponíveis nos laboratórios de estoque"""
+    
+    # Buscar laboratórios de estoque ativos
+    storage_labs = Laboratory.objects.filter(is_active=True, is_storage=True)
+    
+    # Buscar materiais nesses laboratórios
+    materials = Material.objects.filter(
+        laboratory__in=storage_labs,
+        quantity__gt=0  # Apenas materiais com estoque disponível
+    ).select_related('category', 'laboratory').order_by('laboratory__name', 'name')
+    
+    # Organizar por laboratório
+    materials_by_lab = {}
+    for material in materials:
+        lab_name = material.laboratory.name
+        if lab_name not in materials_by_lab:
+            materials_by_lab[lab_name] = []
+        
+        materials_by_lab[lab_name].append({
+            'id': material.id,
+            'name': material.name,
+            'category': material.category.name if material.category else 'Sem categoria',
+            'quantity': material.quantity,
+            'description': material.description or '',
+            'expiration_date': material.expiration_date.strftime('%d/%m/%Y') if material.expiration_date else None,
+            'is_near_expiration': material.is_near_expiration if hasattr(material, 'is_near_expiration') else False,
+            'is_expired': material.is_expired if hasattr(material, 'is_expired') else False,
+        })
+    
+    return JsonResponse({
+        'success': True,
+        'storage_labs_count': storage_labs.count(),
+        'materials_by_lab': materials_by_lab
+    })

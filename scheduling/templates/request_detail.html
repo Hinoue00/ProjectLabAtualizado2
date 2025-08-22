@@ -243,6 +243,34 @@
             </span>
         </div>
 
+        <!-- Exception Alert (if applicable) -->
+        {% if schedule_request.is_exception %}
+        <div class="alert alert-warning border-0 mx-4 mt-3" style="background: linear-gradient(135deg, #fff3cd, #fff8db); border-left: 4px solid #ffc107 !important;">
+            <div class="d-flex align-items-start">
+                <i class="bi bi-exclamation-triangle-fill text-warning me-3" style="font-size: 1.5rem; margin-top: 0.125rem;"></i>
+                <div>
+                    <h6 class="alert-heading mb-2">
+                        <strong>🚨 Agendamento de Exceção</strong>
+                    </h6>
+                    <p class="mb-2">
+                        Este agendamento foi criado <strong>fora dos horários regulares</strong> 
+                        {% if schedule_request.created_by_technician %}
+                            pelo técnico <strong>{{ schedule_request.created_by_technician.get_full_name }}</strong>.
+                        {% endif %}
+                    </p>
+                    {% if schedule_request.exception_reason %}
+                    <div class="mt-2">
+                        <strong>Motivo da exceção:</strong>
+                        <div class="mt-1 p-2 bg-light rounded">
+                            {{ schedule_request.exception_reason }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Conflict Alert (if applicable) -->
         {% if conflicting_schedules %}
         <div class="conflict-alert">

@@ -34,7 +34,7 @@ class LaboratoryForm(forms.ModelForm):
         fields = [
             'name', 'location', 'capacity', 'departments',
             'responsible_technicians',  # 🔧 ADICIONADO!
-            'description', 'equipment', 'is_active'
+            'description', 'equipment', 'is_active', 'is_storage'
         ]
         widgets = {
             'name': forms.TextInput(attrs={
@@ -61,6 +61,9 @@ class LaboratoryForm(forms.ModelForm):
                 'placeholder': 'Liste os equipamentos disponíveis...'
             }),
             'is_active': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+            'is_storage': forms.CheckboxInput(attrs={
                 'class': 'form-check-input'
             })
         }

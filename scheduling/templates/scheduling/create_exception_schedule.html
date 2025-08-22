@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - LabConnect{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/create-request-optimized.css' %}">
+<style>
+.exception-warning {
+    background: linear-gradient(135deg, #ff7e5f, #feb47b);
+    color: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(255, 126, 95, 0.3);
+}
+
+.exception-warning h4 {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.exception-warning .icon {
+    font-size: 24px;
+}
+
+.form-section {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.form-section h5 {
+    color: #4a6fa5;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.required-field label:after {
+    content: " *";
+    color: #dc3545;
+}
+
+.btn-exception {
+    background: linear-gradient(135deg, #ff7e5f, #feb47b);
+    border: none;
+    color: white;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-exception:hover {
+    background: linear-gradient(135deg, #ff6a4a, #feb47b);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 126, 95, 0.4);
+    color: white;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Warning Banner -->
+            <div class="exception-warning">
+                <h4>
+                    <span class="icon">⚠️</span>
+                    Agendamento de Exceção
+                </h4>
+                <p><strong>Atenção:</strong> Você está criando um agendamento <strong>excepcional</strong> que não segue as regras normais de horários e dias permitidos.</p>
+                <ul class="mb-0">
+                    <li>Este agendamento pode ser feito em qualquer dia da semana e horário</li>
+                    <li>Será <strong>automaticamente aprovado</strong> quando criado</li>
+                    <li>O professor receberá notificação sobre esta exceção</li>
+                    <li>É necessário explicar o motivo da exceção</li>
+                </ul>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" id="exception-form">
+                {% csrf_token %}
+                
+                <!-- Seção: Professor e Motivo -->
+                <div class="form-section">
+                    <h5><i class="bi bi-person-check"></i> Professor e Motivo da Exceção</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6 required-field">
+                            <label for="{{ form.professor.id_for_label }}" class="form-label">{{ form.professor.label }}</label>
+                            {{ form.professor }}
+                            {% if form.professor.help_text %}
+                                <div class="form-text">{{ form.professor.help_text }}</div>
+                            {% endif %}
+                            {% if form.professor.errors %}
+                                <div class="text-danger">{{ form.professor.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12 required-field">
+                            <label for="{{ form.exception_reason.id_for_label }}" class="form-label">{{ form.exception_reason.label }}</label>
+                            {{ form.exception_reason }}
+                            {% if form.exception_reason.help_text %}
+                                <div class="form-text">{{ form.exception_reason.help_text }}</div>
+                            {% endif %}
+                            {% if form.exception_reason.errors %}
+                                <div class="text-danger">{{ form.exception_reason.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção: Laboratório e Disciplina -->
+                <div class="form-section">
+                    <h5><i class="bi bi-building"></i> Laboratório e Disciplina</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6 required-field">
+                            <label for="{{ form.laboratory.id_for_label }}" class="form-label">{{ form.laboratory.label }}</label>
+                            {{ form.laboratory }}
+                            {% if form.laboratory.errors %}
+                                <div class="text-danger">{{ form.laboratory.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 required-field">
+                            <label for="{{ form.subject.id_for_label }}" class="form-label">{{ form.subject.label }}</label>
+                            {{ form.subject }}
+                            {% if form.subject.errors %}
+                                <div class="text-danger">{{ form.subject.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção: Data e Período -->
+                <div class="form-section">
+                    <h5><i class="bi bi-calendar-event"></i> Data e Período</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6 required-field">
+                            <label for="{{ form.scheduled_date.id_for_label }}" class="form-label">{{ form.scheduled_date.label }}</label>
+                            {{ form.scheduled_date }}
+                            {% if form.scheduled_date.errors %}
+                                <div class="text-danger">{{ form.scheduled_date.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 required-field">
+                            <label for="{{ form.period.id_for_label }}" class="form-label">{{ form.period.label }}</label>
+                            {{ form.period }}
+                            {% if form.period.help_text %}
+                                <div class="form-text">{{ form.period.help_text }}</div>
+                            {% endif %}
+                            {% if form.period.errors %}
+                                <div class="text-danger">{{ form.period.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção: Detalhes da Aula -->
+                <div class="form-section">
+                    <h5><i class="bi bi-info-circle"></i> Detalhes da Aula</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="{{ form.number_of_students.id_for_label }}" class="form-label">{{ form.number_of_students.label }}</label>
+                            {{ form.number_of_students }}
+                            {% if form.number_of_students.errors %}
+                                <div class="text-danger">{{ form.number_of_students.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="{{ form.class_semester.id_for_label }}" class="form-label">{{ form.class_semester.label }}</label>
+                            {{ form.class_semester }}
+                            {% if form.class_semester.errors %}
+                                <div class="text-danger">{{ form.class_semester.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger">{{ form.description.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <label for="{{ form.materials.id_for_label }}" class="form-label">{{ form.materials.label }}</label>
+                            {{ form.materials }}
+                            {% if form.materials.errors %}
+                                <div class="text-danger">{{ form.materials.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção: Roteiro de Aula -->
+                <div class="form-section">
+                    <h5><i class="bi bi-file-earmark-text"></i> Roteiro de Aula (Opcional)</h5>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <label for="{{ form.guide_file.id_for_label }}" class="form-label">{{ form.guide_file.label }}</label>
+                            {{ form.guide_file }}
+                            {% if form.guide_file.help_text %}
+                                <div class="form-text">{{ form.guide_file.help_text }}</div>
+                            {% endif %}
+                            {% if form.guide_file.errors %}
+                                <div class="text-danger">{{ form.guide_file.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botões de Ação -->
+                <div class="form-section">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'pending_requests' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                        
+                        <button type="submit" class="btn btn-exception">
+                            <i class="bi bi-check-circle"></i> Criar Agendamento de Exceção
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Confirmação antes de enviar
+    document.getElementById('exception-form').addEventListener('submit', function(e) {
+        const professor = document.getElementById('{{ form.professor.id_for_label }}');
+        const reason = document.getElementById('{{ form.exception_reason.id_for_label }}');
+        
+        if (professor.value && reason.value) {
+            const professorName = professor.options[professor.selectedIndex].text;
+            
+            if (!confirm(`Confirma a criação de um agendamento de EXCEÇÃO para ${professorName}?\n\nEste agendamento será automaticamente aprovado e o professor será notificado.`)) {
+                e.preventDefault();
+            }
+        }
+    });
+    
+    // Validação em tempo real do motivo da exceção
+    const reasonField = document.getElementById('{{ form.exception_reason.id_for_label }}');
+    if (reasonField) {
+        reasonField.addEventListener('input', function() {
+            const charCount = this.value.length;
+            const minChars = 10;
+            
+            let feedback = this.parentNode.querySelector('.char-feedback');
+            if (!feedback) {
+                feedback = document.createElement('div');
+                feedback.className = 'form-text char-feedback';
+                this.parentNode.appendChild(feedback);
+            }
+            
+            if (charCount < minChars) {
+                feedback.textContent = `Mínimo ${minChars} caracteres (${minChars - charCount} restantes)`;
+                feedback.className = 'form-text char-feedback text-warning';
+            } else {
+                feedback.textContent = `${charCount} caracteres (✓)`;
+                feedback.className = 'form-text char-feedback text-success';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

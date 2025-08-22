@@ -67,6 +67,13 @@ def reports_dashboard(request):
                 quantity__lt=F('minimum_stock')
             ).count(),
             
+            # Materials near expiration (3 months)
+            'materials_near_expiration': Material.objects.filter(
+                expiration_date__isnull=False,
+                expiration_date__lte=today + timezone.timedelta(days=90),
+                expiration_date__gte=today
+            ).count(),
+            
             # Appointment stats for this month
             'appointments_this_month': ScheduleRequest.objects.filter(
                 scheduled_date__gte=this_month,
@@ -397,8 +404,22 @@ def inventory_report(request, report_id, format='pdf'):
     materials = query.order_by('laboratory__name', 'name')
     
     # Prepare statistics
+    today = timezone.now().date()
     total_materials = materials.count()
     low_stock_materials = materials.filter(quantity__lt=F('minimum_stock')).count()
+    
+    # Materials near expiration (3 months)
+    near_expiration_materials = materials.filter(
+        expiration_date__isnull=False,
+        expiration_date__lte=today + timezone.timedelta(days=90),
+        expiration_date__gte=today
+    ).count()
+    
+    # Expired materials
+    expired_materials = materials.filter(
+        expiration_date__isnull=False,
+        expiration_date__lt=today
+    ).count()
     
     # Category distribution
     category_distribution = materials.values('category__name', 'category__material_type').annotate(
@@ -416,6 +437,13 @@ def inventory_report(request, report_id, format='pdf'):
     stock_status = [
         {'status': 'Normal', 'count': total_materials - low_stock_materials},
         {'status': 'Baixo', 'count': low_stock_materials},
+    ]
+    
+    # Expiration status  
+    expiration_status = [
+        {'status': 'Válidos', 'count': total_materials - near_expiration_materials - expired_materials},
+        {'status': 'Próx. Vencimento', 'count': near_expiration_materials},
+        {'status': 'Vencidos', 'count': expired_materials},
     ]
     
     # Charts
@@ -496,9 +524,12 @@ def inventory_report(request, report_id, format='pdf'):
         'materials': materials,
         'total_materials': total_materials,
         'low_stock_materials': low_stock_materials,
+        'near_expiration_materials': near_expiration_materials,
+        'expired_materials': expired_materials,
         'category_distribution': category_distribution,
         'lab_distribution': lab_distribution,
         'stock_status': stock_status,
+        'expiration_status': expiration_status,
         'charts': charts,
     }
     

@@ -165,6 +165,9 @@
                                         <span class="badge rounded-pill bg-danger ms-1">{{ pending_requests_count }}</span>
                                     {% endif %}
                                 </a>
+                                <a href="{% url 'create_exception_schedule' %}" class="sidebar-dropdown-link {% if '/scheduling/create-exception/' in request.path %}active{% endif %}">
+                                    Agendamento de Exceção
+                                </a>
                             {% endif %}
                         </div>
                     </div>

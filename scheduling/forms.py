@@ -97,8 +97,8 @@ class ScheduleRequestForm(forms.ModelForm):
         # Obter instância se existir (antes de usar)
         instance = kwargs.get('instance')
         
-        # Filtra apenas laboratórios ativos
-        self.fields['laboratory'].queryset = Laboratory.objects.filter(is_active=True)
+        # Filtra apenas laboratórios ativos que não sejam de estoque
+        self.fields['laboratory'].queryset = Laboratory.objects.filter(is_active=True, is_storage=False)
         
         # Inicializar queryset de materiais vazio
         self.fields['selected_materials'].queryset = Material.objects.none()
@@ -354,6 +354,165 @@ class ProfileUpdateForm(forms.ModelForm):
             self.add_error('lab_department', 'Técnicos devem selecionar um departamento.')
         
         return cleaned_data
+
+class ExceptionScheduleRequestForm(forms.ModelForm):
+    """
+    Formulário especial para técnicos criarem agendamentos de exceção
+    para professores em dias/horários não liberados normalmente
+    """
+    
+    professor = forms.ModelChoiceField(
+        queryset=User.objects.filter(user_type='professor', is_approved=True),
+        label="Professor",
+        help_text="Selecione o professor para quem está criando o agendamento de exceção",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    
+    exception_reason = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 4, 'class': 'form-control', 'placeholder': 'Explique o motivo desta exceção...'}),
+        label="Motivo da Exceção",
+        help_text="Descreva detalhadamente o motivo para este agendamento excepcional",
+        max_length=500
+    )
+    
+    PERIOD_CHOICES = [
+        ('matutino', 'Período Matutino (7h às 12h)'),
+        ('noturno', 'Período Noturno (19h às 23h)'),
+    ]
+    
+    period = forms.ChoiceField(
+        choices=PERIOD_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label="Período",
+        help_text="Selecione o período para o agendamento de exceção"
+    )
+    
+    guide_file = forms.FileField(
+        required=False,
+        help_text="Roteiro de aula (PDF, DOC, DOCX, ODT)",
+        validators=[FileExtensionValidator(['pdf', 'doc', 'docx', 'odt'])],
+        widget=forms.FileInput(attrs={'class': 'form-control'})
+    )
+
+    class Meta:
+        model = ScheduleRequest
+        fields = [
+            'professor', 'laboratory', 'subject', 'description', 
+            'scheduled_date', 'period',
+            'number_of_students', 'class_semester', 'materials',
+            'exception_reason', 'guide_file'
+        ]
+        widgets = {
+            'scheduled_date': DateInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
+            'materials': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Liste os materiais necessários...'}),
+            'subject': forms.TextInput(attrs={'class': 'form-control'}),
+            'number_of_students': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+            'class_semester': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 1º Semestre'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        # Extrair o técnico que está criando o agendamento
+        self.technician = kwargs.pop('technician', None)
+        super().__init__(*args, **kwargs)
+        
+        # Configurar laboratórios ativos que não sejam de estoque
+        self.fields['laboratory'].queryset = Laboratory.objects.filter(is_active=True, is_storage=False)
+        self.fields['laboratory'].widget.attrs['class'] = 'form-control'
+        
+        # Configurar professores ativos e aprovados
+        self.fields['professor'].queryset = User.objects.filter(
+            user_type='professor', 
+            is_approved=True
+        ).order_by('first_name', 'last_name')
+        
+        # Configurar limites de data - para exceções, permitir qualquer data futura
+        today = timezone.now().date()
+        # Permitir agendamentos a partir de hoje até 3 meses no futuro
+        max_date = today + timedelta(days=90)
+        
+        self.fields['scheduled_date'].widget.attrs.update({
+            'min': today.strftime('%Y-%m-%d'),
+            'max': max_date.strftime('%Y-%m-%d'),
+        })
+
+    def clean_scheduled_date(self):
+        date = self.cleaned_data.get('scheduled_date')
+        if not date:
+            raise forms.ValidationError("A data é obrigatória para agendamentos de exceção.")
+        
+        today = timezone.now().date()
+        if date < today:
+            raise forms.ValidationError("Não é possível agendar para datas passadas.")
+        
+        # Para exceções, permitir qualquer dia da semana
+        return date
+
+    def clean_exception_reason(self):
+        reason = self.cleaned_data.get('exception_reason')
+        if not reason or len(reason.strip()) < 10:
+            raise forms.ValidationError("O motivo da exceção deve ter pelo menos 10 caracteres.")
+        return reason.strip()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        period = cleaned_data.get('period')
+        laboratory = cleaned_data.get('laboratory')
+        scheduled_date = cleaned_data.get('scheduled_date')
+        professor = cleaned_data.get('professor')
+        number_of_students = cleaned_data.get('number_of_students')
+
+        # Definir horários baseados no período para verificação de conflitos
+        start_time = None
+        end_time = None
+        if period == 'matutino':
+            start_time = time(7, 0)
+            end_time = time(12, 0)
+        elif period == 'noturno':
+            start_time = time(19, 0)
+            end_time = time(23, 0)
+
+        # Verificar capacidade do laboratório
+        if laboratory and number_of_students and hasattr(laboratory, 'capacity') and laboratory.capacity:
+            if number_of_students > laboratory.capacity:
+                self.add_error('number_of_students', 
+                              f'O número de alunos ({number_of_students}) excede a capacidade do laboratório ({laboratory.capacity} pessoas).')
+
+        # Verificar conflitos de horário com outros agendamentos aprovados
+        if all([laboratory, scheduled_date, start_time, end_time]):
+            conflicting_schedules = ScheduleRequest.objects.filter(
+                laboratory=laboratory,
+                scheduled_date=scheduled_date,
+                status='approved'
+            )
+            
+            if self.instance and self.instance.pk:
+                conflicting_schedules = conflicting_schedules.exclude(pk=self.instance.pk)
+            
+            for schedule in conflicting_schedules:
+                if (schedule.start_time <= start_time < schedule.end_time or
+                    schedule.start_time < end_time <= schedule.end_time or
+                    start_time <= schedule.start_time and end_time >= schedule.end_time):
+                    self.add_error('period', 
+                                  f'Conflito de horário com agendamento existente: {schedule.start_time} - {schedule.end_time}')
+                    break
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        
+        # Marcar como agendamento de exceção
+        instance.is_exception = True
+        instance.created_by_technician = self.technician
+        instance.status = 'approved'  # Exceções são automaticamente aprovadas
+        instance.reviewed_by = self.technician
+        instance.review_date = timezone.now()
+        
+        if commit:
+            instance.save()
+        
+        return instance
 
 class PasswordChangeForm(DjangoPasswordChangeForm):
     """Formulário aprimorado para alteração de senha"""
