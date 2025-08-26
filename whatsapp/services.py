@@ -11,6 +11,20 @@ class WhatsAppNotificationService:
     baseadas nos mesmos templates de email
     """
     
+    def send_message(self, phone_number, message):
+        """
+        Método de instância para enviar mensagem WhatsApp
+        Wrapper para o método estático send_notification
+        
+        Args:
+            phone_number (str): Número do destinatário
+            message (str): Conteúdo da mensagem
+            
+        Returns:
+            bool: True se a mensagem foi enviada com sucesso, False caso contrário
+        """
+        return self.send_notification(phone_number, message)
+    
     @staticmethod
     def send_notification(phone, message):
         """

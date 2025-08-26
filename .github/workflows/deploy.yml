@@ -88,10 +88,11 @@ jobs:
         echo "PROD_USER existe: ${{ secrets.PROD_USER != '' }}"
         echo "PROD_SSH_KEY existe: ${{ secrets.PROD_SSH_KEY != '' }}"
     
-    - name: Deploy via Webhook
+    - name: Deploy via Webhook (Ngrok Domínio Fixo)
       run: |
-        echo "🚀 Enviando webhook para deploy..."
-        curl -X POST "${{ secrets.NGROK_WEBHOOK_URL }}/api/deploy/" \
+        echo "🚀 Enviando webhook para deploy via domínio fixo ngrok..."
+        echo "🌐 URL: https://labconnect.ngrok.app"
+        curl -X POST "https://labconnect.ngrok.app/api/deploy/" \
           -H "Content-Type: application/json" \
           -H "Authorization: Bearer ${{ secrets.DEPLOY_TOKEN }}" \
           -d '{"commit": "${{ github.sha }}", "branch": "${{ github.ref }}"}'
@@ -143,14 +144,18 @@ jobs:
             echo "⚠️ Serviço inativo. Reiniciando..."
             sudo systemctl start labconnect
             sleep 5
-            
-            # Verificar se o ngrok existe e iniciar
-            if [ -f "./start-labconnect-ngrok.sh" ]; then
-              chmod +x ./start-labconnect-ngrok.sh
-              ./start-labconnect-ngrok.sh start
-            else
-              echo "⚠️ start-labconnect-ngrok.sh não encontrado"
-            fi
+          fi
+          
+          # Sempre verificar e iniciar/reiniciar ngrok com domínio fixo
+          echo "🌐 Configurando ngrok com domínio fixo..."
+          if [ -f "./start-labconnect-ngrok.sh" ]; then
+            chmod +x ./start-labconnect-ngrok.sh
+            echo "🔄 Reiniciando ngrok para garantir domínio fixo..."
+            ./start-labconnect-ngrok.sh restart
+            sleep 3
+            ./start-labconnect-ngrok.sh status
+          else
+            echo "⚠️ start-labconnect-ngrok.sh não encontrado"
           fi
           
           # Status final detalhado

@@ -1,0 +1,21 @@
+# Arquivo de configuração do ngrok para LabConnect
+# Domínio fixo: labconnect.ngrok.app
+
+version: "2"
+authtoken_from_env: true
+log_level: info
+log_format: logfmt
+log: ngrok.log
+
+tunnels:
+  labconnect:
+    addr: 8000
+    proto: http
+    hostname: labconnect.ngrok.app
+    inspect: false
+    
+# Configurações de região (ajustar conforme localização)  
+region: us
+
+# Web interface desabilitada em produção
+web_addr: false
