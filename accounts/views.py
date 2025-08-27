@@ -469,7 +469,7 @@ def approve_password_reset(request, request_id):
         try:
             whatsapp_service = WhatsAppNotificationService()
             reset_url = request.build_absolute_uri(
-                f"/accounts/password-reset/{reset_request.token}/"
+                f"/password-reset/{reset_request.token}/"
             )
             
             message = f"""
