@@ -99,6 +99,28 @@
         .status-rejected { color: #dc3545; font-weight: bold; }
         .status-pending { color: #ffc107; font-weight: bold; }
         
+        /* ESTILOS PARA AGENDAMENTOS DE EXCEÇÃO */
+        .exception-row { 
+            background-color: #fff3cd !important; 
+            border-left: 4px solid #ffc107 !important;
+        }
+        .exception-badge {
+            background-color: #dc3545;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+        }
+        .normal-badge {
+            background-color: #28a745;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+        }
+        
         .charts {
             page-break-inside: avoid;
         }
@@ -172,6 +194,38 @@
         </div>
     </div>
 
+    <!-- NOVA SEÇÃO: DIFERENCIAÇÃO DE AGENDAMENTOS -->
+    <div class="summary-grid">
+        <div class="summary-item">
+            <h3>Agendamentos Normais</h3>
+            <div class="number" style="color: #28a745;">{{ normal_requests }}</div>
+        </div>
+        <div class="summary-item">
+            <h3>Agendamentos de Exceção</h3>
+            <div class="number" style="color: #dc3545;">{{ exception_requests }}</div>
+        </div>
+        <div class="summary-item">
+            <h3>% de Exceções</h3>
+            <div class="number" style="color: #ffc107;">
+                {% if total_requests > 0 %}
+                    {{ exception_requests|floatformat:0 }}%
+                {% else %}
+                    0%
+                {% endif %}
+            </div>
+        </div>
+        <div class="summary-item">
+            <h3>% Normais</h3>
+            <div class="number" style="color: #17a2b8;">
+                {% if total_requests > 0 %}
+                    {{ normal_requests|floatformat:0 }}%
+                {% else %}
+                    0%
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
     {% if schedule_data %}
     <div class="section">
         <h2>Detalhamento dos Agendamentos</h2>
@@ -183,12 +237,14 @@
                     <th>Laboratório</th>
                     <th>Professor</th>
                     <th>Status</th>
-                    <th>Finalidade</th>
+                    <th>Tipo</th>
+                    <th>Disciplina</th>
+                    <th>Motivo da Exceção</th>
                 </tr>
             </thead>
             <tbody>
                 {% for schedule in schedule_data %}
-                <tr>
+                <tr {% if schedule.is_exception %}class="exception-row"{% endif %}>
                     <td>{{ schedule.scheduled_date|date:"d/m/Y" }}</td>
                     <td>{{ schedule.start_time }} - {{ schedule.end_time }}</td>
                     <td>{{ schedule.laboratory.name }}</td>
@@ -196,11 +252,68 @@
                     <td class="status-{{ schedule.status }}">
                         {{ schedule.get_status_display }}
                     </td>
-                    <td>{{ schedule.purpose|truncatechars:50 }}</td>
+                    <td>
+                        {% if schedule.is_exception %}
+                            <span class="exception-badge">EXCEÇÃO</span>
+                        {% else %}
+                            <span class="normal-badge">NORMAL</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ schedule.subject|default:"N/A"|truncatechars:30 }}</td>
+                    <td>
+                        {% if schedule.is_exception and schedule.exception_reason %}
+                            {{ schedule.exception_reason|truncatechars:50 }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+    {% endif %}
+
+    <!-- NOVA SEÇÃO: AGENDAMENTOS DE EXCEÇÃO DETALHADOS -->
+    {% if exception_data %}
+    <div class="section">
+        <h2 style="color: #dc3545;">Agendamentos de Exceção - Detalhamento</h2>
+        <p><strong>Total de agendamentos de exceção:</strong> {{ exception_requests }}</p>
+        <table>
+            <thead>
+                <tr style="background-color: #dc3545;">
+                    <th>Data</th>
+                    <th>Horário</th>
+                    <th>Laboratório</th>
+                    <th>Professor</th>
+                    <th>Status</th>
+                    <th>Disciplina</th>
+                    <th>Motivo da Exceção</th>
+                    <th>Técnico Criador</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for schedule in exception_data %}
+                <tr class="exception-row">
+                    <td>{{ schedule.scheduled_date|date:"d/m/Y" }}</td>
+                    <td>{{ schedule.start_time }} - {{ schedule.end_time }}</td>
+                    <td>{{ schedule.laboratory.name }}</td>
+                    <td>{{ schedule.professor.get_full_name }}</td>
+                    <td class="status-{{ schedule.status }}">
+                        {{ schedule.get_status_display }}
+                    </td>
+                    <td>{{ schedule.subject|default:"N/A" }}</td>
+                    <td>{{ schedule.exception_reason|default:"N/A" }}</td>
+                    <td>{{ schedule.created_by_technician.get_full_name|default:"N/A" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="section">
+        <h2 style="color: #28a745;">Agendamentos de Exceção</h2>
+        <p><em>Não foram encontrados agendamentos de exceção no período selecionado.</em></p>
     </div>
     {% endif %}
 
@@ -211,7 +324,9 @@
             <thead>
                 <tr>
                     <th>Laboratório</th>
-                    <th>Quantidade de Agendamentos</th>
+                    <th>Total</th>
+                    <th>Normais</th>
+                    <th>Exceções</th>
                 </tr>
             </thead>
             <tbody>
@@ -219,6 +334,8 @@
                 <tr>
                     <td>{{ lab.laboratory__name }}</td>
                     <td>{{ lab.count }}</td>
+                    <td>{{ lab.normal_count|default:0 }}</td>
+                    <td>{{ lab.exception_count|default:0 }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -233,7 +350,9 @@
             <thead>
                 <tr>
                     <th>Professor</th>
-                    <th>Quantidade de Agendamentos</th>
+                    <th>Total</th>
+                    <th>Normais</th>
+                    <th>Exceções</th>
                 </tr>
             </thead>
             <tbody>
@@ -241,6 +360,8 @@
                 <tr>
                     <td>{{ prof.professor__first_name }} {{ prof.professor__last_name }}</td>
                     <td>{{ prof.count }}</td>
+                    <td>{{ prof.normal_count|default:0 }}</td>
+                    <td>{{ prof.exception_count|default:0 }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

@@ -164,20 +164,32 @@ def scheduling_report(request, report_id, format='pdf'):
     # Get data
     schedule_data = query.order_by('scheduled_date', 'start_time')
     
-    # Prepare statistics
+    # Prepare statistics - INCLUINDO DIFERENCIAÇÃO DE AGENDAMENTOS DE EXCEÇÃO
     total_requests = schedule_data.count()
     approved_requests = schedule_data.filter(status='approved').count()
     rejected_requests = schedule_data.filter(status='rejected').count()
     pending_requests = schedule_data.filter(status='pending').count()
     
-    # Labs usage statistics
+    # Estatísticas de agendamentos de exceção
+    exception_requests = schedule_data.filter(is_exception=True).count()
+    normal_requests = schedule_data.filter(is_exception=False).count()
+    
+    # Separação por tipo de agendamento
+    exception_data = schedule_data.filter(is_exception=True).order_by('scheduled_date', 'start_time')
+    normal_data = schedule_data.filter(is_exception=False).order_by('scheduled_date', 'start_time')
+    
+    # Labs usage statistics - SEPARANDO NORMAL E EXCEÇÃO
     lab_usage = schedule_data.filter(status='approved').values('laboratory__name').annotate(
-        count=Count('id')
+        count=Count('id'),
+        exception_count=Count('id', filter=Q(is_exception=True)),
+        normal_count=Count('id', filter=Q(is_exception=False))
     ).order_by('-count')
     
-    # Professor statistics
+    # Professor statistics - SEPARANDO NORMAL E EXCEÇÃO
     professor_usage = schedule_data.filter(status='approved').values('professor__first_name', 'professor__last_name').annotate(
-        count=Count('id')
+        count=Count('id'),
+        exception_count=Count('id', filter=Q(is_exception=True)),
+        normal_count=Count('id', filter=Q(is_exception=False))
     ).order_by('-count')
     
     # Data by weekday
@@ -283,6 +295,11 @@ def scheduling_report(request, report_id, format='pdf'):
         'professor_usage': professor_usage,
         'weekday_data': weekday_data,
         'charts': charts,
+        # NOVOS DADOS PARA AGENDAMENTOS DE EXCEÇÃO
+        'exception_requests': exception_requests,
+        'normal_requests': normal_requests,
+        'exception_data': exception_data,
+        'normal_data': normal_data,
     }
     
     if format == 'pdf':
@@ -322,7 +339,11 @@ def scheduling_report(request, report_id, format='pdf'):
                     'Laboratório': s.laboratory.name,
                     'Professor': s.professor.get_full_name(),
                     'Status': dict(ScheduleRequest.STATUS_CHOICES).get(s.status),
-                    'Finalidade': s.purpose,
+                    'Tipo': 'Agendamento de Exceção' if s.is_exception else 'Agendamento Normal',
+                    'Motivo da Exceção': s.exception_reason if s.is_exception else 'N/A',
+                    'Técnico Criador': s.created_by_technician.get_full_name() if s.is_exception and s.created_by_technician else 'N/A',
+                    'Disciplina': s.subject or 'N/A',
+                    'Descrição': s.description or 'N/A',
                 }
                 for s in schedule_data
             ])
@@ -362,9 +383,9 @@ def scheduling_report(request, report_id, format='pdf'):
         # Create CSV file
         output = io.StringIO()
         
-        # Write headers
+        # Write headers - INCLUINDO CAMPOS DE EXCEÇÃO
         writer = csv.writer(output)
-        writer.writerow(['ID', 'Data', 'Horário', 'Laboratório', 'Professor', 'Status', 'Finalidade'])
+        writer.writerow(['ID', 'Data', 'Horário', 'Laboratório', 'Professor', 'Status', 'Tipo', 'Motivo da Exceção', 'Técnico Criador', 'Disciplina', 'Descrição'])
         
         # Write data
         for s in schedule_data:
@@ -375,7 +396,11 @@ def scheduling_report(request, report_id, format='pdf'):
                 s.laboratory.name,
                 s.professor.get_full_name(),
                 dict(ScheduleRequest.STATUS_CHOICES).get(s.status),
-                s.purpose
+                'Agendamento de Exceção' if s.is_exception else 'Agendamento Normal',
+                s.exception_reason if s.is_exception else 'N/A',
+                s.created_by_technician.get_full_name() if s.is_exception and s.created_by_technician else 'N/A',
+                s.subject or 'N/A',
+                s.description or 'N/A'
             ])
         
         # Create response

@@ -119,17 +119,11 @@ class ScheduleRequestForm(forms.ModelForm):
         today = timezone.now().date()
         
         if self.is_draft:
-            # Para RASCUNHOS: permitir o mês inteiro
-            month_start = today.replace(day=1)
-            # Último dia do mês atual
-            if today.month == 12:
-                month_end = today.replace(year=today.year + 1, month=1, day=1) - timedelta(days=1)
-            else:
-                month_end = today.replace(month=today.month + 1, day=1) - timedelta(days=1)
-            
+            # Para RASCUNHOS: permitir qualquer data futura (exceto domingos)
+            # REGRA: Rascunhos podem ser criados qualquer dia, para qualquer dia futuro (menos domingos)
             self.fields['scheduled_date'].widget.attrs.update({
-                'min': month_start.strftime('%Y-%m-%d'),
-                'max': month_end.strftime('%Y-%m-%d'),
+                'min': today.strftime('%Y-%m-%d'),
+                # Não definir max para permitir datas futuras - apenas excluir domingos na validação
             })
         else:
             # Para SOLICITAÇÕES FINAIS: próxima semana (segunda a sábado)
@@ -169,7 +163,7 @@ class ScheduleRequestForm(forms.ModelForm):
                     self.initial['shift'] = 'evening'
 
     def clean_scheduled_date(self):
-        """Valida data baseado no tipo: rascunho (mês inteiro) vs solicitação (próxima semana)"""
+        """Valida data baseado no tipo: rascunho (qualquer dia futuro exceto domingos) vs solicitação (próxima semana)"""
         date = self.cleaned_data.get('scheduled_date')
         
         # Se não informar data, não há problema
@@ -184,15 +178,11 @@ class ScheduleRequestForm(forms.ModelForm):
             today = timezone.now().date()
             
             if self.is_draft:
-                # Para RASCUNHOS: permitir qualquer data do mês atual
-                month_start = today.replace(day=1)
-                if today.month == 12:
-                    month_end = today.replace(year=today.year + 1, month=1, day=1) - timedelta(days=1)
-                else:
-                    month_end = today.replace(month=today.month + 1, day=1) - timedelta(days=1)
-                
-                if not (month_start <= date <= month_end):
-                    raise forms.ValidationError("Para rascunhos, você pode agendar para qualquer data do mês atual.")
+                # Para RASCUNHOS: permitir qualquer data futura (exceto domingo)
+                # REGRA: Rascunhos podem ser feitos qualquer dia para qualquer dia futuro (menos domingos)
+                if date < today:
+                    raise forms.ValidationError("Não é possível agendar para datas passadas.")
+                # Validação de domingo já feita acima - permite qualquer dia da semana exceto domingo
             else:
                 # Para SOLICITAÇÕES FINAIS: apenas próxima semana (segunda a sábado)
                 next_week_start = today + timedelta(days=(7 - today.weekday()))

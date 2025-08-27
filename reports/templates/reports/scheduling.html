@@ -72,6 +72,61 @@
     </div>
 </div>
 
+<!-- NOVA ROW: DIFERENCIAÇÃO NORMAL vs EXCEÇÃO -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-success h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-calendar2-check display-4 text-success mb-3"></i>
+                <h5 class="card-title">Agendamentos Normais</h5>
+                <p class="card-text display-6 text-success">{{ normal_requests }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card border-danger h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-exclamation-triangle display-4 text-danger mb-3"></i>
+                <h5 class="card-title">Agendamentos de Exceção</h5>
+                <p class="card-text display-6 text-danger">{{ exception_requests }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card border-info h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-percent display-4 text-info mb-3"></i>
+                <h5 class="card-title">% de Exceções</h5>
+                <p class="card-text display-6 text-info">
+                    {% if total_requests > 0 %}
+                        {% widthratio exception_requests total_requests 100 %}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card border-secondary h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-graph-up display-4 text-secondary mb-3"></i>
+                <h5 class="card-title">% Normais</h5>
+                <p class="card-text display-6 text-secondary">
+                    {% if total_requests > 0 %}
+                        {% widthratio normal_requests total_requests 100 %}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row mb-4">
     <div class="col-md-6">
         <div class="card">
@@ -131,12 +186,14 @@
                         <th>Laboratório</th>
                         <th>Professor</th>
                         <th>Status</th>
-                        <th>Finalidade</th>
+                        <th>Tipo</th>
+                        <th>Disciplina</th>
+                        <th>Observações</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for schedule in schedule_data %}
-                    <tr>
+                    <tr {% if schedule.is_exception %}class="table-warning"{% endif %}>
                         <td>{{ schedule.scheduled_date|date:"d/m/Y" }}</td>
                         <td>{{ schedule.start_time }} - {{ schedule.end_time }}</td>
                         <td>{{ schedule.laboratory.name }}</td>
@@ -150,11 +207,103 @@
                                 <span class="badge bg-warning">{{ schedule.get_status_display }}</span>
                             {% endif %}
                         </td>
-                        <td>{{ schedule.purpose|truncatechars:50 }}</td>
+                        <td>
+                            {% if schedule.is_exception %}
+                                <span class="badge bg-danger"><i class="bi bi-exclamation-triangle me-1"></i>EXCEÇÃO</span>
+                            {% else %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>NORMAL</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ schedule.subject|default:"N/A"|truncatechars:30 }}</td>
+                        <td>
+                            {% if schedule.is_exception and schedule.exception_reason %}
+                                <span class="text-danger fw-bold" title="{{ schedule.exception_reason }}">
+                                    <i class="bi bi-info-circle me-1"></i>{{ schedule.exception_reason|truncatechars:40 }}
+                                </span>
+                            {% else %}
+                                {{ schedule.description|default:""|truncatechars:40 }}
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- NOVA SEÇÃO: AGENDAMENTOS DE EXCEÇÃO DETALHADOS -->
+{% if exception_data %}
+<div class="card mb-4">
+    <div class="card-header bg-danger text-white">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-exclamation-triangle me-2"></i>Agendamentos de Exceção - Detalhamento
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning mb-3">
+            <h6 class="alert-heading">Atenção!</h6>
+            <p class="mb-0">Estes agendamentos foram criados fora das regras normais por técnicos laboratoristas em situações especiais.</p>
+            <hr>
+            <small><strong>Total:</strong> {{ exception_requests }} agendamento(s) de exceção no período.</small>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0">
+                <thead class="table-danger">
+                    <tr>
+                        <th>Data</th>
+                        <th>Horário</th>
+                        <th>Laboratório</th>
+                        <th>Professor</th>
+                        <th>Status</th>
+                        <th>Disciplina</th>
+                        <th>Motivo da Exceção</th>
+                        <th>Técnico Criador</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for schedule in exception_data %}
+                    <tr class="table-warning">
+                        <td>{{ schedule.scheduled_date|date:"d/m/Y" }}</td>
+                        <td>{{ schedule.start_time }} - {{ schedule.end_time }}</td>
+                        <td>{{ schedule.laboratory.name }}</td>
+                        <td>{{ schedule.professor.get_full_name }}</td>
+                        <td>
+                            {% if schedule.status == 'approved' %}
+                                <span class="badge bg-success">{{ schedule.get_status_display }}</span>
+                            {% elif schedule.status == 'rejected' %}
+                                <span class="badge bg-danger">{{ schedule.get_status_display }}</span>
+                            {% else %}
+                                <span class="badge bg-warning">{{ schedule.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ schedule.subject|default:"N/A" }}</td>
+                        <td>
+                            <span class="text-danger fw-bold">
+                                <i class="bi bi-exclamation-circle me-1"></i>{{ schedule.exception_reason|default:"N/A" }}
+                            </span>
+                        </td>
+                        <td>{{ schedule.created_by_technician.get_full_name|default:"N/A" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card mb-4">
+    <div class="card-header bg-success text-white">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-check-circle me-2"></i>Agendamentos de Exceção
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-success mb-0">
+            <h6 class="alert-heading">Nenhum agendamento de exceção!</h6>
+            <p class="mb-0">Não foram encontrados agendamentos de exceção no período selecionado. Todos os agendamentos seguiram as regras normais.</p>
         </div>
     </div>
 </div>
@@ -173,7 +322,9 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Laboratório</th>
-                                <th class="text-center">Agendamentos</th>
+                                <th class="text-center">Total</th>
+                                <th class="text-center">Normais</th>
+                                <th class="text-center">Exceções</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -182,6 +333,12 @@
                                 <td>{{ lab.laboratory__name }}</td>
                                 <td class="text-center">
                                     <span class="badge bg-primary rounded-pill">{{ lab.count }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-success rounded-pill">{{ lab.normal_count|default:0 }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-danger rounded-pill">{{ lab.exception_count|default:0 }}</span>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -205,7 +362,9 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Professor</th>
-                                <th class="text-center">Agendamentos</th>
+                                <th class="text-center">Total</th>
+                                <th class="text-center">Normais</th>
+                                <th class="text-center">Exceções</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -214,6 +373,12 @@
                                 <td>{{ prof.professor__first_name }} {{ prof.professor__last_name }}</td>
                                 <td class="text-center">
                                     <span class="badge bg-info rounded-pill">{{ prof.count }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-success rounded-pill">{{ prof.normal_count|default:0 }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-danger rounded-pill">{{ prof.exception_count|default:0 }}</span>
                                 </td>
                             </tr>
                             {% endfor %}

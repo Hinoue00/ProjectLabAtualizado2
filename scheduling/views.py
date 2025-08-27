@@ -132,18 +132,17 @@ def create_schedule_request(request):
     today = timezone.now().date()
     logger.info(f"INICIANDO CRIACAO DE AGENDAMENTO - Professor: {request.user.get_full_name()}")
     
-    # Verificar se é segunda ou terça-feira
-    if today.weekday() not in [0, 1] and not settings.ALLOW_SCHEDULING_ANY_DAY:
-        logger.warning(f"TENTATIVA DE AGENDAMENTO FORA DO DIA PERMITIDO - Dia da semana: {today.weekday()}")
-        messages.warning(request, 'Agendamentos só podem ser feitos às segundas e terças-feiras.')
-        return redirect('professor_dashboard')
+    # REGRA IMPLEMENTADA: Rascunhos podem ser criados qualquer dia, para qualquer dia futuro (exceto domingos)
+    # Envio direto ou confirmação de rascunho só pode ser feito segundas/terças para semana seguinte
     
     # Data da próxima semana (segunda a sábado) - agendamentos para semana seguinte
     next_week_start = today + timedelta(days=(7 - today.weekday()))
     next_week_end = next_week_start + timedelta(days=5)  # Segunda a sábado
     
-    # Verificar se é dia de confirmação
+    # Verificar se é dia de confirmação (ENVIO DIRETO ou CONFIRMAÇÃO DE RASCUNHO)
     is_confirmation_day = today.weekday() in [0, 1]  # Segunda = 0, Terça = 1
+    
+    # REGRA: Professores podem criar rascunhos qualquer dia, mas só podem ENVIAR/CONFIRMAR na segunda/terça
     
     if request.method == 'POST':
         logger.info(f" PROCESSANDO FORMULÁRIO DE AGENDAMENTO")
@@ -151,8 +150,8 @@ def create_schedule_request(request):
         # Verificar se o usuário escolheu salvar como rascunho
         save_as_draft = request.POST.get('save_as_draft') == 'true'
         
-        # Determinar se será rascunho: sempre quando escolhido OU quando não é segunda/terça
-        is_draft = save_as_draft or (not is_confirmation_day)
+        # Rascunho apenas quando explicitamente escolhido pelo usuário
+        is_draft = save_as_draft
         form = ScheduleRequestForm(request.POST, request.FILES, is_draft=is_draft)
         
         # Atualizar queryset de materiais baseado no laboratório selecionado
@@ -170,6 +169,18 @@ def create_schedule_request(request):
             
             # Validação específica para envio direto (não rascunho)
             if not is_draft:
+                # REGRA: Verificar se é segunda ou terça-feira para envio direto
+                if today.weekday() not in [0, 1]:
+                    logger.warning(f"TENTATIVA DE ENVIO DIRETO FORA DO DIA PERMITIDO - Dia da semana: {today.weekday()}")
+                    messages.warning(request, 'Solicitações só podem ser ENVIADAS às segundas e terças-feiras. Salve como rascunho e confirme na segunda/terça da semana posterior.')
+                    return render(request, 'create_request.html', {
+                        'form': form,
+                        'next_week_start': next_week_start,
+                        'next_week_end': next_week_end,
+                        'is_confirmation_day': is_confirmation_day,
+                        'departments': Department.objects.all().order_by('name')
+                    })
+                    
                 scheduled_date = form.cleaned_data.get('scheduled_date')
                 if scheduled_date:
                     # Verificar se a data está na próxima semana (segunda a sábado)
@@ -200,7 +211,20 @@ def create_schedule_request(request):
                         })
             
             if is_draft:
-                # Criar rascunho quando solicitado ou quando não é segunda/terça
+                # REGRA: Validação para rascunhos - não permitir domingos
+                scheduled_date = form.cleaned_data.get('scheduled_date')
+                if scheduled_date and scheduled_date.weekday() == 6:  # 6=domingo
+                    logger.warning(f"TENTATIVA DE RASCUNHO EM DOMINGO")
+                    form.add_error('scheduled_date', 'Domingos não são permitidos para agendamentos. Rascunhos podem ser feitos para qualquer dia exceto domingos.')
+                    return render(request, 'create_request.html', {
+                        'form': form,
+                        'next_week_start': next_week_start,
+                        'next_week_end': next_week_end,
+                        'is_confirmation_day': is_confirmation_day,
+                        'departments': Department.objects.all().order_by('name')
+                    })
+                
+                # Criar rascunho
                 draft = DraftScheduleRequest()
                 for field in form.cleaned_data:
                     if hasattr(draft, field):
@@ -235,9 +259,9 @@ def create_schedule_request(request):
                 draft.save()
                 logger.info(f" RASCUNHO SALVO COM SUCESSO - ID: {draft.pk}")
                 if is_confirmation_day:
-                    messages.success(request, 'Rascunho salvo com sucesso! Você pode confirmá-lo como solicitação quando desejar.')
+                    messages.success(request, 'Rascunho salvo com sucesso! Você pode confirmá-lo como solicitação hoje (segunda/terça).')
                 else:
-                    messages.success(request, 'Rascunho salvo com sucesso! Você poderá confirmá-lo na segunda ou terça-feira.')
+                    messages.success(request, 'Rascunho salvo com sucesso! Ele ficará como uma "caixa" e você poderá enviá-lo na segunda ou terça-feira da semana posterior ao agendamento.')
                 return redirect('professor_dashboard')
             
             # Continuar com agendamento normal se for segunda/terça
@@ -342,14 +366,42 @@ def list_draft_schedule_requests(request):
         messages.warning(request, 'Rascunhos só podem ser confirmados às segundas e terças-feiras.')
         return redirect('professor_dashboard')
     
-    # Busca rascunhos do usuário atual
-    draft_requests = DraftScheduleRequest.objects.filter(
+    # NOVA REGRA: Busca rascunhos que podem ser confirmados hoje
+    # (rascunhos para agendamentos desta semana - confirmados na segunda/terça)
+    
+    # Calcular o início da semana atual (segunda-feira)
+    current_week_start = today - timezone.timedelta(days=today.weekday())
+    current_week_end = current_week_start + timezone.timedelta(days=6)  # Domingo
+    
+    # Buscar todos os rascunhos do usuário
+    all_drafts = DraftScheduleRequest.objects.filter(
         professor=request.user
     ).order_by('scheduled_date')
     
+    # Filtrar rascunhos que podem ser confirmados hoje (segunda/terça da semana do agendamento)
+    confirmable_drafts = []
+    for draft in all_drafts:
+        if draft.scheduled_date:
+            # Semana do agendamento
+            scheduled_week_start = draft.scheduled_date - timezone.timedelta(days=draft.scheduled_date.weekday())
+            confirmation_monday = scheduled_week_start
+            confirmation_tuesday = scheduled_week_start + timezone.timedelta(days=1)
+            
+            # Pode confirmar se hoje é segunda ou terça da semana do agendamento
+            draft.can_confirm_today = confirmation_monday <= today <= confirmation_tuesday
+            if draft.can_confirm_today:
+                confirmable_drafts.append(draft)
+        else:
+            draft.can_confirm_today = False
+    
+    draft_requests = confirmable_drafts
+    
     context = {
-        'draft_requests': draft_requests,
-        'can_confirm': True
+        'draft_requests': draft_requests,  # Rascunhos que podem ser confirmados hoje
+        'all_drafts': all_drafts,          # Todos os rascunhos com indicação de confirmação
+        'can_confirm': True,
+        'current_week_start': current_week_start,
+        'current_week_end': current_week_end
     }
     
     return render(request, 'draft_requests.html', context)
@@ -384,12 +436,27 @@ def confirm_draft_schedule_request(request, draft_id):
     """
     today = timezone.now().date()
     
-    # Verifica se é segunda ou terça-feira
+    # REGRA: Verifica se é segunda ou terça-feira
     if today.weekday() not in [0, 1]:  # 0=segunda, 1=terça
         messages.warning(request, 'Rascunhos só podem ser confirmados às segundas e terças-feiras.')
         return redirect('view_draft_schedule_requests')
     
     draft_request = get_object_or_404(DraftScheduleRequest, id=draft_id, professor=request.user)
+    
+    # NOVA REGRA: Verificar se o rascunho pode ser enviado (segunda/terça da semana ANTERIOR ao agendamento)
+    # Exemplo: Se agendamento é para sexta dia 15, pode confirmar na segunda (dia 11) ou terça (dia 12)
+    scheduled_date = draft_request.scheduled_date
+    if scheduled_date:
+        # Calcular início da semana do agendamento (segunda-feira)
+        scheduled_week_start = scheduled_date - timezone.timedelta(days=scheduled_date.weekday())
+        # A confirmação deve acontecer na segunda (dia 0) ou terça (dia 1) desta semana
+        confirmation_monday = scheduled_week_start 
+        confirmation_tuesday = scheduled_week_start + timezone.timedelta(days=1)
+        
+        # Verificar se hoje é segunda ou terça da mesma semana do agendamento
+        if not (confirmation_monday <= today <= confirmation_tuesday):
+            messages.warning(request, f'Este rascunho só pode ser confirmado na segunda ({confirmation_monday.strftime("%d/%m/%Y")}) ou terça ({confirmation_tuesday.strftime("%d/%m/%Y")}) da mesma semana do agendamento ({scheduled_date.strftime("%d/%m/%Y")}).')
+            return redirect('view_draft_schedule_requests')
     
     # Cria a solicitação real
     schedule_request = ScheduleRequest.objects.create(
