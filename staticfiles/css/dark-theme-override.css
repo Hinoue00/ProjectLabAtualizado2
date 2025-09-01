@@ -148,9 +148,7 @@
 }
 
 /* Override de cores específicas muito usadas */
-[data-theme="dark"] * {
-    /* Remove qualquer background branco ou muito claro */
-}
+/* Remove qualquer background branco ou muito claro */
 
 [data-theme="dark"] .bg-white,
 [data-theme="dark"] .bg-light,
@@ -184,6 +182,7 @@
 [data-theme="dark"] .alert {
     border-color: var(--border-color) !important;
     color: var(--text-color) !important;
+    background-color: transparent !important;
 }
 
 /* Loading spinners */

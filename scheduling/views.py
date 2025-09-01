@@ -366,12 +366,27 @@ def view_draft_schedule_requests(request):
     ).order_by('scheduled_date')
     
     today = timezone.now().date()
-    can_confirm = today.weekday() in [0, 1]  # 0=segunda, 1=terça
+    
+    # Verificar se existe pelo menos um rascunho que pode ser confirmado hoje
+    can_confirm_any = False
+    if today.weekday() in [0, 1]:  # Se hoje é segunda ou terça
+        for draft in draft_requests:
+            # Calcular as datas válidas para este rascunho
+            scheduled_date = draft.scheduled_date
+            days_to_monday = scheduled_date.weekday()
+            schedule_week_monday = scheduled_date - timezone.timedelta(days=days_to_monday)
+            previous_week_monday = schedule_week_monday - timezone.timedelta(days=7)
+            previous_week_tuesday = previous_week_monday + timezone.timedelta(days=1)
+            
+            if today in [previous_week_monday, previous_week_tuesday]:
+                can_confirm_any = True
+                break
     
     context = {
         'draft_requests': draft_requests,
-        'can_confirm': can_confirm,
-        'is_view_only': not can_confirm
+        'can_confirm': can_confirm_any,
+        'is_view_only': not can_confirm_any,
+        'today': today
     }
     
     return render(request, 'draft_requests.html', context)
@@ -390,6 +405,29 @@ def confirm_draft_schedule_request(request, draft_id):
         return redirect('view_draft_schedule_requests')
     
     draft_request = get_object_or_404(DraftScheduleRequest, id=draft_id, professor=request.user)
+    
+    # Validação adicional: verifica se hoje está na semana anterior ao agendamento
+    scheduled_date = draft_request.scheduled_date
+    
+    # Calcular a segunda-feira da semana do agendamento
+    days_to_monday = scheduled_date.weekday()  # 0=segunda, 1=terça, etc.
+    schedule_week_monday = scheduled_date - timezone.timedelta(days=days_to_monday)
+    
+    # Calcular a segunda e terça da semana ANTERIOR ao agendamento
+    previous_week_monday = schedule_week_monday - timezone.timedelta(days=7)
+    previous_week_tuesday = previous_week_monday + timezone.timedelta(days=1)
+    
+    # Verificar se hoje é segunda ou terça da semana anterior
+    if today not in [previous_week_monday, previous_week_tuesday]:
+        # Formatar datas para exibição
+        monday_str = previous_week_monday.strftime("%d/%m/%Y")
+        tuesday_str = previous_week_tuesday.strftime("%d/%m/%Y")
+        schedule_str = scheduled_date.strftime("%d/%m/%Y")
+        
+        messages.error(request, 
+            f'Este rascunho só pode ser confirmado na segunda ({monday_str}) ou terça ({tuesday_str}) '
+            f'da semana anterior ao agendamento ({schedule_str})')
+        return redirect('view_draft_schedule_requests')
     
     # Cria a solicitação real
     schedule_request = ScheduleRequest.objects.create(
