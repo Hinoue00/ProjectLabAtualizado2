@@ -36,6 +36,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Chatbot Disabled**: Default configuration for production performance
 - **Size Reduction**: Removed ~30+ development/test files for cleaner production deployment
 
+### Security Updates (Setembro 2025)
+- **DEBUG Mode Fixed**: Production now uses `DEBUG=False` for security compliance
+- **SECRET_KEY Enhanced**: Generated new 50-character secure SECRET_KEY using Django's official generator
+- **Environment Variables**: All sensitive data properly configured in `.env` file (not committed to git)
+- **Security Warnings Resolved**: Eliminated Django security check warnings in production
+
 ## Architecture Overview
 
 ### Core Django Apps

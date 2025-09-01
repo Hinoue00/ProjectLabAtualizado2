@@ -7,8 +7,8 @@ from .base import *
 
 load_dotenv()
 
-# DEBUG ativado temporariamente para investigar outros erros
-DEBUG = True
+# DEBUG desabilitado para segurança em produção
+DEBUG = False
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
