@@ -1,0 +1,387 @@
+/* =============================================================================
+   UNIFIED COLOR VARIABLES - LabConnect System Optimization
+   Sistema único de variáveis de cores para tema claro e escuro
+   ============================================================================= */
+
+:root {
+    /* === CORES PRIMÁRIAS === */
+    --primary-blue: #4a6fa5;
+    --primary-blue-light: rgba(74, 111, 165, 0.1);
+    --primary-blue-dark: #3a5a95;
+    --primary-blue-rgb: 74, 111, 165;
+    
+    /* === CORES NEUTRAS (LIGHT MODE) === */
+    --neutral-white: #ffffff;
+    --neutral-gray-50: #f8f9fa;
+    --neutral-gray-100: #f1f3f4;
+    --neutral-gray-200: #e9ecef;
+    --neutral-gray-300: #dee2e6;
+    --neutral-gray-400: #ced4da;
+    --neutral-gray-500: #adb5bd;
+    --neutral-gray-600: #6c757d;
+    --neutral-gray-700: #495057;
+    --neutral-gray-800: #343a40;
+    --neutral-gray-900: #212529;
+    --neutral-black: #000000;
+    
+    /* === CORES NEUTRAS (DARK MODE) === */
+    --dark-bg-primary: #1a1d23;
+    --dark-bg-secondary: #212529;
+    --dark-bg-tertiary: #2d3136;
+    --dark-border: #4a5568;
+    --dark-text-primary: #e2e8f0;
+    --dark-text-secondary: #a0aec0;
+    --dark-text-muted: #718096;
+    
+    /* === CORES DE STATUS === */
+    --status-success: #198754;
+    --status-success-light: rgba(25, 135, 84, 0.1);
+    --status-warning: #ffc107;
+    --status-warning-light: rgba(255, 193, 7, 0.1);
+    --status-danger: #dc3545;
+    --status-danger-light: rgba(220, 53, 69, 0.1);
+    --status-info: #0dcaf0;
+    --status-info-light: rgba(13, 202, 240, 0.1);
+    
+    /* === MAPEAMENTO LIGHT MODE === */
+    --bg-primary: var(--neutral-white);
+    --bg-secondary: var(--neutral-gray-50);
+    --bg-tertiary: var(--neutral-gray-100);
+    --bg-card: var(--neutral-white);
+    --bg-input: var(--neutral-white);
+    --bg-modal: var(--neutral-white);
+    --bg-sidebar: var(--primary-blue);
+    --bg-header: var(--neutral-white);
+    --bg-hover: var(--neutral-gray-100);
+    --bg-active: var(--primary-blue-light);
+    
+    --text-primary: var(--neutral-gray-800);
+    --text-secondary: var(--neutral-gray-600);
+    --text-muted: var(--neutral-gray-500);
+    --text-contrast: var(--neutral-white);
+    
+    --border-primary: var(--neutral-gray-300);
+    --border-secondary: var(--neutral-gray-200);
+    --border-input: var(--neutral-gray-300);
+    --border-focus: var(--primary-blue);
+    
+    /* === SHADOW SYSTEM === */
+    --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+    --shadow-focus: 0 0 0 0.2rem rgba(74, 111, 165, 0.25);
+    
+    /* === SPACING SYSTEM === */
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    --space-xxl: 3rem;
+    
+    /* === BORDER RADIUS === */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.375rem;
+    --radius-lg: 0.5rem;
+    --radius-xl: 1rem;
+    
+    /* === TYPOGRAPHY === */
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+    --line-height-base: 1.5;
+    --line-height-tight: 1.25;
+    --line-height-loose: 1.75;
+    
+    /* === TRANSITIONS === */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.2s ease;
+    --transition-slow: 0.3s ease;
+    
+    /* === Z-INDEX === */
+    --z-dropdown: 1000;
+    --z-sticky: 1020;
+    --z-fixed: 1030;
+    --z-modal-backdrop: 1040;
+    --z-modal: 1050;
+    --z-popover: 1060;
+    --z-tooltip: 1070;
+}
+
+/* === DARK THEME OVERRIDES === */
+[data-theme="dark"] {
+    /* === REMAPPING PARA DARK MODE === */
+    --bg-primary: var(--dark-bg-primary);
+    --bg-secondary: var(--dark-bg-secondary);
+    --bg-tertiary: var(--dark-bg-tertiary);
+    --bg-card: var(--dark-bg-secondary);
+    --bg-input: var(--dark-bg-secondary);
+    --bg-modal: var(--dark-bg-secondary);
+    --bg-sidebar: var(--dark-bg-primary);
+    --bg-header: var(--dark-bg-primary);
+    --bg-hover: var(--dark-bg-tertiary);
+    --bg-active: rgba(74, 111, 165, 0.2);
+    
+    --text-primary: var(--dark-text-primary);
+    --text-secondary: var(--dark-text-secondary);
+    --text-muted: var(--dark-text-muted);
+    --text-contrast: var(--neutral-white);
+    
+    --border-primary: var(--dark-border);
+    --border-secondary: var(--dark-border);
+    --border-input: var(--dark-border);
+    --border-focus: var(--primary-blue);
+    
+    /* === SHADOW AJUSTES PARA DARK MODE === */
+    --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.5);
+    --shadow-focus: 0 0 0 0.2rem rgba(74, 111, 165, 0.4);
+}
+
+/* === BOOTSTRAP COMPATIBILITY === */
+:root {
+    --bs-primary: var(--primary-blue);
+    --bs-success: var(--status-success);
+    --bs-warning: var(--status-warning);
+    --bs-danger: var(--status-danger);
+    --bs-info: var(--status-info);
+    --bs-light: var(--bg-secondary);
+    --bs-dark: var(--text-primary);
+    --bs-body-bg: var(--bg-primary);
+    --bs-body-color: var(--text-primary);
+    --bs-border-color: var(--border-primary);
+}
+
+/* === BASE ELEMENT STYLES === */
+body {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+.card {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+.card-header {
+    background-color: var(--bg-header) !important;
+    border-color: var(--border-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+.form-control,
+.form-select {
+    background-color: var(--bg-input) !important;
+    border-color: var(--border-input) !important;
+    color: var(--text-primary) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--border-focus) !important;
+    box-shadow: var(--shadow-focus) !important;
+}
+
+.table {
+    color: var(--text-primary) !important;
+}
+
+.table th,
+.table td {
+    border-color: var(--border-primary) !important;
+}
+
+.table-hover tbody tr:hover {
+    background-color: var(--bg-hover) !important;
+}
+
+.btn-primary {
+    background-color: var(--primary-blue) !important;
+    border-color: var(--primary-blue) !important;
+}
+
+.btn-outline-primary {
+    color: var(--primary-blue) !important;
+    border-color: var(--primary-blue) !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-blue) !important;
+    color: var(--text-contrast) !important;
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+.bg-light {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+.bg-white {
+    background-color: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+}
+
+.modal-content {
+    background-color: var(--bg-modal) !important;
+    border-color: var(--border-primary) !important;
+}
+
+.dropdown-menu {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-primary) !important;
+}
+
+.dropdown-item:hover {
+    background-color: var(--bg-hover) !important;
+}
+
+/* === STATUS BADGES === */
+.badge.bg-success {
+    background-color: var(--status-success) !important;
+}
+
+.badge.bg-warning {
+    background-color: var(--status-warning) !important;
+    color: var(--neutral-black) !important;
+}
+
+.badge.bg-danger {
+    background-color: var(--status-danger) !important;
+}
+
+.badge.bg-info {
+    background-color: var(--status-info) !important;
+    color: var(--neutral-black) !important;
+}
+
+.badge.bg-light,
+.badge.bg-secondary {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* === ALERT SYSTEM === */
+.alert-success {
+    background-color: var(--status-success-light) !important;
+    border-color: var(--status-success) !important;
+    color: var(--text-primary) !important;
+}
+
+.alert-warning {
+    background-color: var(--status-warning-light) !important;
+    border-color: var(--status-warning) !important;
+    color: var(--text-primary) !important;
+}
+
+.alert-danger {
+    background-color: var(--status-danger-light) !important;
+    border-color: var(--status-danger) !important;
+    color: var(--text-primary) !important;
+}
+
+.alert-info {
+    background-color: var(--status-info-light) !important;
+    border-color: var(--status-info) !important;
+    color: var(--text-primary) !important;
+}
+
+/* === NAVIGATION === */
+.navbar {
+    background-color: var(--bg-sidebar) !important;
+}
+
+.sidebar {
+    background-color: var(--bg-primary) !important;
+}
+
+/* === PAGINATION === */
+.page-link {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+.page-link:hover {
+    background-color: var(--bg-hover) !important;
+}
+
+.page-item.active .page-link {
+    background-color: var(--primary-blue) !important;
+    border-color: var(--primary-blue) !important;
+}
+
+/* === INPUT GROUPS === */
+.input-group-text {
+    background-color: var(--bg-tertiary) !important;
+    border-color: var(--border-input) !important;
+    color: var(--text-primary) !important;
+}
+
+/* === BREADCRUMB === */
+.breadcrumb {
+    background-color: transparent !important;
+}
+
+.breadcrumb-item a {
+    color: var(--primary-blue) !important;
+}
+
+.breadcrumb-item.active {
+    color: var(--text-primary) !important;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    color: var(--text-muted) !important;
+}
+
+/* === UTILITY CLASSES === */
+.text-primary {
+    color: var(--primary-blue) !important;
+}
+
+.text-success {
+    color: var(--status-success) !important;
+}
+
+.text-warning {
+    color: var(--status-warning) !important;
+}
+
+.text-danger {
+    color: var(--status-danger) !important;
+}
+
+.text-info {
+    color: var(--status-info) !important;
+}
+
+/* === CONTAINERS === */
+.container,
+.container-fluid,
+.content-container,
+.main-content {
+    background-color: transparent !important;
+}
+
+/* === SPECIFIC OVERRIDES FOR CONSISTENCY === */
+* {
+    box-sizing: border-box;
+}
+
+/* Remove any residual white backgrounds */
+.bg-white,
+.bg-light,
+[style*="background-color: white"],
+[style*="background-color: #fff"],
+[style*="background-color: #ffffff"] {
+    background-color: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+}

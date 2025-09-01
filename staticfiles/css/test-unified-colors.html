@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Sistema Unificado de Cores</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- Unified Variables System -->
+    <link rel="stylesheet" href="unified-variables.css">
+</head>
+<body>
+    <div class="container py-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h1>Teste do Sistema Unificado de Cores</h1>
+                    <button id="themeToggle" class="btn btn-outline-primary">
+                        <i class="bi bi-moon-fill"></i> Alternar Tema
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card stats-card p-3 text-center">
+                    <div class="stats-icon mx-auto mb-2 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <i class="bi bi-building"></i>
+                    </div>
+                    <div class="stats-value">12</div>
+                    <div class="stats-label">Laboratórios</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card p-3 text-center">
+                    <div class="stats-icon mx-auto mb-2 bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <div class="stats-value">45</div>
+                    <div class="stats-label">Usuários</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card p-3 text-center">
+                    <div class="stats-icon mx-auto mb-2 bg-warning text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <i class="bi bi-box"></i>
+                    </div>
+                    <div class="stats-value">238</div>
+                    <div class="stats-label">Materiais</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card p-3 text-center">
+                    <div class="stats-icon mx-auto mb-2 bg-info text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <i class="bi bi-calendar"></i>
+                    </div>
+                    <div class="stats-value">89</div>
+                    <div class="stats-label">Agendamentos</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Example -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Formulário de Teste</h5>
+                    </div>
+                    <div class="card-body">
+                        <form>
+                            <div class="mb-3">
+                                <label for="testInput" class="form-label">Campo de Texto</label>
+                                <input type="text" class="form-control" id="testInput" placeholder="Digite algo aqui">
+                            </div>
+                            <div class="mb-3">
+                                <label for="testSelect" class="form-label">Seleção</label>
+                                <select class="form-select" id="testSelect">
+                                    <option>Escolha uma opção</option>
+                                    <option>Opção 1</option>
+                                    <option>Opção 2</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="testTextarea" class="form-label">Área de Texto</label>
+                                <textarea class="form-control" id="testTextarea" rows="3" placeholder="Digite uma mensagem..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Enviar</button>
+                            <button type="button" class="btn btn-outline-secondary ms-2">Cancelar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Badges de Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <h6>Status de Solicitações:</h6>
+                            <span class="badge badge-approved me-2">Aprovado</span>
+                            <span class="badge badge-pending me-2">Pendente</span>
+                            <span class="badge badge-rejected me-2">Rejeitado</span>
+                        </div>
+                        <div class="mb-3">
+                            <h6>Bootstrap Badges:</h6>
+                            <span class="badge bg-success me-2">Sucesso</span>
+                            <span class="badge bg-warning me-2">Aviso</span>
+                            <span class="badge bg-danger me-2">Erro</span>
+                            <span class="badge bg-info me-2">Info</span>
+                        </div>
+                        <div class="mb-3">
+                            <h6>Alertas:</h6>
+                            <div class="alert alert-success" role="alert">
+                                <i class="bi bi-check-circle"></i> Operação realizada com sucesso!
+                            </div>
+                            <div class="alert alert-warning" role="alert">
+                                <i class="bi bi-exclamation-triangle"></i> Atenção! Verifique os dados.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table Example -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Tabela de Exemplo</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nome</th>
+                                        <th>Email</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>João Silva</td>
+                                        <td>joao@exemplo.com</td>
+                                        <td><span class="badge badge-approved">Ativo</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary me-2">Editar</button>
+                                            <button class="btn btn-sm btn-outline-danger">Excluir</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>Maria Santos</td>
+                                        <td>maria@exemplo.com</td>
+                                        <td><span class="badge badge-pending">Pendente</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary me-2">Editar</button>
+                                            <button class="btn btn-sm btn-outline-danger">Excluir</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td>Pedro Costa</td>
+                                        <td>pedro@exemplo.com</td>
+                                        <td><span class="badge badge-rejected">Inativo</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary me-2">Editar</button>
+                                            <button class="btn btn-sm btn-outline-danger">Excluir</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Color Palette Display -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Paleta de Cores - Sistema Unificado</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <h6>Backgrounds</h6>
+                                <div class="p-3 mb-2" style="background-color: var(--bg-primary); border: 1px solid var(--border-primary);">bg-primary</div>
+                                <div class="p-3 mb-2" style="background-color: var(--bg-secondary); border: 1px solid var(--border-primary);">bg-secondary</div>
+                                <div class="p-3 mb-2" style="background-color: var(--bg-card); border: 1px solid var(--border-primary);">bg-card</div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <h6>Textos</h6>
+                                <div class="p-3 mb-2" style="color: var(--text-primary);">text-primary</div>
+                                <div class="p-3 mb-2" style="color: var(--text-secondary);">text-secondary</div>
+                                <div class="p-3 mb-2" style="color: var(--text-muted);">text-muted</div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <h6>Status</h6>
+                                <div class="p-2 mb-2 text-white" style="background-color: var(--status-success);">success</div>
+                                <div class="p-2 mb-2 text-dark" style="background-color: var(--status-warning);">warning</div>
+                                <div class="p-2 mb-2 text-white" style="background-color: var(--status-danger);">danger</div>
+                                <div class="p-2 mb-2 text-dark" style="background-color: var(--status-info);">info</div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <h6>Primary</h6>
+                                <div class="p-2 mb-2 text-white" style="background-color: var(--primary-blue);">primary-blue</div>
+                                <div class="p-2 mb-2 text-white" style="background-color: var(--primary-blue-dark);">primary-blue-dark</div>
+                                <div class="p-2 mb-2" style="background-color: var(--primary-blue-light); border: 1px solid var(--primary-blue);">primary-blue-light</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            
+            const icon = themeToggle.querySelector('i');
+            if (newTheme === 'dark') {
+                icon.className = 'bi bi-sun-fill';
+                themeToggle.innerHTML = '<i class="bi bi-sun-fill"></i> Tema Claro';
+            } else {
+                icon.className = 'bi bi-moon-fill';
+                themeToggle.innerHTML = '<i class="bi bi-moon-fill"></i> Alternar Tema';
+            }
+        });
+        
+        // Auto-detect system theme preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            html.setAttribute('data-theme', 'dark');
+            const icon = themeToggle.querySelector('i');
+            icon.className = 'bi bi-sun-fill';
+            themeToggle.innerHTML = '<i class="bi bi-sun-fill"></i> Tema Claro';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,319 @@
+/* =============================================================================
+   DASHBOARD BASE STYLES - LabConnect (OPTIMIZED WITH UNIFIED VARIABLES)
+   ============================================================================= */
+
+/* === Layout Base === */
+.content-container {
+    padding: var(--space-lg);
+    background-color: var(--bg-primary);
+    min-height: 100vh;
+}
+
+/* === Page Header === */
+.page-header {
+    margin-bottom: var(--space-xl);
+    padding-bottom: var(--space-lg);
+    border-bottom: 2px solid var(--border-secondary);
+}
+
+.page-title {
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+}
+
+.page-subtitle {
+    color: var(--text-muted);
+    font-size: var(--font-size-lg);
+    margin: 0;
+}
+
+/* === Stats Cards === */
+.stats-card {
+    position: relative;
+    background: var(--bg-card);
+    border: 1px solid var(--border-secondary);
+    border-radius: var(--radius-md);
+    transition: var(--transition-normal);
+    height: 100%;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-blue-light);
+}
+
+.stats-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-blue);
+    font-size: var(--font-size-xl);
+}
+
+.stats-value {
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: var(--space-md) 0 var(--space-xs);
+    line-height: 1;
+}
+
+.stats-label {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* === Cards Gerais === */
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-secondary);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-normal);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.card-header {
+    background: transparent;
+    border-bottom: 1px solid var(--border-secondary);
+    padding: var(--space-lg);
+}
+
+.card-header > h5.card-title {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+    flex: 1; 
+    min-width: 250px; 
+}
+
+.card-body {
+    padding: var(--space-lg);
+}
+
+/* === Badges === */
+.badge {
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+}
+
+.badge.badge-approved {
+    background-color: var(--status-success-light);
+    color: var(--status-success);
+    border: 1px solid var(--status-success);
+}
+
+.badge.badge-rejected {
+    background-color: var(--status-danger-light);
+    color: var(--status-danger);
+    border: 1px solid var(--status-danger);
+}
+
+.badge.badge-pending {
+    background-color: var(--status-warning-light);
+    color: var(--neutral-black);
+    border: 1px solid var(--status-warning);
+}
+
+/* === Loading States === */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+    position: relative;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 30px;
+    height: 30px;
+    border: 3px solid var(--border-primary);
+    border-top: 3px solid var(--primary-blue);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 10;
+}
+
+.chart-container.loading {
+    position: relative;
+    opacity: 0.7;
+}
+
+.chart-container.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30px;
+    height: 30px;
+    margin: -15px 0 0 -15px;
+    border: 3px solid var(--border-primary);
+    border-top: 3px solid var(--primary-blue);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.chart-error {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    min-width: 300px;
+}
+
+/* === Utilidades === */
+.text-gradient {
+    background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.border-gradient {
+    border: 2px solid;
+    border-image: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark)) 1;
+}
+
+/* === Scrollbar Customizada === */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-blue-light) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--primary-blue-light);
+    border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: var(--primary-blue);
+}
+
+/* === Chart Containers === */
+.chart-container {
+    background-color: var(--bg-card);
+    border-radius: var(--radius-md);
+}
+
+/* === Global Link Styling === */
+a {
+    text-decoration: none;
+    color: var(--primary-blue);
+}
+
+a:hover {
+    color: var(--primary-blue-dark);
+}
+
+/* === Table Styling === */
+.table {
+    color: var(--text-primary);
+    background-color: transparent;
+}
+
+.table th,
+.table td {
+    border-color: var(--border-primary);
+    color: var(--text-primary);
+}
+
+.table-hover tbody tr:hover {
+    background-color: var(--bg-hover);
+}
+
+/* === Text Utilities === */
+.text-muted {
+    color: var(--text-muted);
+}
+
+.text-secondary {
+    color: var(--text-secondary);
+}
+
+.text-primary {
+    color: var(--primary-blue);
+}
+
+.text-success {
+    color: var(--status-success);
+}
+
+.text-warning {
+    color: var(--status-warning);
+}
+
+.text-danger {
+    color: var(--status-danger);
+}
+
+.text-info {
+    color: var(--status-info);
+}
+
+/* === Alert Styling === */
+.alert {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-primary);
+    color: var(--text-primary);
+}
+
+.alert-success {
+    background-color: var(--status-success-light);
+    border-color: var(--status-success);
+}
+
+.alert-warning {
+    background-color: var(--status-warning-light);
+    border-color: var(--status-warning);
+}
+
+.alert-danger {
+    background-color: var(--status-danger-light);
+    border-color: var(--status-danger);
+}
+
+.alert-info {
+    background-color: var(--status-info-light);
+    border-color: var(--status-info);
+}
+
+/* 
+==============================================================================
+NOTE: Dark theme functionality is now handled automatically through the 
+unified variable system. No separate dark theme overrides needed.
+==============================================================================
+*/
