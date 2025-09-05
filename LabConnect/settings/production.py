@@ -116,9 +116,10 @@ LOGGING = {
 }
 
 # Configurações de segurança para produção
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+# SSL configurado considerando que ngrok termina HTTPS
+SECURE_SSL_REDIRECT = False  # ngrok já força HTTPS
+SESSION_COOKIE_SECURE = True  # Cookies devem ser seguros
+CSRF_COOKIE_SECURE = True   # CSRF cookies devem ser seguros
 SECURE_HSTS_SECONDS = 31536000  # 1 ano
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
@@ -130,3 +131,6 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
 CSRF_TRUSTED_ORIGINS = ['https://labconnect.ngrok.app']
+
+# Configuração adicional para confiar no proxy reverso
+SECURE_SSL_HOST = None  # Permite qualquer host HTTPS

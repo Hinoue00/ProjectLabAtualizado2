@@ -2,6 +2,7 @@
 {% load static %}
 {% load scheduling_tags %}
 {% load scheduling_filters %}
+{% load scheduling_utils %}
 {% block title %}Detalhes da Solicitação de Agendamento | LabConnect{% endblock %}
 
 {% block extra_css %}
@@ -329,10 +330,11 @@
                                             </div>
                                         </div>
                                         <div class="d-grid gap-2">
-                                            <a href="{{ schedule_request.guide_file.url }}" class="btn btn-primary" download>
+                                            {% secure_file_url schedule_request.guide_file as guide_file_url %}
+                                            <a href="{{ guide_file_url }}?download=1" class="btn btn-primary">
                                                 <i class="bi bi-download me-1"></i> Baixar PDF
                                             </a>
-                                            <a href="{{ schedule_request.guide_file.url }}" class="btn btn-outline-secondary" target="_blank">
+                                            <a href="{{ guide_file_url }}" class="btn btn-outline-secondary" target="_blank">
                                                 <i class="bi bi-eye me-1"></i> Visualizar PDF
                                             </a>
                                         </div>

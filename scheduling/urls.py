@@ -28,4 +28,5 @@ urlpatterns = [
     path('technician-edit/<int:pk>/', views.technician_edit_schedule, name='technician_edit_schedule'),
     path('create-exception/', views.create_exception_schedule, name='create_exception_schedule'),
     path('api/storage-materials/', views.storage_materials_api, name='storage_materials_api'),
+    path('guide-file/<str:file_path>/', views.serve_guide_file, name='serve_guide_file'),
 ]

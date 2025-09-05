@@ -16,6 +16,10 @@ from whatsapp.services import WhatsAppNotificationService
 from inventory.models import Material
 from django.core.cache import cache
 from django.core.paginator import Paginator
+from django.http import HttpResponse, Http404, FileResponse
+from django.contrib.auth.decorators import login_required
+import os
+import mimetypes
 
 
 def invalidate_schedule_caches():
@@ -1626,3 +1630,55 @@ def storage_materials_api(request):
         'storage_labs_count': storage_labs.count(),
         'materials_by_lab': materials_by_lab
     })
+
+
+@login_required
+def serve_guide_file(request, file_path):
+    """
+    Serve arquivos de media de forma segura com autenticação
+    """
+    # Construir caminho completo do arquivo
+    full_path = os.path.join(settings.MEDIA_ROOT, 'lab_guides', file_path)
+    
+    # Verificar se arquivo existe
+    if not os.path.exists(full_path):
+        raise Http404("Arquivo não encontrado")
+    
+    # Verificar se é um arquivo válido (não um diretório)
+    if not os.path.isfile(full_path):
+        raise Http404("Caminho inválido")
+    
+    # Verificar se o usuário tem permissão para acessar o arquivo
+    # Buscar o agendamento que contém este arquivo
+    schedule_request = get_object_or_404(
+        ScheduleRequest, 
+        guide_file__icontains=file_path
+    )
+    
+    # Verificar permissões
+    if request.user.user_type == 'professor':
+        # Professor pode acessar seus próprios arquivos
+        if schedule_request.professor != request.user:
+            raise Http404("Sem permissão para acessar este arquivo")
+    elif request.user.user_type == 'technician':
+        # Técnico pode acessar todos os arquivos
+        pass
+    else:
+        # Outros tipos de usuário não podem acessar
+        raise Http404("Sem permissão para acessar este arquivo")
+    
+    # Determinar tipo MIME
+    content_type, _ = mimetypes.guess_type(full_path)
+    if content_type is None:
+        content_type = 'application/octet-stream'
+    
+    # Verificar se deve ser download ou visualização
+    is_download = request.GET.get('download', '0') == '1'
+    
+    # Retornar arquivo
+    return FileResponse(
+        open(full_path, 'rb'),
+        content_type=content_type,
+        as_attachment=is_download,  # True para download, False para visualizar
+        filename=os.path.basename(full_path)
+    )
