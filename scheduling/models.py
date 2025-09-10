@@ -135,7 +135,7 @@ class ScheduleRequest(models.Model):
         Retorna o prazo limite para aprovação (sexta-feira da semana da solicitação)
         """
         # Obter a data da solicitação
-        request_date = self.request_date.date() if self.request_date else timezone.now().date()
+        request_date = self.request_date.date() if self.request_date else timezone.localtime().date()
         
         # Calcular a sexta-feira da mesma semana
         days_until_friday = 4 - request_date.weekday()  # 4=sexta
@@ -152,7 +152,7 @@ class ScheduleRequest(models.Model):
         if self.status != 'pending':
             return False
         
-        today = timezone.now().date()
+        today = timezone.localtime().date()
         deadline = self.get_approval_deadline()
         return today > deadline
     
@@ -163,14 +163,14 @@ class ScheduleRequest(models.Model):
         if self.status != 'pending':
             return None
         
-        today = timezone.now().date()
+        today = timezone.localtime().date()
         deadline = self.get_approval_deadline()
         days_remaining = (deadline - today).days
         return max(0, days_remaining)  # Não retornar valores negativos
     
     def can_be_requested(self, user=None, is_exception=False):
         """Verifica se a solicitação atende aos requisitos (dia e semana)"""
-        today = timezone.now().date()
+        today = timezone.localtime().date()
         
         # Se for agendamento de exceção e usuário é técnico, permitir qualquer dia/horário
         if is_exception and user and user.user_type == 'technician':

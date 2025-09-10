@@ -35,7 +35,7 @@ def invalidate_schedule_caches():
 def schedule_calendar(request):
     """Exibe calendário de agendamentos de laboratórios"""
     user = request.user
-    today = timezone.now().date()
+    today = timezone.localtime().date()
     
     # Define o período para visualização (mês atual + próximos meses)
     start_date = today.replace(day=1) - timedelta(days=31)  # Mês anterior
@@ -133,7 +133,7 @@ def create_schedule_request(request):
     import logging
     logger = logging.getLogger(__name__)
     
-    today = timezone.now().date()
+    today = timezone.localtime().date()
     logger.info(f"INICIANDO CRIACAO DE AGENDAMENTO - Professor: {request.user.get_full_name()}")
     
     # REGRA IMPLEMENTADA: Rascunhos podem ser criados qualquer dia, para qualquer dia futuro (exceto domingos)
@@ -363,7 +363,7 @@ def list_draft_schedule_requests(request):
     """
     Lista os rascunhos de agendamento para confirmação (apenas segunda/terça)
     """
-    today = timezone.now().date()
+    today = timezone.localtime().date()
     
     # Verifica se é segunda ou terça-feira
     if today.weekday() not in [0, 1]:  # 0=segunda, 1=terça
@@ -421,7 +421,7 @@ def view_draft_schedule_requests(request):
         professor=request.user
     ).order_by('scheduled_date')
     
-    today = timezone.now().date()
+    today = timezone.localtime().date()
     
     # Verificar se existe pelo menos um rascunho que pode ser confirmado hoje
     can_confirm_any = False
@@ -453,7 +453,7 @@ def confirm_draft_schedule_request(request, draft_id):
     """
     Confirma um rascunho de agendamento
     """
-    today = timezone.now().date()
+    today = timezone.localtime().date()
     
     # REGRA: Verifica se é segunda ou terça-feira
     if today.weekday() not in [0, 1]:  # 0=segunda, 1=terça
@@ -605,7 +605,7 @@ def edit_schedule_request(request, pk):
         return redirect('schedule_request_detail', pk=pk)
     
     # Verifica se é uma segunda ou terça-feira
-    today = timezone.now().date()
+    today = timezone.localtime().date()
     if today.weekday() not in [0, 1] or settings.ALLOW_SCHEDULING_ANY_DAY:  # 0=segunda, 1=terça
         messages.warning(request, 'Agendamentos só podem ser modificados às segundas e terças-feiras.')
         return redirect('schedule_request_detail', pk=pk)
@@ -917,7 +917,7 @@ def calendar_data_api(request):
     filter_status = request.GET.get('status', 'all')
     
     # Determinar período de datas
-    today = timezone.now().date()
+    today = timezone.localtime().date()
     
     # Se for navegação mensal
     if month_offset != 0:
@@ -1150,7 +1150,7 @@ def pending_requests_list(request):
         cache.set(cache_key, pending_requests, 120)
     
     # Adicionar informações sobre prazo e comentários para cada solicitação
-    today = timezone.now().date()
+    today = timezone.localtime().date()
     for schedule_req in pending_requests:
         schedule_req.approval_deadline = schedule_req.get_approval_deadline()
         schedule_req.days_remaining = schedule_req.days_until_approval_deadline()

@@ -116,7 +116,7 @@ class ScheduleRequestForm(forms.ModelForm):
                     field.widget.attrs['type'] = field.widget.input_type
             
         # Configurar limites de data baseado no tipo (rascunho vs solicitação)
-        today = timezone.now().date()
+        today = timezone.localtime().date()
         
         if self.is_draft:
             # Para RASCUNHOS: permitir qualquer data futura (exceto domingos)
@@ -175,7 +175,7 @@ class ScheduleRequestForm(forms.ModelForm):
             if date.weekday() == 6:  # 6=domingo
                 raise forms.ValidationError("Domingo não é permitido para agendamentos.")
             
-            today = timezone.now().date()
+            today = timezone.localtime().date()
             
             if self.is_draft:
                 # Para RASCUNHOS: permitir qualquer data futura (exceto domingo)
@@ -417,7 +417,7 @@ class ExceptionScheduleRequestForm(forms.ModelForm):
         ).order_by('first_name', 'last_name')
         
         # Configurar limites de data - para exceções, permitir qualquer data futura
-        today = timezone.now().date()
+        today = timezone.localtime().date()
         # Permitir agendamentos a partir de hoje até 3 meses no futuro
         max_date = today + timedelta(days=90)
         
@@ -431,7 +431,7 @@ class ExceptionScheduleRequestForm(forms.ModelForm):
         if not date:
             raise forms.ValidationError("A data é obrigatória para agendamentos de exceção.")
         
-        today = timezone.now().date()
+        today = timezone.localtime().date()
         if date < today:
             raise forms.ValidationError("Não é possível agendar para datas passadas.")
         
