@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="{% static 'css/calendar-visual.css' %}">
 <link rel="stylesheet" href="{% static 'css/activities-professors.css' %}">
 <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+<link rel="stylesheet" href="{% static 'css/dashboard-mobile-fix.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -205,34 +206,39 @@
         <div class="col-lg-8 mb-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-transparent">
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex justify-content-between align-items-center mobile-stack">
                         <h5 class="card-title mb-0">
                             <i class="bi bi-bar-chart"></i>
                             Atividade dos Laboratórios
                         </h5>
                         
                         <!-- Chart Controls -->
-                        <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center gap-3 chart-controls">
                             <!-- Period Filter -->
                             <div class="btn-group" id="labActivityPeriod" role="group">
                                 <button type="button" class="btn btn-outline-primary btn-sm active" data-period="week">
-                                    Semana
+                                    <span class="d-none d-sm-inline">Semana</span>
+                                    <span class="d-sm-none">S</span>
                                 </button>
                                 <button type="button" class="btn btn-outline-primary btn-sm" data-period="month">
-                                    Mês
+                                    <span class="d-none d-sm-inline">Mês</span>
+                                    <span class="d-sm-none">M</span>
                                 </button>
                                 <button type="button" class="btn btn-outline-primary btn-sm" data-period="year">
-                                    Ano
+                                    <span class="d-none d-sm-inline">Ano</span>
+                                    <span class="d-sm-none">A</span>
                                 </button>
                             </div>
                             
                             <!-- Department Filter -->
-                            <select id="chartDepartmentFilter" class="form-select form-select-sm" style="width: auto;">
-                                <option value="all">Todos</option>
-                                {% for dept in departments %}
-                                    <option value="{{ dept }}">{{ dept|capfirst }}</option>
-                                {% endfor %}
-                            </select>
+                            <div class="department-select-container">
+                                <select id="chartDepartmentFilter" class="form-select form-select-sm">
+                                    <option value="all">Todos os Departamentos</option>
+                                    {% for dept in departments %}
+                                        <option value="{{ dept }}">{{ dept|capfirst }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -249,25 +255,27 @@
         <div class="col-lg-4 mb-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-transparent">
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex justify-content-between align-items-center mobile-stack">
                         <h5 class="card-title mb-0">
                             <i class="bi bi-hourglass-split"></i>
                             Solicitações Pendentes
                         </h5>
-                        <div class="dropdown">
-                            <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-plus-circle"></i> Ações
+                        <div class="dropdown pending-actions-dropdown">
+                            <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-plus-circle"></i> 
+                                <span class="d-none d-sm-inline">Ações</span>
+                                <span class="d-sm-none">Menu</span>
                             </button>
-                            <ul class="dropdown-menu">
+                            <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
                                     <a class="dropdown-item" href="{% url 'pending_requests' %}">
-                                        <i class="bi bi-list-task"></i> Ver Todas
+                                        <i class="bi bi-list-task me-2"></i> Ver Todas
                                     </a>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <a class="dropdown-item text-warning" href="{% url 'create_exception_schedule' %}">
-                                        <i class="bi bi-exclamation-triangle"></i> Criar Agendamento de Exceção
+                                        <i class="bi bi-exclamation-triangle me-2"></i> Criar Agendamento de Exceção
                                     </a>
                                 </li>
                             </ul>
