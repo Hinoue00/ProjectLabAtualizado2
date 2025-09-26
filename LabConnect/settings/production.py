@@ -8,12 +8,12 @@ from .base import *
 load_dotenv()
 
 # DEBUG desabilitado para segurança em produção
-DEBUG = False
+DEBUG = True
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') + ['192.168.224.114', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') + ['192.168.224.120', 'localhost', '127.0.0.1', 'labconnect.ngrok.app', '*.ngrok.app', '*.ngrok.io']
 
 # Database para produção
 DATABASES = {
@@ -50,6 +50,9 @@ CACHES = {
 
 # Middleware adicional para produção
 MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+# TEMPORARIAMENTE DESABILITADO - MIDDLEWARE.insert(2, 'performance_middleware.PerformanceMiddleware')
+# TEMPORARIAMENTE DESABILITADO - MIDDLEWARE.insert(3, 'performance_middleware.DatabaseOptimizationMiddleware') 
+# TEMPORARIAMENTE DESABILITADO - MIDDLEWARE.insert(4, 'performance_middleware.JSONResponseOptimizationMiddleware')
 # Remover middleware de cache de página para evitar conflitos com AJAX
 # MIDDLEWARE.insert(0, 'django.middleware.cache.UpdateCacheMiddleware')
 # MIDDLEWARE.append('django.middleware.cache.FetchFromCacheMiddleware')
@@ -79,9 +82,23 @@ COMPRESS_JS_FILTERS = [
 ]
 
 # Configurações de database otimizadas para PostgreSQL
-DATABASES['default']['CONN_MAX_AGE'] = 60
+DATABASES['default']['CONN_MAX_AGE'] = 300  # 5 minutos
 DATABASES['default']['OPTIONS'] = {
     'connect_timeout': 10,
+    'server_side_binding': True,  # Melhor performance para queries repetidas
+    'application_name': 'labconnect_prod',
+}
+
+# Pool de conexões otimizado
+DATABASES['default']['CONN_HEALTH_CHECKS'] = True
+DATABASES['default']['TIME_ZONE'] = 'America/Sao_Paulo'
+
+# Configurações avançadas de performance
+DATABASE_CONNECTION_POOLING = {
+    'MAX_CONNECTIONS': 20,  # Máximo de conexões simultâneas
+    'MIN_CONNECTIONS': 5,   # Mínimo sempre ativo
+    'CONNECTION_LIFETIME': 3600,  # 1 hora
+    'IDLE_TIMEOUT': 300,    # 5 minutos para conexões idle
 }
 
 # Configurações para evitar truncamento de respostas grandes

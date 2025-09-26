@@ -1,12 +1,12 @@
 # inventory/ai_inventory_organizer.py - Versão MELHORADA para estruturas complexas
 
-# Importações condicionais para AI
-try:
-    import pandas as pd
-    DataFrame = pd.DataFrame
-except ImportError:
-    pd = None
-    DataFrame = object  # Fallback type
+# Importações condicionais para AI - temporariamente desabilitado
+# try:
+#     import pandas as pd
+#     DataFrame = pd.DataFrame
+# except ImportError:
+pd = None
+DataFrame = object  # Fallback type
 
 try:
     import numpy as np  

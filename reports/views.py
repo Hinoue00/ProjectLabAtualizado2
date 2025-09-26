@@ -21,7 +21,8 @@ try:
 except ImportError:
     HTML = None
 try:
-    import pandas as pd
+    # import pandas as pd
+    pd = None
 except ImportError:
     pd = None
 

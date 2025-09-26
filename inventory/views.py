@@ -11,10 +11,12 @@ from .forms import MaterialForm, MaterialCategoryForm, ImportMaterialsForm
 from laboratories.models import Laboratory
 
 # Importações condicionais para funcionalidades de importação
-try:
-    import pandas as pd
-except ImportError:
-    pd = None
+# Temporariamente desabilitado devido a erro de importação
+pd = None
+# try:
+#     import pandas as pd
+# except ImportError:
+#     pd = None
 
 try:
     import openpyxl
@@ -353,20 +355,29 @@ def import_materials(request):
                 errors = []
                 
                 # Processar cada linha
+                # 🚀 OTIMIZADO: Importação em lote com bulk operations
+                
+                # 1. Preparar caches para categorias e laboratórios existentes
+                existing_categories = {cat.name.lower(): cat for cat in MaterialCategory.objects.all()}
+                existing_labs = {lab.name.lower(): lab for lab in Laboratory.objects.all()}
+                
+                # 2. Coletar dados válidos para bulk operations
+                materials_to_create = []
+                materials_to_update = []
+                categories_to_create = []
+                labs_to_create = []
+                
                 for idx, row in df.iterrows():
                     try:
                         # Pular linhas vazias
                         if pd.isna(row.get('nome')) or str(row.get('nome')).strip() == '':
-                            print(f"DEBUG: Pulando linha {idx + 1} - nome vazio")
                             skipped_count += 1
                             continue
                         
-                        # Extrair dados
+                        # Extrair e validar dados
                         nome = str(row['nome']).strip()
                         categoria_nome = str(row['categoria']).strip()
                         laboratorio_nome = str(row['laboratorio']).strip()
-                        
-                        print(f"DEBUG: Processando linha {idx + 1} - {nome}")
                         
                         # Validar quantidade
                         try:
@@ -376,7 +387,6 @@ def import_materials(request):
                         except (ValueError, TypeError):
                             error_msg = f"Linha {idx + 1}: Quantidade inválida - {row['quantidade']}"
                             errors.append(error_msg)
-                            print(f"DEBUG: {error_msg}")
                             if not skip_errors:
                                 continue
                             quantidade = 0
@@ -389,7 +399,6 @@ def import_materials(request):
                         except (ValueError, TypeError):
                             error_msg = f"Linha {idx + 1}: Estoque mínimo inválido - {row['estoque_minimo']}"
                             errors.append(error_msg)
-                            print(f"DEBUG: {error_msg}")
                             if not skip_errors:
                                 continue
                             estoque_minimo = 1
@@ -399,99 +408,141 @@ def import_materials(request):
                         if 'descricao' in row and pd.notna(row['descricao']):
                             descricao = str(row['descricao']).strip()
                         
-                        # Buscar ou criar categoria
-                        categoria = None
-                        try:
-                            categoria = MaterialCategory.objects.get(name__iexact=categoria_nome)
-                            print(f"DEBUG: Categoria encontrada: {categoria.name}")
-                        except MaterialCategory.DoesNotExist:
+                        # Preparar categoria
+                        categoria = existing_categories.get(categoria_nome.lower())
+                        if not categoria:
                             if create_missing_categories:
-                                categoria = MaterialCategory.objects.create(
-                                    name=categoria_nome,
-                                    material_type='consumable'
-                                )
-                                print(f"DEBUG: Categoria criada: {categoria.name}")
+                                categoria = MaterialCategory(name=categoria_nome, material_type='consumable')
+                                categories_to_create.append(categoria)
+                                existing_categories[categoria_nome.lower()] = categoria
                             else:
                                 error_msg = f"Linha {idx + 1}: Categoria '{categoria_nome}' não encontrada"
                                 errors.append(error_msg)
-                                print(f"DEBUG: {error_msg}")
                                 if not skip_errors:
                                     continue
                         
-                        # Buscar ou criar laboratório
-                        laboratorio = None
-                        try:
-                            laboratorio = Laboratory.objects.get(name__iexact=laboratorio_nome)
-                            print(f"DEBUG: Laboratório encontrado: {laboratorio.name}")
-                        except Laboratory.DoesNotExist:
+                        # Preparar laboratório
+                        laboratorio = existing_labs.get(laboratorio_nome.lower())
+                        if not laboratorio:
                             if create_missing_labs:
-                                laboratorio = Laboratory.objects.create(
+                                laboratorio = Laboratory(
                                     name=laboratorio_nome,
                                     location=f"Localização {laboratorio_nome}",
                                     capacity=30,
                                     is_active=True
                                 )
-                                print(f"DEBUG: Laboratório criado: {laboratorio.name}")
+                                labs_to_create.append(laboratorio)
+                                existing_labs[laboratorio_nome.lower()] = laboratorio
                             else:
                                 error_msg = f"Linha {idx + 1}: Laboratório '{laboratorio_nome}' não encontrado"
                                 errors.append(error_msg)
-                                print(f"DEBUG: {error_msg}")
                                 if not skip_errors:
                                     continue
                         
-                        # Pular se não temos categoria ou laboratório
-                        if not categoria or not laboratorio:
-                            skipped_count += 1
-                            continue
-                        
-                        # Criar ou atualizar material
-                        if update_existing:
-                            material, created = Material.objects.update_or_create(
-                                name=nome,
-                                laboratory=laboratorio,
-                                defaults={
-                                    'category': categoria,
-                                    'description': descricao,
-                                    'quantity': quantidade,
-                                    'minimum_stock': estoque_minimo,
-                                }
-                            )
-                            if created:
-                                imported_count += 1
-                                print(f"DEBUG: Material criado: {material.name}")
-                            else:
-                                updated_count += 1
-                                print(f"DEBUG: Material atualizado: {material.name}")
+                        # Preparar material para criação em lote
+                        if categoria and laboratorio:
+                            material_data = {
+                                'nome': nome,
+                                'categoria': categoria,
+                                'laboratorio': laboratorio,
+                                'descricao': descricao,
+                                'quantidade': quantidade,
+                                'estoque_minimo': estoque_minimo,
+                                'linha': idx + 1
+                            }
+                            materials_to_create.append(material_data)
                         else:
-                            # Verificar se já existe
-                            if Material.objects.filter(name=nome, laboratory=laboratorio).exists():
-                                error_msg = f"Linha {idx + 1}: Material '{nome}' já existe no laboratório '{laboratorio_nome}'"
-                                errors.append(error_msg)
-                                print(f"DEBUG: {error_msg}")
-                                if not skip_errors:
-                                    continue
-                                skipped_count += 1
-                                continue
+                            skipped_count += 1
                             
-                            # Criar novo material
-                            material = Material.objects.create(
-                                name=nome,
-                                category=categoria,
-                                description=descricao,
-                                quantity=quantidade,
-                                minimum_stock=estoque_minimo,
-                                laboratory=laboratorio,
-                            )
-                            imported_count += 1
-                            print(f"DEBUG: Material criado: {material.name}")
-                    
                     except Exception as e:
-                        error_msg = f"Linha {idx + 1}: Erro ao processar - {str(e)}"
+                        error_msg = f"Linha {idx + 1}: Erro inesperado - {str(e)}"
                         errors.append(error_msg)
-                        print(f"DEBUG: {error_msg}")
                         if not skip_errors:
                             continue
-                        skipped_count += 1
+                
+                # 3. Executar bulk operations
+                try:
+                    # Criar categorias em lote
+                    if categories_to_create:
+                        MaterialCategory.objects.bulk_create(categories_to_create, batch_size=100)
+                        print(f"DEBUG: {len(categories_to_create)} categorias criadas em lote")
+                    
+                    # Criar laboratórios em lote
+                    if labs_to_create:
+                        Laboratory.objects.bulk_create(labs_to_create, batch_size=100)
+                        print(f"DEBUG: {len(labs_to_create)} laboratórios criados em lote")
+                    
+                    # Atualizar referências para objetos criados
+                    if categories_to_create or labs_to_create:
+                        existing_categories = {cat.name.lower(): cat for cat in MaterialCategory.objects.all()}
+                        existing_labs = {lab.name.lower(): lab for lab in Laboratory.objects.all()}
+                    
+                    # Preparar materiais para bulk_create
+                    final_materials = []
+                    for material_data in materials_to_create:
+                        try:
+                            categoria = existing_categories.get(material_data['categoria'].name.lower())
+                            laboratorio = existing_labs.get(material_data['laboratorio'].name.lower())
+                            
+                            if categoria and laboratorio:
+                                if update_existing:
+                                    # Para update_existing, usar get_or_create individual (mais lento mas necessário)
+                                    material, created = Material.objects.update_or_create(
+                                        name=material_data['nome'],
+                                        laboratory=laboratorio,
+                                        defaults={
+                                            'category': categoria,
+                                            'description': material_data['descricao'],
+                                            'quantity': material_data['quantidade'],
+                                            'minimum_stock': material_data['estoque_minimo'],
+                                        }
+                                    )
+                                    if created:
+                                        imported_count += 1
+                                        print(f"DEBUG: Material criado: {material.name}")
+                                    else:
+                                        updated_count += 1
+                                        print(f"DEBUG: Material atualizado: {material.name}")
+                                else:
+                                    # Para bulk_create (modo mais rápido)
+                                    material = Material(
+                                        name=material_data['nome'],
+                                        category=categoria,
+                                        description=material_data['descricao'],
+                                        quantity=material_data['quantidade'],
+                                        minimum_stock=material_data['estoque_minimo'],
+                                        laboratory=laboratorio,
+                                    )
+                                    final_materials.append(material)
+                            else:
+                                error_msg = f"Linha {material_data['linha']}: Erro ao encontrar categoria ou laboratório"
+                                errors.append(error_msg)
+                                
+                        except Exception as e:
+                            error_msg = f"Linha {material_data['linha']}: Erro ao processar material - {str(e)}"
+                            errors.append(error_msg)
+                    
+                    # 4. Executar bulk_create para novos materiais
+                    if final_materials and not update_existing:
+                        try:
+                            # Bulk create em lotes para melhor performance
+                            batch_size = 100
+                            for i in range(0, len(final_materials), batch_size):
+                                batch = final_materials[i:i + batch_size]
+                                Material.objects.bulk_create(batch, batch_size=batch_size, ignore_conflicts=True)
+                                imported_count += len(batch)
+                                print(f"DEBUG: Lote de {len(batch)} materiais criados")
+                        except Exception as e:
+                            error_msg = f"Erro durante bulk_create: {str(e)}"
+                            errors.append(error_msg)
+                            print(f"DEBUG: {error_msg}")
+                    
+                except Exception as e:
+                    error_msg = f"Erro durante bulk operations: {str(e)}"
+                    errors.append(error_msg)
+                    print(f"DEBUG: {error_msg}")
+                    
+                # CONTINUAR COM O RESTO DA FUNÇÃO ORIGINAL...
                 
                 # Mostrar resultados
                 print(f"DEBUG: Resultado final - Importados: {imported_count}, Atualizados: {updated_count}, Pulados: {skipped_count}, Erros: {len(errors)}")

@@ -1,13 +1,13 @@
 # inventory/automation_service.py
-# Importações condicionais para automação
-try:
-    import pandas as pd
-    DataFrame = pd.DataFrame
-    Series = pd.Series
-except ImportError:
-    pd = None
-    DataFrame = object  # Fallback type
-    Series = object     # Fallback type
+# Importações condicionais para automação - temporariamente desabilitado
+# try:
+#     import pandas as pd
+#     DataFrame = pd.DataFrame
+#     Series = pd.Series
+# except ImportError:
+pd = None
+DataFrame = object  # Fallback type
+Series = object     # Fallback type
 
 try:
     import numpy as np

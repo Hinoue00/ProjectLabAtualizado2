@@ -15,8 +15,10 @@ from django.http import JsonResponse
 from whatsapp.services import WhatsAppNotificationService
 from inventory.models import Material
 from django.core.cache import cache
+from cache_manager import CacheManager
 from django.core.paginator import Paginator
 from django.http import HttpResponse, Http404, FileResponse
+from django.db.models import Count, Q
 from django.contrib.auth.decorators import login_required
 import os
 import mimetypes
@@ -42,17 +44,28 @@ def schedule_calendar(request):
     end_date = today.replace(day=1) + timedelta(days=62)    # Próximos 2 meses
     
     # Buscar TODOS os status de agendamentos
+    # 🚀 OTIMIZADO: Query unificada com todas as relações necessárias
+    schedule_requests_base = ScheduleRequest.objects.select_related(
+        'professor', 
+        'laboratory',
+        'reviewed_by'
+    ).prefetch_related(
+        'comments__author',
+        'attachments'
+    ).annotate(
+        comments_count=Count('comments'),
+        unread_comments_count=Count(
+            'comments', 
+            filter=Q(comments__is_read=False) & ~Q(comments__author=user)
+        )
+    ).filter(scheduled_date__range=[start_date, end_date])
+    
     if user.user_type == 'professor':
         # Para professores, mostrar apenas seus próprios agendamentos
-        schedule_requests = ScheduleRequest.objects.filter(
-            professor=user,
-            scheduled_date__range=[start_date, end_date]
-        ).select_related('professor', 'laboratory')
+        schedule_requests = schedule_requests_base.filter(professor=user)
     else:
         # Para laboratoristas, mostrar todos os agendamentos
-        schedule_requests = ScheduleRequest.objects.filter(
-            scheduled_date__range=[start_date, end_date]
-        ).select_related('professor', 'laboratory')
+        schedule_requests = schedule_requests_base
     
     # Obtém todos os laboratórios disponíveis para os filtros
     laboratories = Laboratory.objects.filter(is_active=True).prefetch_related('departments')
@@ -1132,24 +1145,30 @@ def pending_requests_list(request):
         
         return redirect('pending_requests')
     
-    # Query otimizada com CACHE - limitar a 50 mais recentes e usar índices
-    cache_key = 'pending_requests_list'
-    pending_requests = cache.get(cache_key)
+    # OTIMIZADO: Query com prefetch e annotations para eliminar N+1
+    cache_key = f'pending_requests_list_{request.user.id}'
+    pending_requests = CacheManager.get_cache('pending_requests', cache_key)
     
     if pending_requests is None:
         pending_requests = list(ScheduleRequest.objects.filter(
             status='pending'
-        ).select_related('professor', 'laboratory').only(
-            'id', 'request_date', 'scheduled_date', 'start_time', 'end_time',
-            'subject', 'number_of_students', 'description', 'materials', 'guide_file',
-            'professor__first_name', 'professor__last_name', 'professor__email',
-            'laboratory__name'
+        ).select_related(
+            'professor', 
+            'laboratory'
+        ).prefetch_related(
+            'comments__author'
+        ).annotate(
+            comments_count=Count('comments'),
+            unread_comments_count=Count(
+                'comments', 
+                filter=Q(comments__is_read=False) & ~Q(comments__author=request.user)
+            )
         ).order_by('-request_date')[:50])  # Limitar a 50 mais recentes
         
         # Cache por 2 minutos
-        cache.set(cache_key, pending_requests, 120)
+        CacheManager.set_cache('pending_requests', pending_requests, cache_key, ttl=120)
     
-    # Adicionar informações sobre prazo e comentários para cada solicitação
+    # Adicionar informações sobre prazo (sem queries adicionais)
     today = timezone.localtime().date()
     for schedule_req in pending_requests:
         schedule_req.approval_deadline = schedule_req.get_approval_deadline()
@@ -1157,16 +1176,9 @@ def pending_requests_list(request):
         schedule_req.is_overdue = schedule_req.is_approval_overdue()
         schedule_req.is_urgent = schedule_req.days_remaining is not None and schedule_req.days_remaining <= 1
         
-        # Informações sobre comentários
-        comments_count = ScheduleRequestComment.objects.filter(schedule_request=schedule_req).count()
-        unread_count = ScheduleRequestComment.objects.filter(
-            schedule_request=schedule_req,
-            is_read=False
-        ).exclude(author=request.user).count()
-        
-        schedule_req.comments_count = comments_count
-        schedule_req.unread_comments = unread_count
-        schedule_req.has_conversation = comments_count > 0
+        # Usar os valores já calculados pela annotation
+        schedule_req.unread_comments = schedule_req.unread_comments_count
+        schedule_req.has_conversation = schedule_req.comments_count > 0
     
     context = {
         'pending_requests': pending_requests,

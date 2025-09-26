@@ -126,10 +126,14 @@ class Material(models.Model):
         
         super().save(*args, **kwargs)
     
-        class Meta:
-            indexes = [
-                models.Index(fields=['name']),
-                models.Index(fields=['category']),
-                models.Index(fields=['laboratory']),
-                models.Index(fields=['quantity']),  # Para consultas de estoque baixo
-            ]   
+    class Meta:
+        indexes = [
+            models.Index(fields=['name']),
+            models.Index(fields=['category']),
+            models.Index(fields=['laboratory']),
+            models.Index(fields=['quantity', 'minimum_stock']),  # Para consultas de estoque baixo
+            models.Index(fields=['laboratory', 'category']),  # Para filtros por lab e categoria
+            models.Index(fields=['expiration_date'], condition=models.Q(expiration_date__isnull=False), name='material_expiration_idx'),  # Para materiais com validade
+            models.Index(fields=['created_at']),  # Para ordenação temporal
+            models.Index(fields=['laboratory', 'quantity']),  # Para dashboard de materiais por lab
+        ]   

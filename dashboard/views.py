@@ -15,6 +15,8 @@ from django.template.loader import render_to_string # Para renderizar partes do 
 from django.db.models import Count
 from django.db.models.functions import TruncYear, TruncWeek, TruncMonth
 from django.core.cache import cache
+from cache_manager import CacheManager
+from dashboard_cache import smart_cache_dashboard, SmartDashboardCache
 from django.views.decorators.http import require_http_methods
 import json
 import logging
@@ -22,6 +24,7 @@ import logging
 
 @login_required
 @user_passes_test(is_technician)
+# TEMPORARIAMENTE DESABILITADO - @smart_cache_dashboard('technician_dashboard')
 def technician_dashboard(request):
     """Dashboard para técnicos com calendário semanal e filtros de departamento"""
     
@@ -34,21 +37,43 @@ def technician_dashboard(request):
     start_of_week = today - timedelta(days=today.weekday()) + timedelta(weeks=week_offset)
     end_of_week = start_of_week + timedelta(days=4)
     
-    # Query appointments with proper department filtering
-    appointments_base = ScheduleRequest.objects.select_related(
-        'professor', 
-        'laboratory',
-        'reviewed_by'
-    ).filter(
-        scheduled_date__range=[start_of_week, end_of_week]
-    )
+    # OTIMIZADO: Query com cache e seleção eficiente de campos
+    cache_key_appointments = f'appointments_{request.user.id}_{department_filter}_{week_offset}'
+    appointments_base = CacheManager.get_cache('dashboard_appointments', cache_key_appointments)
     
-    # 🔧 APLICAR FILTRO DE DEPARTAMENTO CORRIGIDO
-    if department_filter != 'all':
-        filtered_labs = get_laboratories_by_department(department_filter)
-        appointments_base = appointments_base.filter(laboratory__in=filtered_labs)
+    if appointments_base is None:
+        # Query super otimizada - apenas campos necessários
+        appointments_base = ScheduleRequest.objects.select_related(
+            'professor', 
+            'laboratory',
+            'reviewed_by'
+        ).prefetch_related(
+            'comments__author'
+        ).only(
+            'id', 'subject', 'scheduled_date', 'start_time', 'end_time', 'status',
+            'professor__first_name', 'professor__last_name', 'professor__email',
+            'laboratory__name', 'laboratory__location',
+            'reviewed_by__first_name', 'reviewed_by__last_name'
+        ).annotate(
+            comments_count=Count('comments'),
+            unread_comments_count=Count(
+                'comments', 
+                filter=Q(comments__is_read=False) & ~Q(comments__author=request.user)
+            )
+        ).filter(
+            scheduled_date__range=[start_of_week, end_of_week]
+        )
+        
+        # Aplicar filtro de departamento ANTES da conversão para lista
+        if department_filter != 'all':
+            filtered_labs = get_laboratories_by_department(department_filter)
+            appointments_base = appointments_base.filter(laboratory__in=filtered_labs)
+        
+        # Converter para lista e cachear por 3 minutos
+        appointments_base = list(appointments_base[:50])  # Limitar resultados
+        CacheManager.set_cache('dashboard_appointments', appointments_base, cache_key_appointments, ttl=180)
     
-    current_week_appointments = list(appointments_base)
+    current_week_appointments = appointments_base
     
     # Build calendar data
     calendar_data = []
@@ -113,11 +138,13 @@ def technician_dashboard(request):
                 'error': str(e)
             }, status=500)
     
-    # Get statistics - COM CACHE
-    pending_appointments_count = cache.get('pending_appointments_count')
+    # OTIMIZADO: Statistics com cache inteligente
+    cache_key_stats = f'dashboard_stats_{request.user.user_type}_{department_filter}'
+    pending_appointments_count = CacheManager.get_cache('dashboard_stats', cache_key_stats, 'pending_count')
+    
     if pending_appointments_count is None:
         pending_appointments_count = ScheduleRequest.objects.filter(status='pending').count()
-        cache.set('pending_appointments_count', pending_appointments_count, 300)  # Cache por 5 minutos
+        CacheManager.set_cache('dashboard_stats', pending_appointments_count, cache_key_stats, 'pending_count')
     
     # Get pending approvals - OTIMIZADO
     pending_approvals = ScheduleRequest.objects.filter(
@@ -128,28 +155,63 @@ def technician_dashboard(request):
         'laboratory__name'
     ).order_by('-request_date')[:5]
     
-    # 🔧 CORREÇÃO: Materials in alert (baixo estoque)
-    # Como is_low_stock é uma @property, precisamos usar query diferente
-    from django.db.models import F
+    # OTIMIZADO: Materials statistics com cache e query unificada
+    cache_key_materials = f'materials_stats_{department_filter}_{today}'
+    materials_stats = CacheManager.get_cache('materials_stats', cache_key_materials)
     
-    # Buscar materiais onde quantity < minimum_stock - aplicar filtro de departamento
-    materials_in_alert_query = Material.objects.filter(quantity__lt=F('minimum_stock'))
-    materials_near_expiration_query = Material.objects.filter(
-        expiration_date__isnull=False,
-        expiration_date__lte=today + timedelta(days=90),
-        expiration_date__gte=today
-    ).select_related('category', 'laboratory')
+    if materials_stats is None:
+        # Query unificada para materiais com filtros
+        materials_base = Material.objects.select_related('category', 'laboratory')
+        
+        # Aplicar filtro de departamento se necessário
+        if department_filter != 'all':
+            filtered_labs = get_laboratories_by_department(department_filter)
+            materials_base = materials_base.filter(laboratory__in=filtered_labs)
+        
+        # Contar em uma única query usando aggregation
+        from django.db.models import Case, When, IntegerField
+        
+        materials_stats = materials_base.aggregate(
+            low_stock_count=Count(
+                'id', 
+                filter=Q(quantity__lt=F('minimum_stock'))
+            ),
+            near_expiration_count=Count(
+                'id',
+                filter=Q(
+                    expiration_date__isnull=False,
+                    expiration_date__lte=today + timedelta(days=90),
+                    expiration_date__gte=today
+                )
+            ),
+            total_materials=Count('id')
+        )
+        
+        CacheManager.set_cache('materials_stats', materials_stats, cache_key_materials, ttl=600)
     
-    # Aplicar filtro de departamento se necessário
+    materials_in_alert_count = materials_stats['low_stock_count']
+    materials_near_expiration_count = materials_stats['near_expiration_count']
+    
+    # Buscar os materiais reais para o template (se necessário)
+    materials_base_query = Material.objects.select_related('category', 'laboratory')
     if department_filter != 'all':
         filtered_labs = get_laboratories_by_department(department_filter)
-        materials_in_alert_query = materials_in_alert_query.filter(laboratory__in=filtered_labs)
-        materials_near_expiration_query = materials_near_expiration_query.filter(laboratory__in=filtered_labs)
+        materials_base_query = materials_base_query.filter(laboratory__in=filtered_labs)
     
-    materials_in_alert = materials_in_alert_query
-    materials_in_alert_count = materials_in_alert.count()
-    materials_near_expiration = materials_near_expiration_query
-    materials_near_expiration_count = materials_near_expiration.count()
+    try:
+        materials_in_alert = materials_base_query.filter(quantity__lt=F('minimum_stock'))
+        materials_near_expiration = materials_base_query.filter(
+            expiration_date__isnull=False,
+            expiration_date__lte=today + timedelta(days=90),
+            expiration_date__gte=today
+        )
+        print(f"DEBUG: Successfully created materials_in_alert: {type(materials_in_alert)}")
+        print(f"DEBUG: Successfully created materials_near_expiration: {type(materials_near_expiration)}")
+    except Exception as e:
+        print(f"DEBUG: Error creating materials queries: {e}")
+        # Fallback
+        materials_in_alert = Material.objects.none()
+        materials_near_expiration = Material.objects.none()
     
     # Active professors count
     active_professors = User.objects.filter(
@@ -218,11 +280,9 @@ def technician_dashboard(request):
         'recent_requests': recent_requests,
         'stats': stats,
         'today': today,
-        
-        # Stats for template
         'pending_appointments': pending_appointments_count,
         'pending_approvals': pending_approvals,
-        'pending_requests': pending_approvals,  # Para compatibilidade com template
+        'pending_requests': pending_approvals,
         'materials_in_alert': materials_in_alert,
         'materials_in_alert_count': materials_in_alert_count,
         'materials_near_expiration': materials_near_expiration,

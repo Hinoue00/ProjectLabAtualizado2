@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 def main():
     """Run administrative tasks."""
     load_dotenv(override=True)
-    # Alteração aqui:
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'LabConnect.settings.development')
+    # Configuração de produção:
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'LabConnect.settings.production')
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
