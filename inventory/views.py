@@ -121,7 +121,7 @@ def material_list(request):
 def material_create(request):
     """Criar novo material"""
     if request.method == 'POST':
-        form = MaterialForm(request.POST)
+        form = MaterialForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             messages.success(request, 'Material adicionado com sucesso.')
@@ -130,9 +130,9 @@ def material_create(request):
             messages.error(request, 'Por favor, corrija os erros abaixo.')
     else:
         form = MaterialForm()
-    
+
     return render(request, 'material_form.html', {
-        'form': form, 
+        'form': form,
         'title': 'Adicionar Material'
     })
 
@@ -141,9 +141,9 @@ def material_create(request):
 def material_update(request, pk):
     """Editar material existente"""
     material = get_object_or_404(Material, pk=pk)
-    
+
     if request.method == 'POST':
-        form = MaterialForm(request.POST, instance=material)
+        form = MaterialForm(request.POST, request.FILES, instance=material)
         if form.is_valid():
             form.save()
             messages.success(request, 'Material atualizado com sucesso.')
@@ -152,9 +152,9 @@ def material_update(request, pk):
             messages.error(request, 'Por favor, corrija os erros abaixo.')
     else:
         form = MaterialForm(instance=material)
-    
+
     return render(request, 'material_form.html', {
-        'form': form, 
+        'form': form,
         'title': 'Editar Material',
         'material': material
     })
@@ -178,14 +178,15 @@ def material_delete(request, pk):
 
 @login_required
 def material_detail(request, pk):
-    """Detalhes do material"""
+    """Detalhes do material - Acessível para técnicos e professores"""
     material = get_object_or_404(Material, pk=pk)
-    
+
     context = {
         'material': material,
-        'title': f'Detalhes - {material.name}'
+        'title': f'Detalhes - {material.name}',
+        'is_technician': request.user.user_type == 'technician'
     }
-    
+
     return render(request, 'material_detail.html', context)
 
 @login_required

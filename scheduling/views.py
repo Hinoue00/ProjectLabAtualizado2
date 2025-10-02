@@ -11,7 +11,7 @@ from laboratories.models import Department
 from .forms import ScheduleRequestForm, ExceptionScheduleRequestForm
 from django.conf import settings
 from django.urls import reverse
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from whatsapp.services import WhatsAppNotificationService
 from inventory.models import Material
 from django.core.cache import cache
@@ -699,7 +699,7 @@ def approve_schedule_request(request, pk):
     
     if schedule_request.status != 'pending':
         messages.error(request, 'Esta solicitação já foi processada.')
-        return redirect('pending_requests')
+        return HttpResponseRedirect(reverse('pending_requests') + '?fresh=1')
     
     if request.method == 'POST':
         # Verifica conflitos de horário
@@ -709,12 +709,16 @@ def approve_schedule_request(request, pk):
         
         # Aprova a solicitação
         schedule_request.approve(request.user)
+        
+        # FORÇA INVALIDAÇÃO IMEDIATA E COMPLETA DO CACHE
+        CacheManager.force_invalidate_all_scheduling_cache()
+        invalidate_schedule_caches()
 
         # Adicionar: Enviar notificação WhatsApp
         WhatsAppNotificationService.notify_schedule_approval(schedule_request)
         
         messages.success(request, f'Solicitação de agendamento de {schedule_request.professor.get_full_name()} aprovada com sucesso.')
-        return redirect('pending_requests')
+        return HttpResponseRedirect(reverse('pending_requests') + '?fresh=1')
     
     context = {
         'schedule_request': schedule_request,
@@ -730,19 +734,23 @@ def reject_schedule_request(request, pk):
     
     if schedule_request.status != 'pending':
         messages.error(request, 'Esta solicitação já foi processada.')
-        return redirect('pending_requests')
+        return HttpResponseRedirect(reverse('pending_requests') + '?fresh=1')
     
     if request.method == 'POST':
         rejection_reason = request.POST.get('rejection_reason', '')
         
         # Rejeita a solicitação
         schedule_request.reject(request.user, rejection_reason)
+        
+        # FORÇA INVALIDAÇÃO IMEDIATA E COMPLETA DO CACHE
+        CacheManager.force_invalidate_all_scheduling_cache()
+        invalidate_schedule_caches()
 
         # Adicionar: Enviar notificação WhatsApp
         WhatsAppNotificationService.notify_schedule_rejection(schedule_request)
         
         messages.success(request, f'Solicitação de agendamento de {schedule_request.professor.get_full_name()} rejeitada com sucesso.')
-        return redirect('pending_requests')
+        return HttpResponseRedirect(reverse('pending_requests') + '?fresh=1')
     
     context = {
         'schedule_request': schedule_request,
@@ -1130,24 +1138,65 @@ def pending_requests_list(request):
                     else:
                         schedule_request.approve(request.user)
                         WhatsAppNotificationService.notify_schedule_approval(schedule_request)
-                        invalidate_schedule_caches()  # Invalidar cache
+                        
+                        # FORÇA INVALIDAÇÃO IMEDIATA DO CACHE
+                        invalidate_schedule_caches()
+                        CacheManager.invalidate_scheduling_cache()
+                        CacheManager.invalidate_dashboard_cache()
+                        
+                        # Limpar cache específico do pending_requests_list
+                        cache_key = f'pending_requests_list_{request.user.id}'
+                        cache.delete(cache_key)
+                        
+                        # Limpar todos os caches relacionados manualmente
+                        cache.delete_many([
+                            'pending_requests_list',
+                            'pending_appointments_count',
+                            'dashboard_stats_technician',
+                            'dashboard_stats_professor'
+                        ])
+                        
                         messages.success(request, f'Solicitação de {schedule_request.professor.get_full_name()} aprovada com sucesso.')
                 
                 elif action == 'reject':
                     rejection_reason = request.POST.get('rejection_reason', '')
                     schedule_request.reject(request.user, rejection_reason)
                     WhatsAppNotificationService.notify_schedule_rejection(schedule_request)
-                    invalidate_schedule_caches()  # Invalidar cache
+                    
+                    # FORÇA INVALIDAÇÃO IMEDIATA DO CACHE
+                    invalidate_schedule_caches()
+                    CacheManager.invalidate_scheduling_cache()
+                    CacheManager.invalidate_dashboard_cache()
+                    
+                    # Limpar cache específico do pending_requests_list
+                    cache_key = f'pending_requests_list_{request.user.id}'
+                    cache.delete(cache_key)
+                    
+                    # Limpar todos os caches relacionados manualmente
+                    cache.delete_many([
+                        'pending_requests_list',
+                        'pending_appointments_count',
+                        'dashboard_stats_technician',
+                        'dashboard_stats_professor'
+                    ])
+                    
                     messages.success(request, f'Solicitação de {schedule_request.professor.get_full_name()} rejeitada.')
                     
             except ScheduleRequest.DoesNotExist:
                 messages.error(request, 'Solicitação não encontrada ou já foi processada.')
         
-        return redirect('pending_requests')
+        return HttpResponseRedirect(reverse('pending_requests') + '?fresh=1')
     
     # OTIMIZADO: Query com prefetch e annotations para eliminar N+1
+    # Verificar se devemos forçar busca direta (após mudanças recentes)
+    force_fresh = request.GET.get('fresh', '0') == '1'
     cache_key = f'pending_requests_list_{request.user.id}'
-    pending_requests = CacheManager.get_cache('pending_requests', cache_key)
+    
+    if force_fresh:
+        pending_requests = None
+        CacheManager.delete_cache('pending_requests', cache_key)
+    else:
+        pending_requests = CacheManager.get_cache('pending_requests', cache_key)
     
     if pending_requests is None:
         pending_requests = list(ScheduleRequest.objects.filter(
@@ -1462,7 +1511,7 @@ def technician_edit_schedule(request, pk):
     # Verificar se o agendamento está pendente
     if schedule_request.status != 'pending':
         messages.error(request, 'Apenas agendamentos pendentes podem ser editados.')
-        return redirect('pending_requests')
+        return HttpResponseRedirect(reverse('pending_requests') + '?fresh=1')
     
     if request.method == 'POST':
         form = ScheduleRequestForm(request.POST, request.FILES, instance=schedule_request)
@@ -1514,7 +1563,7 @@ def technician_edit_schedule(request, pk):
             else:
                 messages.info(request, 'Nenhuma alteração foi detectada.')
             
-            return redirect('pending_requests')
+            return HttpResponseRedirect(reverse('pending_requests') + '?fresh=1')
     else:
         form = ScheduleRequestForm(instance=schedule_request)
         form.is_draft = False
@@ -1582,7 +1631,7 @@ def create_exception_schedule(request):
                     f'Agendamento de exceção criado com sucesso para {schedule_request.professor.get_full_name()}! '
                     f'O professor foi notificado sobre este agendamento excepcional.'
                 )
-                return redirect('pending_requests')
+                return HttpResponseRedirect(reverse('pending_requests') + '?fresh=1')
                 
             except Exception as e:
                 import logging
@@ -1694,3 +1743,88 @@ def serve_guide_file(request, file_path):
         as_attachment=is_download,  # True para download, False para visualizar
         filename=os.path.basename(full_path)
     )
+
+
+@login_required
+@user_passes_test(is_technician)
+def guide_history(request):
+    """
+    Visualização do histórico de roteiros de aula submetidos pelos professores.
+    Apenas técnicos têm acesso a esta funcionalidade.
+    """
+    # Filtros
+    professor_filter = request.GET.get('professor', '')
+    laboratory_filter = request.GET.get('laboratory', '')
+    subject_filter = request.GET.get('subject', '')
+    semester_filter = request.GET.get('semester', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+
+    # Query base - apenas agendamentos que têm roteiro de aula
+    schedules = ScheduleRequest.objects.filter(
+        guide_file__isnull=False
+    ).exclude(
+        guide_file=''
+    ).select_related(
+        'professor',
+        'laboratory'
+    ).order_by('-scheduled_date', '-start_time')
+
+    # Aplicar filtros
+    if professor_filter:
+        schedules = schedules.filter(professor_id=professor_filter)
+
+    if laboratory_filter:
+        schedules = schedules.filter(laboratory_id=laboratory_filter)
+
+    if subject_filter:
+        schedules = schedules.filter(subject__icontains=subject_filter)
+
+    if semester_filter:
+        schedules = schedules.filter(class_semester__icontains=semester_filter)
+
+    if date_from:
+        schedules = schedules.filter(scheduled_date__gte=date_from)
+
+    if date_to:
+        schedules = schedules.filter(scheduled_date__lte=date_to)
+
+    # Estatísticas
+    total_guides = schedules.count()
+    professors_with_guides = schedules.values('professor').distinct().count()
+
+    # Paginação
+    paginator = Paginator(schedules, 20)  # 20 itens por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Dados para os filtros
+    professors = User.objects.filter(
+        user_type='professor',
+        schedulerequest__guide_file__isnull=False
+    ).exclude(
+        schedulerequest__guide_file=''
+    ).distinct().order_by('first_name', 'last_name')
+
+    laboratories = Laboratory.objects.filter(
+        is_active=True,
+        schedulerequest__guide_file__isnull=False
+    ).exclude(
+        schedulerequest__guide_file=''
+    ).distinct().order_by('name')
+
+    context = {
+        'page_obj': page_obj,
+        'total_guides': total_guides,
+        'professors_with_guides': professors_with_guides,
+        'professors': professors,
+        'laboratories': laboratories,
+        'professor_filter': professor_filter,
+        'laboratory_filter': laboratory_filter,
+        'subject_filter': subject_filter,
+        'semester_filter': semester_filter,
+        'date_from': date_from,
+        'date_to': date_to,
+    }
+
+    return render(request, 'scheduling/guide_history.html', context)

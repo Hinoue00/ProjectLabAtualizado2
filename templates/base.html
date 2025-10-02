@@ -168,6 +168,9 @@
                                 <a href="{% url 'create_exception_schedule' %}" class="sidebar-dropdown-link {% if '/scheduling/create-exception/' in request.path %}active{% endif %}">
                                     Agendamento de Exceção
                                 </a>
+                                <a href="{% url 'guide_history' %}" class="sidebar-dropdown-link {% if '/scheduling/guide-history/' in request.path %}active{% endif %}">
+                                    Histórico de Roteiros
+                                </a>
                             {% endif %}
                         </div>
                     </div>

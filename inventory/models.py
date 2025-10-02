@@ -40,7 +40,11 @@ class Material(models.Model):
     # Campos de validade (opcionais para todos os tipos)
     expiration_date = models.DateField(null=True, blank=True, verbose_name="Data de Validade", help_text="Data de vencimento do material (opcional)")
     batch_number = models.CharField(max_length=50, blank=True, verbose_name="Número do Lote", help_text="Identificação do lote (opcional)")
-    
+
+    # Campos de documentação e imagem
+    invoice = models.FileField(upload_to='invoices/', null=True, blank=True, verbose_name="Nota Fiscal", help_text="Arquivo da nota fiscal do material (PDF ou imagem)")
+    photo = models.ImageField(upload_to='materials/', null=True, blank=True, verbose_name="Foto do Material", help_text="Imagem do material")
+
     created_at = models.DateTimeField(auto_now_add=True, null=True)  # Adicionar também um campo para criação
     updated_at = models.DateTimeField(auto_now=True, null=True)  # Campo que está faltando
 

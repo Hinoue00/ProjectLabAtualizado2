@@ -73,8 +73,37 @@ class CacheManager:
                 cache.delete_pattern(f"*{pattern}*")
                 logger.info(f"Cache invalidated pattern: {pattern}")
             else:
-                # Fallback para backends sem delete_pattern
-                logger.warning(f"Pattern invalidation not supported for cache backend")
+                # Fallback: limpar manualmente as chaves conhecidas que correspondem ao padrão
+                if 'pending_requests' in pattern:
+                    keys_to_delete = [
+                        'pending_requests_list',
+                        'pending_appointments_count',
+                    ]
+                    # Adicionar chaves dinâmicas de usuários (limitar aos últimos 10 users ativos)
+                    for user_id in range(1, 11):  # Assumindo IDs de usuário de 1 a 10
+                        keys_to_delete.append(f'pending_requests_list_{user_id}')
+                    
+                    cache.delete_many(keys_to_delete)
+                    logger.info(f"Cache invalidated manually for pattern: {pattern}")
+                elif 'dashboard' in pattern:
+                    keys_to_delete = [
+                        'dashboard_stats_technician',
+                        'dashboard_stats_professor',
+                        'dash_dashboard_stats',
+                        'dash_pending_requests',
+                        'dash_pending_appointments'
+                    ]
+                    cache.delete_many(keys_to_delete)
+                    logger.info(f"Dashboard cache invalidated manually for pattern: {pattern}")
+                elif 'appointments' in pattern:
+                    keys_to_delete = [
+                        'dash_pending_appointments',
+                        'pending_appointments_count'
+                    ]
+                    cache.delete_many(keys_to_delete)
+                    logger.info(f"Appointments cache invalidated manually for pattern: {pattern}")
+                else:
+                    logger.debug(f"No manual invalidation rule for pattern: {pattern} (this is not an error)")
         except Exception as e:
             logger.error(f"Error invalidating cache pattern {pattern}: {e}")
     
@@ -115,6 +144,38 @@ class CacheManager:
         
         for pattern in patterns:
             cls.invalidate_pattern(pattern)
+    
+    @classmethod
+    def force_invalidate_all_scheduling_cache(cls):
+        """Força invalidação completa de todos os caches de agendamento"""
+        # Lista completa de chaves de cache relacionadas a agendamentos
+        cache_keys = [
+            'pending_requests_list',
+            'pending_appointments_count',
+            'dashboard_stats_technician', 
+            'dashboard_stats_professor',
+            'dash_dashboard_stats',
+            'dash_pending_requests',
+            'sched_pending_requests',
+            'dash_pending_appointments'
+        ]
+        
+        # Adicionar chaves específicas de usuários (expandir conforme necessário)
+        for user_id in range(1, 21):  # Suporte para usuários ID 1-20
+            cache_keys.extend([
+                f'pending_requests_list_{user_id}',
+                f'sched_pending_requests_list_{user_id}',
+                f'dash_dashboard_stats_technician_{user_id}',
+                f'dash_dashboard_stats_professor_{user_id}'
+            ])
+        
+        # Deletar todas as chaves
+        cache.delete_many(cache_keys)
+        logger.info(f"Force invalidated {len(cache_keys)} scheduling cache keys")
+        
+        # Também tentar invalidar por padrão se disponível
+        cls.invalidate_pattern('pending_requests')
+        cls.invalidate_pattern('dashboard')
 
 
 # === SIGNALS PARA INVALIDAÇÃO AUTOMÁTICA ===

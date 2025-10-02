@@ -10,7 +10,7 @@ docling_service = DoclingService() if getattr(settings, 'DOCLING_ENABLED', False
 class MaterialForm(forms.ModelForm):
     class Meta:
         model = Material
-        fields = ['name', 'category', 'description', 'quantity', 'minimum_stock', 'laboratory', 'expiration_date', 'batch_number']
+        fields = ['name', 'category', 'description', 'quantity', 'minimum_stock', 'laboratory', 'expiration_date', 'batch_number', 'photo', 'invoice']
         labels = {
             'name': 'Nome do Material',
             'category': 'Categoria',
@@ -19,7 +19,9 @@ class MaterialForm(forms.ModelForm):
             'minimum_stock': 'Estoque Mínimo',
             'laboratory': 'Laboratório',
             'expiration_date': 'Data de Validade',
-            'batch_number': 'Número do Lote'
+            'batch_number': 'Número do Lote',
+            'photo': 'Foto do Material',
+            'invoice': 'Nota Fiscal'
         }
         help_texts = {
             'name': 'Digite o nome do material (ex: Microscópio, Papel A4, etc.)',
@@ -29,7 +31,9 @@ class MaterialForm(forms.ModelForm):
             'minimum_stock': 'Quantidade mínima antes de emitir alertas de estoque baixo',
             'laboratory': 'Laboratório onde o material está localizado',
             'expiration_date': 'Data de validade (opcional)',
-            'batch_number': 'Número do lote do produto (opcional)'
+            'batch_number': 'Número do lote do produto (opcional)',
+            'photo': 'Imagem do material (JPG, PNG) (opcional)',
+            'invoice': 'Arquivo da nota fiscal (PDF ou imagem) (opcional)'
         }
         widgets = {
             'name': forms.TextInput(attrs={
@@ -58,6 +62,14 @@ class MaterialForm(forms.ModelForm):
             'batch_number': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Ex: LOTE-2024-001 (opcional)'
+            }),
+            'photo': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*'
+            }),
+            'invoice': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': '.pdf,image/*'
             }),
         }
         

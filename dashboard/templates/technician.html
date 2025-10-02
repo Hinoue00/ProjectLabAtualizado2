@@ -522,9 +522,21 @@
                     </label>
                     <span class="badge" id="modal-status-badge"></span>
                 </div>
+
+                <!-- Campo oculto para armazenar o ID do agendamento -->
+                <input type="hidden" id="modal-schedule-id">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <a href="#" id="modal-btn-details" class="btn btn-outline-primary" target="_blank">
+                    <i class="bi bi-eye me-1"></i>Ver Detalhes
+                </a>
+                <button type="button" id="modal-btn-reject" class="btn btn-danger" style="display: none;">
+                    <i class="bi bi-x-circle me-1"></i>Rejeitar
+                </button>
+                <button type="button" id="modal-btn-approve" class="btn btn-success" style="display: none;">
+                    <i class="bi bi-check-circle me-1"></i>Aprovar
+                </button>
             </div>
         </div>
     </div>
@@ -538,7 +550,7 @@
 <!-- Modular JavaScript Files -->
 <script src="{% static 'js/dashboard-main.js' %}"></script>
 <script src="{% static 'js/calendar-module.js' %}"></script>
-<script src="{% static 'js/modal-handlers.js' %}"></script>
+<script src="{% static 'js/modal-handlers.js' %}?v=2024100101"></script>
 <script src="{% static 'js/chart-module.js' %}"></script>
 
 <!-- Initialize Dashboard -->

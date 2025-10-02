@@ -1,0 +1,378 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Histórico de Roteiros de Aula | LabConnect{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/variables.css' %}">
+<link rel="stylesheet" href="{% static 'css/dashboard-base.css' %}">
+<style>
+    .guide-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .guide-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .guide-card-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .guide-card-body {
+        padding: 1.5rem;
+    }
+
+    .guide-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .guide-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+    .guide-meta-item i {
+        color: #4a6fa5;
+    }
+
+    .filter-section {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .stat-card-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #4a6fa5;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-card-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 50rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .status-approved {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+
+    .status-pending {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+    }
+
+    .status-rejected {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .btn-download {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: linear-gradient(135deg, #4a6fa5 0%, #2c4677 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+
+    .btn-download:hover {
+        background: linear-gradient(135deg, #2c4677 0%, #1a2a4a 100%);
+        color: white;
+        transform: scale(1.05);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .guide-card-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .guide-meta {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Cabeçalho -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="page-title">
+                    <i class="bi bi-file-earmark-text me-2"></i>
+                    Histórico de Roteiros de Aula
+                </h1>
+                <p class="page-subtitle">Visualização de todos os roteiros submetidos pelos professores</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="stat-card-value">{{ total_guides }}</div>
+            <div class="stat-card-label">Total de Roteiros</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-value">{{ professors_with_guides }}</div>
+            <div class="stat-card-label">Professores Distintos</div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filter-section">
+        <h5 class="mb-3">
+            <i class="bi bi-funnel me-2"></i>Filtros
+        </h5>
+        <form method="get" action="{% url 'guide_history' %}">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="professor" class="form-label">Professor</label>
+                    <select name="professor" id="professor" class="form-select">
+                        <option value="">Todos os professores</option>
+                        {% for prof in professors %}
+                            <option value="{{ prof.id }}" {% if professor_filter == prof.id|stringformat:"s" %}selected{% endif %}>
+                                {{ prof.get_full_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="laboratory" class="form-label">Laboratório</label>
+                    <select name="laboratory" id="laboratory" class="form-select">
+                        <option value="">Todos os laboratórios</option>
+                        {% for lab in laboratories %}
+                            <option value="{{ lab.id }}" {% if laboratory_filter == lab.id|stringformat:"s" %}selected{% endif %}>
+                                {{ lab.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="subject" class="form-label">Disciplina</label>
+                    <input type="text" name="subject" id="subject" class="form-control"
+                           placeholder="Digite a disciplina" value="{{ subject_filter }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="semester" class="form-label">Semestre/Turma</label>
+                    <input type="text" name="semester" id="semester" class="form-control"
+                           placeholder="Digite o semestre" value="{{ semester_filter }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="date_from" class="form-label">Data Inicial</label>
+                    <input type="date" name="date_from" id="date_from" class="form-control" value="{{ date_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="date_to" class="form-label">Data Final</label>
+                    <input type="date" name="date_to" id="date_to" class="form-control" value="{{ date_to }}">
+                </div>
+                <div class="col-md-6 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search me-1"></i>Filtrar
+                    </button>
+                    <a href="{% url 'guide_history' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i>Limpar
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Lista de Roteiros -->
+    {% if page_obj %}
+        {% for schedule in page_obj %}
+            <div class="guide-card">
+                <div class="guide-card-header">
+                    <div>
+                        <h5 class="mb-1">{{ schedule.subject|default:"Sem título" }}</h5>
+                        <small class="text-muted">
+                            por <strong>{{ schedule.professor.get_full_name }}</strong>
+                        </small>
+                    </div>
+                    <span class="status-badge status-{{ schedule.status }}">
+                        {% if schedule.status == 'approved' %}
+                            <i class="bi bi-check-circle me-1"></i>Aprovado
+                        {% elif schedule.status == 'pending' %}
+                            <i class="bi bi-clock me-1"></i>Pendente
+                        {% elif schedule.status == 'rejected' %}
+                            <i class="bi bi-x-circle me-1"></i>Rejeitado
+                        {% else %}
+                            <i class="bi bi-dash-circle me-1"></i>Cancelado
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="guide-card-body">
+                    <div class="guide-meta">
+                        <div class="guide-meta-item">
+                            <i class="bi bi-calendar-event"></i>
+                            <span>{{ schedule.scheduled_date|date:"d/m/Y" }}</span>
+                        </div>
+                        <div class="guide-meta-item">
+                            <i class="bi bi-clock"></i>
+                            <span>{{ schedule.start_time|time:"H:i" }} - {{ schedule.end_time|time:"H:i" }}</span>
+                        </div>
+                        <div class="guide-meta-item">
+                            <i class="bi bi-building"></i>
+                            <span>{{ schedule.laboratory.name }}</span>
+                        </div>
+                        {% if schedule.class_semester %}
+                        <div class="guide-meta-item">
+                            <i class="bi bi-mortarboard"></i>
+                            <span>{{ schedule.class_semester }}</span>
+                        </div>
+                        {% endif %}
+                        {% if schedule.number_of_students %}
+                        <div class="guide-meta-item">
+                            <i class="bi bi-people"></i>
+                            <span>{{ schedule.number_of_students }} alunos</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if schedule.description %}
+                    <div class="mb-3">
+                        <strong>Descrição:</strong>
+                        <p class="mb-0">{{ schedule.description|truncatewords:30 }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if schedule.materials %}
+                    <div class="mb-3">
+                        <strong>Materiais Necessários:</strong>
+                        <p class="mb-0">{{ schedule.materials|truncatewords:20 }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex gap-2">
+                        <a href="{{ schedule.guide_file.url }}" target="_blank" class="btn-download">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                            Visualizar Roteiro
+                        </a>
+                        <a href="{{ schedule.guide_file.url }}?download=1" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-download me-1"></i>Download
+                        </a>
+                        <a href="{% url 'schedule_request_detail' schedule.id %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-eye me-1"></i>Ver Detalhes
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+
+        <!-- Paginação -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Paginação">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if professor_filter %}&professor={{ professor_filter }}{% endif %}{% if laboratory_filter %}&laboratory={{ laboratory_filter }}{% endif %}{% if subject_filter %}&subject={{ subject_filter }}{% endif %}{% if semester_filter %}&semester={{ semester_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if professor_filter %}&professor={{ professor_filter }}{% endif %}{% if laboratory_filter %}&laboratory={{ laboratory_filter }}{% endif %}{% if subject_filter %}&subject={{ subject_filter }}{% endif %}{% if semester_filter %}&semester={{ semester_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">
+                        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if professor_filter %}&professor={{ professor_filter }}{% endif %}{% if laboratory_filter %}&laboratory={{ laboratory_filter }}{% endif %}{% if subject_filter %}&subject={{ subject_filter }}{% endif %}{% if semester_filter %}&semester={{ semester_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if professor_filter %}&professor={{ professor_filter }}{% endif %}{% if laboratory_filter %}&laboratory={{ laboratory_filter }}{% endif %}{% if subject_filter %}&subject={{ subject_filter }}{% endif %}{% if semester_filter %}&semester={{ semester_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+    {% else %}
+        <!-- Estado vazio -->
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-file-earmark-text"></i>
+            </div>
+            <h4>Nenhum roteiro encontrado</h4>
+            <p class="text-muted">Não há roteiros de aula cadastrados com os filtros selecionados.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

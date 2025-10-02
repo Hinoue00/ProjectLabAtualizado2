@@ -53,7 +53,11 @@ class ModalModule {
             students: this.dashboard.dom.$('#modal-students'),
             materials: this.dashboard.dom.$('#modal-materials'),
             description: this.dashboard.dom.$('#modal-description'),
-            statusBadge: this.dashboard.dom.$('#modal-status-badge')
+            statusBadge: this.dashboard.dom.$('#modal-status-badge'),
+            scheduleId: this.dashboard.dom.$('#modal-schedule-id'),
+            btnDetails: this.dashboard.dom.$('#modal-btn-details'),
+            btnApprove: this.dashboard.dom.$('#modal-btn-approve'),
+            btnReject: this.dashboard.dom.$('#modal-btn-reject')
         };
 
         // Find all modal triggers
@@ -93,6 +97,17 @@ class ModalModule {
         this.elements.modalTriggers.forEach(trigger => {
             trigger.addEventListener('click', this.handleTriggerClick.bind(this));
         });
+
+        // Modal action buttons
+        const btnApprove = this.elements.appointmentModal.btnApprove;
+        const btnReject = this.elements.appointmentModal.btnReject;
+
+        if (btnApprove) {
+            btnApprove.addEventListener('click', this.handleApprove.bind(this));
+        }
+        if (btnReject) {
+            btnReject.addEventListener('click', this.handleReject.bind(this));
+        }
 
         // Keyboard events
         document.addEventListener('keydown', this.handleKeyboardEvents.bind(this));
@@ -199,16 +214,23 @@ class ModalModule {
 
         // Extract data from trigger attributes
         const data = this.extractAppointmentData(trigger);
-        
+
+        // Get schedule ID
+        const scheduleId = trigger.getAttribute('data-schedule-id');
+        data.scheduleId = scheduleId;
+
         // Store data for later use
         this.modalData.set('appointmentModal', data);
-        
+
         // Populate modal fields
         this.populateModalFields(data);
-        
+
         // Setup status badge
         this.setupStatusBadge(trigger, data);
-        
+
+        // Setup action buttons
+        this.setupActionButtons(data);
+
         this.dashboard.log('✅ Appointment modal populated', data);
     }
 
@@ -217,8 +239,8 @@ class ModalModule {
      */
     extractAppointmentData(trigger) {
         const dataAttributes = [
-            'professor', 'laboratory', 'subject', 'time', 
-            'date', 'students', 'materials', 'description', 'status'
+            'professor', 'laboratory', 'subject', 'time',
+            'date', 'students', 'materials', 'description', 'status', 'status-raw'
         ];
 
         const data = {};
@@ -490,14 +512,194 @@ class ModalModule {
     }
 
     /**
+     * Setup action buttons (Approve/Reject/Details)
+     */
+    setupActionButtons(data) {
+        const { scheduleId, status } = data;
+        const statusRaw = data['status-raw'] || status;
+        const { scheduleId: idField, btnApprove, btnReject, btnDetails } = this.elements.appointmentModal;
+
+        this.dashboard.log(`🔧 Setting up action buttons - ID: ${scheduleId}, Status: ${status}, StatusRaw: ${statusRaw}`);
+
+        // Store schedule ID in hidden field
+        if (idField && scheduleId) {
+            idField.value = scheduleId;
+        }
+
+        // Setup "Ver Detalhes" button
+        if (btnDetails && scheduleId) {
+            const detailsUrl = `/scheduling/request/${scheduleId}/`;
+            btnDetails.href = detailsUrl;
+            this.dashboard.log(`✅ Details button URL set to: ${detailsUrl}`);
+        } else {
+            this.dashboard.log(`⚠️ Details button or scheduleId missing - btnDetails: ${!!btnDetails}, scheduleId: ${scheduleId}`);
+        }
+
+        // Show/hide Approve and Reject buttons based on status
+        if (btnApprove && btnReject) {
+            // Check both translated and raw status values
+            if (statusRaw === 'pending' || status === 'Pendente' || status === 'pending') {
+                btnApprove.style.display = 'inline-block';
+                btnReject.style.display = 'inline-block';
+                this.dashboard.log(`✅ Showing Approve/Reject buttons (status is pending)`);
+            } else {
+                btnApprove.style.display = 'none';
+                btnReject.style.display = 'none';
+                this.dashboard.log(`ℹ️ Hiding Approve/Reject buttons (status: ${statusRaw})`);
+            }
+        }
+    }
+
+    /**
+     * Handle approve button click
+     */
+    async handleApprove() {
+        const scheduleId = this.elements.appointmentModal.scheduleId?.value;
+        if (!scheduleId) {
+            alert('Erro: ID do agendamento não encontrado.');
+            return;
+        }
+
+        if (!confirm('Deseja realmente aprovar este agendamento?')) {
+            return;
+        }
+
+        try {
+            // Disable button while processing
+            const btn = this.elements.appointmentModal.btnApprove;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Aprovando...';
+
+            // Send AJAX request
+            const response = await fetch(`/scheduling/requests/${scheduleId}/approve/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': this.getCSRFToken(),
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                // Success
+                this.showToast('Agendamento aprovado com sucesso!', 'success');
+                this.closeModal('appointmentModal');
+
+                // Refresh calendar
+                if (this.dashboard && this.dashboard.modules.calendar) {
+                    await this.dashboard.modules.calendar.loadCalendarData();
+                }
+            } else {
+                const error = await response.json();
+                alert(`Erro ao aprovar: ${error.message || 'Erro desconhecido'}`);
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+
+        } catch (error) {
+            console.error('Error approving schedule:', error);
+            alert('Erro ao aprovar agendamento. Tente novamente.');
+        }
+    }
+
+    /**
+     * Handle reject button click
+     */
+    async handleReject() {
+        const scheduleId = this.elements.appointmentModal.scheduleId?.value;
+        if (!scheduleId) {
+            alert('Erro: ID do agendamento não encontrado.');
+            return;
+        }
+
+        const reason = prompt('Digite o motivo da rejeição:');
+        if (!reason || reason.trim() === '') {
+            alert('É necessário informar um motivo para rejeitar.');
+            return;
+        }
+
+        try {
+            // Disable button while processing
+            const btn = this.elements.appointmentModal.btnReject;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Rejeitando...';
+
+            // Send AJAX request
+            const response = await fetch(`/scheduling/requests/${scheduleId}/reject/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': this.getCSRFToken(),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ reason })
+            });
+
+            if (response.ok) {
+                // Success
+                this.showToast('Agendamento rejeitado.', 'warning');
+                this.closeModal('appointmentModal');
+
+                // Refresh calendar
+                if (this.dashboard && this.dashboard.modules.calendar) {
+                    await this.dashboard.modules.calendar.loadCalendarData();
+                }
+            } else {
+                const error = await response.json();
+                alert(`Erro ao rejeitar: ${error.message || 'Erro desconhecido'}`);
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+
+        } catch (error) {
+            console.error('Error rejecting schedule:', error);
+            alert('Erro ao rejeitar agendamento. Tente novamente.');
+        }
+    }
+
+    /**
+     * Get CSRF token from cookie
+     */
+    getCSRFToken() {
+        const name = 'csrftoken';
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + '=')) {
+                return cookie.substring(name.length + 1);
+            }
+        }
+        return '';
+    }
+
+    /**
+     * Show toast notification
+     */
+    showToast(message, type = 'info') {
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type} position-fixed top-0 end-0 m-3`;
+        toast.style.zIndex = '9999';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        // Remove after 3 seconds
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
+
+    /**
      * Cleanup resources
      */
     cleanup() {
         this.dashboard.log('🧹 Cleaning up Modal module');
-        
+
         // Clear stored data
         this.modalData.clear();
-        
+
         // Dispose Bootstrap modals
         this.modals.forEach((modal, id) => {
             if (typeof modal.dispose === 'function') {

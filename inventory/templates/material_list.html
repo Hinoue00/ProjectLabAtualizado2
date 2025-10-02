@@ -157,8 +157,8 @@
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 material-grid-view">
         {% for material in page_obj %}
             <div class="col">
-                <div class="card material-card h-100 position-relative">
-                    <div class="position-absolute top-0 start-0 p-2">
+                <div class="card material-card h-100 position-relative" style="cursor: pointer;" onclick="window.location.href='{% url 'material_detail' material.id %}'">
+                    <div class="position-absolute top-0 start-0 p-2" style="z-index: 10;" onclick="event.stopPropagation();">
                         <input type="checkbox" class="form-check-input material-checkbox" value="{{ material.id }}" data-name="{{ material.name }}">
                     </div>
                     {% if material.is_low_stock %}
@@ -166,14 +166,18 @@
                             <span class="badge bg-danger stock-alert">Estoque Baixo</span>
                         </div>
                     {% endif %}
-                    
+
                     <div class="material-image">
-                        {% if material.category.material_type == 'consumable' %}
-                            <i class="bi bi-box-seam material-icon"></i>
-                        {% elif material.category.material_type == 'permanent' %}
-                            <i class="bi bi-tools material-icon"></i>
+                        {% if material.photo %}
+                            <img src="{{ material.photo.url }}" alt="{{ material.name }}" class="material-photo" style="width: 100%; height: 100%; object-fit: cover;">
                         {% else %}
-                            <i class="bi bi-hourglass-split material-icon"></i>
+                            {% if material.category.material_type == 'consumable' %}
+                                <i class="bi bi-box-seam material-icon"></i>
+                            {% elif material.category.material_type == 'permanent' %}
+                                <i class="bi bi-tools material-icon"></i>
+                            {% else %}
+                                <i class="bi bi-hourglass-split material-icon"></i>
+                            {% endif %}
                         {% endif %}
                     </div>
                     
@@ -185,7 +189,7 @@
                                 {% else %}perishable{% endif %}">
                                 {{ material.category.get_material_type_display }}
                             </div>
-                            <div class="dropdown">
+                            <div class="dropdown" onclick="event.stopPropagation();">
                                 <button class="btn-action" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="bi bi-three-dots-vertical"></i>
                                 </button>

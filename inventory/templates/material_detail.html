@@ -230,12 +230,16 @@
             <div class="row align-items-center">
                 <div class="col-md-8">
                     <div class="material-icon">
-                        {% if material.category.material_type == 'consumable' %}
-                            <i class="bi bi-box-seam"></i>
-                        {% elif material.category.material_type == 'permanent' %}
-                            <i class="bi bi-tools"></i>
+                        {% if material.photo %}
+                            <img src="{{ material.photo.url }}" alt="{{ material.name }}" style="width: 150px; height: 150px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
                         {% else %}
-                            <i class="bi bi-hourglass-split"></i>
+                            {% if material.category.material_type == 'consumable' %}
+                                <i class="bi bi-box-seam"></i>
+                            {% elif material.category.material_type == 'permanent' %}
+                                <i class="bi bi-tools"></i>
+                            {% else %}
+                                <i class="bi bi-hourglass-split"></i>
+                            {% endif %}
                         {% endif %}
                     </div>
                     <h2 class="mb-3">{{ material.name }}</h2>
@@ -286,6 +290,19 @@
 
         <!-- Material Details Grid -->
         <div class="material-details-grid p-4">
+            <!-- Foto do Material -->
+            {% if material.photo %}
+            <div class="material-detail-card">
+                <h5 class="material-detail-title">
+                    <i class="bi bi-image"></i>
+                    Foto do Material
+                </h5>
+                <div class="text-center">
+                    <img src="{{ material.photo.url }}" alt="{{ material.name }}" class="img-fluid rounded" style="max-height: 300px; object-fit: contain;">
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Quantity Details -->
             <div class="material-detail-card">
                 <h5 class="material-detail-title">
@@ -324,6 +341,53 @@
                 </h5>
                 <p>{{ material.description|default:"Nenhuma descrição disponível." }}</p>
             </div>
+
+            <!-- Validade e Lote (apenas para técnicos) -->
+            {% if is_technician %}
+                {% if material.expiration_date or material.batch_number %}
+            <div class="material-detail-card">
+                <h5 class="material-detail-title">
+                    <i class="bi bi-calendar-check"></i>
+                    Informações de Validade
+                </h5>
+                {% if material.expiration_date %}
+                <div class="mb-2">
+                    <strong>Data de Validade:</strong> {{ material.expiration_date|date:"d/m/Y" }}
+                    {% if material.is_expired %}
+                        <span class="badge bg-danger ms-2">Vencido</span>
+                    {% elif material.is_near_expiration %}
+                        <span class="badge bg-warning ms-2">Próximo do vencimento</span>
+                    {% else %}
+                        <span class="badge bg-success ms-2">Válido</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% if material.batch_number %}
+                <div>
+                    <strong>Lote:</strong> {{ material.batch_number }}
+                </div>
+                {% endif %}
+            </div>
+                {% endif %}
+            {% endif %}
+
+            <!-- Nota Fiscal (apenas para técnicos) -->
+            {% if user.user_type == 'technician' and material.invoice %}
+            <div class="material-detail-card">
+                <h5 class="material-detail-title">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                    Nota Fiscal
+                </h5>
+                <div class="text-center">
+                    <a href="{{ material.invoice.url }}" target="_blank" class="btn btn-outline-primary">
+                        <i class="bi bi-file-earmark-pdf me-2"></i>Visualizar Nota Fiscal
+                    </a>
+                    <p class="text-muted mt-2 mb-0" style="font-size: 0.85rem;">
+                        <i class="bi bi-info-circle me-1"></i>Documento confidencial - Acesso restrito
+                    </p>
+                </div>
+            </div>
+            {% endif %}
 
             <!-- Usage History -->
             <div class="material-detail-card">
@@ -436,3 +500,5 @@
             return new bootstrap.Tooltip(tooltipTriggerEl);
         });
     });
+</script>
+{% endblock %}

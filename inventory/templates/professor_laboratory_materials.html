@@ -83,12 +83,16 @@
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <div class="me-3">
-                                                {% if material.category.material_type == 'consumable' %}
-                                                    <i class="bi bi-box-seam text-success"></i>
-                                                {% elif material.category.material_type == 'permanent' %}
-                                                    <i class="bi bi-tools text-primary"></i>
+                                                {% if material.photo %}
+                                                    <img src="{{ material.photo.url }}" alt="{{ material.name }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;" data-bs-toggle="tooltip" title="Visualizar foto">
                                                 {% else %}
-                                                    <i class="bi bi-hourglass-split text-danger"></i>
+                                                    {% if material.category.material_type == 'consumable' %}
+                                                        <i class="bi bi-box-seam text-success"></i>
+                                                    {% elif material.category.material_type == 'permanent' %}
+                                                        <i class="bi bi-tools text-primary"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-hourglass-split text-danger"></i>
+                                                    {% endif %}
                                                 {% endif %}
                                             </div>
                                             <div>

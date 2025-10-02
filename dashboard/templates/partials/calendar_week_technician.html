@@ -12,10 +12,11 @@
         <div class="day-content">
             {% if day.appointments %}
                 {% for appointment in day.appointments %}
-                <div class="appointment-item status-{{ appointment.status }}" 
-                     data-bs-toggle="modal" 
+                <div class="appointment-item status-{{ appointment.status }}"
+                     data-bs-toggle="modal"
                      data-bs-target="#appointmentModal"
                      data-appointment-id="{{ appointment.id }}"
+                     data-schedule-id="{{ appointment.id }}"
                      data-professor="{{ appointment.professor.get_full_name }}"
                      data-laboratory="{{ appointment.laboratory.name }}"
                      data-subject="{{ appointment.subject|default:'Não informado' }}"
@@ -24,7 +25,8 @@
                      data-students="{{ appointment.number_of_students|default:'N/A' }}"
                      data-materials="{{ appointment.materials|default:'Nenhum material especificado'|escape }}"
                      data-description="{{ appointment.description|default:'Sem descrição'|escape }}"
-                     data-status="{{ appointment.get_status_display }}">
+                     data-status="{{ appointment.get_status_display }}"
+                     data-status-raw="{{ appointment.status }}">
                      
                     <div class="appointment-time">
                         <i class="bi bi-clock"></i>
