@@ -261,13 +261,34 @@ def technician_dashboard(request):
     recent_requests = ScheduleRequest.objects.select_related(
         'professor', 'laboratory'
     ).order_by('-request_date')[:10]
-    
+
+    # Recent appointments for history card
+    recent_appointments = ScheduleRequest.objects.select_related(
+        'professor', 'laboratory'
+    ).order_by('-scheduled_date')[:10]
+
+    # 🔧 BUSCAR HISTÓRICO DE ROTEIROS (últimos 5 com roteiros enviados)
+    recent_guides = ScheduleRequest.objects.filter(
+        guide_file__isnull=False
+    ).exclude(guide_file='').select_related(
+        'professor', 'laboratory'
+    ).order_by('-scheduled_date')[:5]
+
+    # Contar total de roteiros e professores distintos
+    total_guides = ScheduleRequest.objects.filter(
+        guide_file__isnull=False
+    ).exclude(guide_file='').count()
+
+    professors_with_guides = ScheduleRequest.objects.filter(
+        guide_file__isnull=False
+    ).exclude(guide_file='').values('professor').distinct().count()
+
     # 🔧 BUSCAR DEPARTAMENTOS CORRIGIDO
     if Department.objects.exists():
         departments = Department.objects.filter(is_active=True).values_list('code', flat=True)
     else:
         departments = Laboratory.objects.filter(is_active=True).values_list('department', flat=True).distinct()
-    
+
     context = {
         'calendar_data': calendar_data,
         'current_week_start': start_of_week,
@@ -291,7 +312,13 @@ def technician_dashboard(request):
         'active_professors_count': active_professors_count,
         'current_count': current_week_count,
         'percentage_change': percentage_change,
-        
+
+        # Guide History Data
+        'recent_guides': recent_guides,
+        'total_guides': total_guides,
+        'professors_with_guides': professors_with_guides,
+        'recent_appointments': recent_appointments,
+
         # Compatibility
         'start_of_week': start_of_week,
         'end_of_week': end_of_week,

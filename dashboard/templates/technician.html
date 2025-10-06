@@ -325,6 +325,66 @@
 
     <!-- Third Row -->
     <div class="row">
+        <!-- Guide History -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-file-earmark-text"></i>
+                            Histórico de Roteiros
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-primary">{{ total_guides }} total</span>
+                            <span class="badge bg-info">{{ professors_with_guides }} professores</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="recent-activity-list custom-scrollbar">
+                        {% for guide in recent_guides %}
+                        <div class="activity-item">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="activity-title mb-0">{{ guide.subject|default:"Sem título" }}</h6>
+                                <span class="badge rounded-pill badge-{{ guide.status }}">
+                                    {{ guide.get_status_display }}
+                                </span>
+                            </div>
+                            <div class="activity-details">
+                                <p><i class="bi bi-person"></i> {{ guide.professor.get_full_name }}</p>
+                                <p><i class="bi bi-building"></i> {{ guide.laboratory.name }}</p>
+                                <p><i class="bi bi-calendar-date"></i> {{ guide.scheduled_date|date:"d/m/Y" }}</p>
+                                {% if guide.class_semester %}
+                                <p><i class="bi bi-mortarboard"></i> {{ guide.class_semester }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="activity-date">
+                                <i class="bi bi-file-earmark-check"></i>
+                                Roteiro enviado
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="empty-state">
+                            <i class="bi bi-file-earmark-text"></i>
+                            <h5>Nenhum roteiro enviado</h5>
+                            <p>Não há roteiros de aula para exibir.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {% if total_guides > 5 %}
+                <div class="card-footer text-center">
+                    <a href="{% url 'guide_history' %}" class="card-footer-link">
+                        <i class="bi bi-arrow-right"></i>
+                        Ver todo o histórico de roteiros
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
         <!-- Recent Appointments -->
         <div class="col-lg-6 mb-4">
             <div class="card border-0 shadow-sm h-100">
@@ -379,9 +439,11 @@
                 {% endif %}
             </div>
         </div>
+    </div>
 
-        <!-- Active Professors -->
-        <div class="col-lg-6 mb-4">
+    <!-- Fourth Row - Professores Ativos -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-transparent">
                     <h5 class="card-title mb-0">
@@ -390,7 +452,7 @@
                     </h5>
                     <p class="small text-muted mb-0">Total: {{ active_professors.count }}</p>
                 </div>
-                
+
                 <div class="card-body">
                     <ul class="professor-list custom-scrollbar">
                         {% for professor in active_professors|slice:":8" %}
@@ -419,7 +481,7 @@
                         {% endfor %}
                     </ul>
                 </div>
-                
+
                 {% if active_professors.count > 8 %}
                 <div class="card-footer text-center">
                     <a href="{% url 'professor_list' %}" class="card-footer-link">
